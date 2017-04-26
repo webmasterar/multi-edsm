@@ -1,0 +1,10 @@
+libsdsl/*
+sdsl-lite/*
+vcflib/
+experiments/realdata/data/*
+edsm-main.cpp
+multiedsm
+edsm.cpp
+edsm.hpp
+*.o
+*.exe
