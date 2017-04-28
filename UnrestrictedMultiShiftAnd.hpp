@@ -17,7 +17,7 @@
 #elif INTPTR_MAX == INT64_MAX
     #define ffs(x) __builtin_ffsl((x))
 #else
-    #error "Unsupported architecture - neither 64 or 32 bit!"
+    #error "Unsupported architecture - neither 64 nor 32 bit!"
 #endif
 
 class UnrestrictedMultiShiftAnd
@@ -72,6 +72,11 @@ protected:
      */
     std::map<int,int> positions;
 
+    /**
+     * @var reportPatterns
+     */
+    bool reportPatterns;
+
 public:
     UnrestrictedMultiShiftAnd(const std::string & alphabet);
     void addPattern(const std::string & pattern);
@@ -82,6 +87,7 @@ public:
     void clearMatches();
     unsigned int getNumberOfPatterns() const;
     unsigned int getTotalPatternLength() const;
+    void reportPatternIds(bool report = true);
 };
 
 #endif

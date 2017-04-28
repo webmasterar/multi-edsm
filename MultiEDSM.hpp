@@ -42,7 +42,7 @@ class MultiEDSM
 {
 private:
 
-    void recFindAllChildNodes(const cst_node_t & n, WordVector & x);
+    void recFindAllChildNodes(const cst_node_t & u, WordVector & v, const unsigned int j);
 
     void preprocessPatterns();
 
@@ -109,6 +109,11 @@ protected:
     bool reportOnce;
 
     /**
+     * @var reportPatterns Report id of pattern found -- default: True
+     */
+    bool reportPatterns;
+
+    /**
      * @var STp The suffix tree (array) of P
      */
     cst_t STp;
@@ -170,6 +175,8 @@ public:
     ResultSet getMatches() const;
 
     void reportOncePerPosition(bool yesorno = true);
+
+    void reportPatternIds(bool yesorno = true);
 
     void clearMatches();
 

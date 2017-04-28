@@ -52,6 +52,7 @@ MultiEDSM::MultiEDSM(const std::string & alphabet, const std::vector<std::string
     this->primed = false;
     this->duration = 0;
     this->reportOnce = true;
+    this->reportPatterns = true;
     this->preprocessPatterns();
 }
 
@@ -73,12 +74,11 @@ void MultiEDSM::preprocessPatterns()
 
     //initialize Shift-And searching tool
     this->umsa = new UnrestrictedMultiShiftAnd(this->alphabet);
-
-    cout << "Got here 0.1" << endl;
+    this->umsa->reportPatternIds(this->reportPatterns);
 
     //add patterns to bitvector and build suffix tree string
     string p = "";
-    char sep = 0;
+    char sep = 1;
     unsigned int h, i, j;
     for (i = 0; i < this->patterns.size(); i++)
     {
@@ -90,7 +90,7 @@ void MultiEDSM::preprocessPatterns()
         do {
             sep = (sep + 1) % (CHAR_MAX + 1);
         }
-        while (this->alphabet.find(sep) != string::npos);
+        while ((this->alphabet.find(sep) != string::npos) || (sep == 0));
 
         //update STpIdx2BVIdx datastructure with correct index of STp match for bitvector
         h = this->patterns[i].length();
@@ -107,13 +107,10 @@ void MultiEDSM::preprocessPatterns()
             this->maxP = h;
         }
     }
-
-    cout << "Got here 0.2" << endl;
+    p.pop_back();
 
     //construct the suffix tree of patterns with seperators
     construct_im(this->STp, p.c_str(), sizeof(char));
-
-    cout << "Got here 0.3" << endl;
 
     //stop timer
     this->duration += clock() - start;
@@ -141,10 +138,12 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 
     //match variables
     bool matchFound = false;
+    bool suffixMatchFound = false;
     bool isDeterminateSegment = false;
     unsigned int matchIdx, posIdx, pattId;
 
     //temp state variables, segment string iterator
+    unsigned int m;
     WordVector B1, B2;
     Segment::const_iterator stringI;
 
@@ -168,8 +167,6 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             isDeterminateSegment = false;
         }
 
-        cout << "Got here 1" << endl;
-
         //search for the patterns
         for (stringI = S.begin(); stringI != S.end(); ++stringI)
         {
@@ -182,7 +179,6 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                         if (isDeterminateSegment)
                         {
                             for (const pair<int,int> & match : this->umsa->getMatches()) {
-                                cout << "Got here 2" << endl;
                                 posIdx = match.first;
                                 matchIdx = this->pos + posIdx + 1;
                                 pattId = match.second;
@@ -217,10 +213,143 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             }
         }
 
-        //build equivalent of BorderPrefixTable
+        //build equivalent of BorderPrefixTable for next segment to use
         this->B = this->buildBorderPrefixWordVector(S);
 
+        //update position
+        if (isDeterminateSegment) {
+            this->pos = this->f;
+        } else {
+            this->pos++;
+        }
+
         this->primed = true;
+    }
+    else
+    {
+        //keep track of f/F counts and if segment is determinate
+        if (S.size() == 1)
+        {
+            this->f += S[0].length();
+            isDeterminateSegment = true;
+        }
+        else
+        {
+            for (stringI = S.begin(); stringI != S.end(); ++stringI)
+            {
+                if (*stringI != EPSILON) {
+                    this->F += (*stringI).length();
+                }
+            }
+            isDeterminateSegment = false;
+        }
+
+        //build equivalent of BorderPrefixTable for current segment
+        B1 = this->buildBorderPrefixWordVector(S);
+
+        //loop through the strings in the segment
+        for (stringI = S.begin(); stringI != S.end(); ++stringI)
+        {
+            if (*stringI != EPSILON)
+            {
+                m = (*stringI).length();
+
+                cout << "Got here 0" << endl;
+
+                //step 1 - if string is longer than patten then do a full search on it
+                if (m >= this->minP)
+                {
+                    if (this->umsa->search(*stringI))
+                    {
+                        if (isDeterminateSegment)
+                        {
+                            for (const pair<int,int> & match : this->umsa->getMatches()) {
+                                posIdx = match.first;
+                                matchIdx = this->pos + posIdx + 1;
+                                pattId = match.second;
+                                this->report(matchIdx, posIdx, pattId);
+                            }
+                        }
+                        else
+                        {
+                            if (this->reportOnce)
+                            {
+                                const pair<int,int> match = *this->umsa->getMatches().begin();
+                                posIdx = match.first;
+                                matchIdx = this->pos + 1;
+                                pattId = match.second;
+                                this->report(matchIdx, posIdx, pattId);
+                                break;
+                            }
+                            else
+                            {
+                                for (const pair<int,int> & match : this->umsa->getMatches()) {
+                                    posIdx = match.first;
+                                    matchIdx = this->pos + 1;
+                                    pattId = match.second;
+                                    this->report(matchIdx, posIdx, pattId);
+                                }
+                            }
+                        }
+                        matchFound = true;
+                    }
+                }
+
+                cout << "Got here 0.1" << endl;
+
+                //step 2 - if string is a suffix of a previously determined prefix, then report a match
+                B2 = this->B;
+                if (m < this->maxP) {
+                    suffixMatchFound = this->umsa->search(*stringI, B2);
+                } else {
+                    suffixMatchFound = this->umsa->search((*stringI).substr(m - this->maxP), B2);
+                }
+                if (suffixMatchFound) {
+                    if (this->reportOnce)
+                    {
+                        const pair<int,int> match = *this->umsa->getMatches().begin();
+                        posIdx = match.first;
+                        matchIdx = this->pos + 1;
+                        pattId = match.second;
+                        this->report(matchIdx, posIdx, pattId);
+                        break;
+                    }
+                    else
+                    {
+                        for (const pair<int,int> & match : this->umsa->getMatches()) {
+                            posIdx = match.first;
+                            matchIdx = this->pos + 1;
+                            pattId = match.second;
+                            this->report(matchIdx, posIdx, pattId);
+                        }
+                    }
+                    matchFound = true;
+                }
+
+                cout << "Got here 0.3" << endl;
+
+                //step 3 - if string is short, then it could be an infix, so determine it is actual infix and mark its position accordingly
+                if (m < (this->maxP - 1))
+                {
+                    this->Np++;
+                    this->Nm += m;
+                    B2 = this->occVector(*stringI);
+
+                    cout << "Got here 0.4" << endl;
+
+                    B1 = this->WordVectorOR(B1, B2);
+                }
+            }
+        }
+
+        this->B = B1;
+
+        //update position
+        if (isDeterminateSegment) {
+            this->pos = this->f;
+        } else {
+            this->pos++;
+        }
     }
 
     this->duration += clock() - start;
@@ -248,6 +377,7 @@ WordVector MultiEDSM::WordVectorOR(const WordVector & a, const WordVector & b)
 /**
  * The bitwise AND operation performed on WordVectors.
  *
+ * @deprecated Unused, consider deleting @TODO
  * @param a
  * @param b
  * @return (a & b)
@@ -275,7 +405,7 @@ WordVector MultiEDSM::WordVectorAND(const WordVector & a, const WordVector & b)
  */
 WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
 {
-    WordVector C;
+    WordVector c;
     unsigned int m, i = 0;
     Segment::const_iterator stringI;
 
@@ -285,20 +415,109 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
         {
             m = (*stringI).length();
             if (m >= this->maxP) {
-                this->umsa->search((*stringI).substr(m - this->maxP));
+                this->umsa->search((*stringI).substr(m - this->maxP + 1));
             } else {
                 this->umsa->search(*stringI);
             }
             if (i == 0) {
-                C = this->umsa->getLastSearchState();
+                c = this->umsa->getLastSearchState();
             } else {
-                C = this->WordVectorOR(C, this->umsa->getLastSearchState());
+                c = this->WordVectorOR(c, this->umsa->getLastSearchState());
             }
             i++;
         }
     }
 
-    return C;
+    return c;
+}
+
+/**
+ * occVector function for demarcating valid infix starting positions. @TODO rewrite
+ *
+ * @param a @TODO
+ * @return @TODO
+ */
+WordVector MultiEDSM::occVector(const string & a)
+{
+    cst_node_t explicitNode = this->STp.root();
+    string::const_iterator it;
+    uint64_t char_pos = 0;
+    unsigned int j = 0;
+    for (it = a.begin(); it != a.end(); ++it)
+    {
+        if (forward_search(this->STp, explicitNode, it - a.begin(), *it, char_pos) > 0) {
+            j++;
+        } else {
+            break;
+        }
+    }
+
+    WordVector v;
+
+    //if a is present in P
+    if (j == a.length()) {
+        cout << "Got here 0.5 " << a << endl;
+        this->recFindAllChildNodes(explicitNode, v, j);
+    }
+
+    return v;
+}
+
+/**
+* Recursively finds leaves in the tree from node u and updates v
+*
+* @param u The starting node
+* @param v The bitvector where leaves string lengths are encoded to
+* @param j The length of the match to move bits along correctly
+*/
+void MultiEDSM::recFindAllChildNodes(const cst_node_t & u, WordVector & v, const unsigned int j)
+{
+    if (this->STp.is_leaf(u))
+    {
+        //sn(u) gets the suffix index from the leaf node u, while STpIdx2BVIdx converts it to the correct index
+        cout << "checking leaf" << endl;
+        int h = (int)this->STp.sn(u);
+        cout << "h:" << h << ", STpIdx2BVIdx size:" << this->STpIdx2BVIdx.size() << endl;
+        int i = (int)this->STpIdx2BVIdx[h];
+
+        cout << "Got here 1" << endl;
+
+        int wordIdx = (int) ((float)i / (float)BITSINWORD);
+
+        cout << "wordIdx: " << wordIdx << endl;
+
+        //check if it's a valid infix starting position
+        if (this->B[wordIdx] & (1 << (i % BITSINWORD)))
+        {
+            cout << "update pos" << endl;
+            //update position
+            i = i + j;
+            wordIdx = (int) ((float)i / (float)BITSINWORD);
+
+            cout << "wordIdx: " << wordIdx << endl;
+
+            //check the word vector has enough words in it
+            if (wordIdx >= (int)v.size()) {
+                int k;
+                for (k = v.size(); k <= wordIdx; k++) {
+                    v.push_back(0ul);
+                }
+            }
+            //write position to v
+            v[wordIdx] = v[wordIdx] | (1 << (i % BITSINWORD));
+        }
+    }
+    else
+    {
+        /*cst_node_t broke = this->STp.children(u)[2];
+        cout << this->STp.children(broke).size() << endl;
+        cout << extract(this->STp, this->STp.children(u)[2]) << endl;
+        this->recFindAllChildNodes(this->STp.children(u)[2], v, j); // this is explicitNode leading to leaves 1 and 9 of ACACA"CACCA#$. Not sure why throws segfault
+        */
+        for (const auto & child : this->STp.children(u)) {
+            this->recFindAllChildNodes(child, v, j);
+        }
+    }
 }
 
 /**
@@ -327,6 +546,16 @@ void MultiEDSM::clearMatches()
 void MultiEDSM::reportOncePerPosition(bool yesorno)
 {
     this->reportOnce = yesorno;
+}
+
+/**
+ * Report the id of discovered patterns?
+ *
+ * @param yesorno Default: True
+ */
+void MultiEDSM::reportPatternIds(bool yesorno)
+{
+    this->reportPatterns = yesorno;
 }
 
 /**

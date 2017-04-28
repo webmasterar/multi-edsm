@@ -36,5 +36,12 @@ int main(int argc, char * argv[])
     segment.push_back("E");
     segment.push_back("CACC");
     multiedsm.searchNextSegment(segment);
+    segment.clear();
+    segment.push_back("AA");
+    segment.push_back("AC");
+    multiedsm.searchNextSegment(segment);
+    segment.clear();
+    segment.push_back("CA");
+    multiedsm.searchNextSegment(segment);
     return 0;
 }

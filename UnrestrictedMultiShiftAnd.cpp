@@ -18,6 +18,7 @@ using namespace std;
 UnrestrictedMultiShiftAnd::UnrestrictedMultiShiftAnd(const string & alphabet)
 {
     this->alphabet = alphabet;
+    this->reportPatterns = true;
     this->N = 0;
     this->M = 0;
     this->L = 1;
@@ -32,6 +33,16 @@ UnrestrictedMultiShiftAnd::UnrestrictedMultiShiftAnd(const string & alphabet)
         v.push_back(0ul);
     }
     this->Bv.push_back(v);
+}
+
+/**
+ * Turn pattern id discovered reporting on or off. By default it is on.
+ *
+ * @param report Report positions or not
+ */
+void UnrestrictedMultiShiftAnd::reportPatternIds(bool report)
+{
+    this->reportPatterns = report;
 }
 
 /**
@@ -93,7 +104,9 @@ void UnrestrictedMultiShiftAnd::addPattern(const std::string & pattern)
     this->Ev[this->L - 1] = this->Ev[this->L - 1] | (1ul << ((this->M % BITSINWORD) - 1));
 
     //keep a record of position the pattern is stored and pattern id - for search results
-    this->positions.insert(pair<int,int>(this->M - 1, this->N - 1));
+    if (this->reportPatterns) {
+        this->positions.insert(pair<int,int>(this->M - 1, this->N - 1));
+    }
 }
 
 /**
@@ -164,7 +177,11 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
                 while (checking)
                 {
                     k = ffs(checking);
-                    this->matches.insert(pair<int,int>((int)i, this->positions.find(j * BITSINWORD + k - 1)->second));
+                    if (this->reportPatterns) {
+                        this->matches.insert(pair<int,int>((int)i, this->positions.find(j * BITSINWORD + k - 1)->second));
+                    } else {
+                        this->matches.insert(pair<int,int>((int)i, -1));
+                    }
                     checking = checking >> k;
                 }
             }
