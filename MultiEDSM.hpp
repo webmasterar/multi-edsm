@@ -28,6 +28,7 @@
 
 #define EPSILON "E"
 #define BUFFERSIZE 1000000
+#define SEPARATOR_DIGIT -1
 
 typedef sdsl::cst_sct3<> cst_t;
 typedef cst_t::node_type cst_node_t;

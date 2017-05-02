@@ -94,10 +94,11 @@ void MultiEDSM::preprocessPatterns()
 
         //update STpIdx2BVIdx datastructure with correct index of STp match for bitvector
         h = this->patterns[i].length();
-        for (j = 0; j < (h + 1); j++) {
+        for (j = 0; j < h; j++) {
             this->STpIdx2BVIdx.push_back(this->M + j - i);
         }
-        this->M += h;
+        this->STpIdx2BVIdx.push_back(SEPARATOR_DIGIT);
+        this->M += h + 1;
 
         //find min/max pattern length
         if (h < this->minP) {
@@ -114,6 +115,121 @@ void MultiEDSM::preprocessPatterns()
 
     //stop timer
     this->duration += clock() - start;
+}
+
+/**
+ * The Shift-And algorithm performs the equivalent of creating a BorderPrefixTable
+ * and this function just returns a WordVector with the prefixes of patterns
+ * identified in the suffixes of all strings in a segment.
+ *
+ * @param S A segment
+ * @return A WordVector with the prefixes marked
+ */
+WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
+{
+    WordVector c;
+    unsigned int m, i = 0;
+    Segment::const_iterator stringI;
+
+    for (stringI = S.begin(); stringI != S.end(); ++stringI)
+    {
+        if (*stringI != EPSILON)
+        {
+            m = (*stringI).length();
+            if (m >= this->maxP) {
+                this->umsa->search((*stringI).substr(m - this->maxP + 1));
+            } else {
+                this->umsa->search(*stringI);
+            }
+            if (i == 0) {
+                c = this->umsa->getLastSearchState();
+            } else {
+                c = this->WordVectorOR(c, this->umsa->getLastSearchState());
+            }
+            i++;
+        }
+    }
+
+    return c;
+}
+
+/**
+ * occVector function for demarcating valid infix starting positions. @TODO rewrite
+ *
+ * @param a @TODO
+ * @return @TODO
+ */
+WordVector MultiEDSM::occVector(const string & a)
+{
+    cst_node_t explicitNode = this->STp.root();
+    string::const_iterator it;
+    uint64_t char_pos = 0;
+    unsigned int j = 0;
+    for (it = a.begin(); it != a.end(); ++it)
+    {
+        if (forward_search(this->STp, explicitNode, it - a.begin(), *it, char_pos) > 0) {
+            j++;
+        } else {
+            break;
+        }
+    }
+
+    WordVector v(1, 0ul);
+
+    //if a is present in P
+    if (j == a.length()) {
+        this->recFindAllChildNodes(explicitNode, v, j);
+    }
+
+    return v;
+}
+
+/**
+* Recursively finds leaves in the tree from node u and updates v
+*
+* @param u The starting node
+* @param v The bitvector where leaves string lengths are encoded to
+* @param j The length of the match to move bits along correctly
+*/
+void MultiEDSM::recFindAllChildNodes(const cst_node_t & u, WordVector & v, const unsigned int j)
+{
+    if (this->STp.is_leaf(u))
+    {
+        //sn(u) gets the suffix index from the leaf node u, while STpIdx2BVIdx converts it to the correct index
+        int h = (int)this->STp.sn(u); //h is index in suffix tree string
+        int i = (int)this->STpIdx2BVIdx[h]; //i is index in bitvector
+
+        //check that it is actually an infix (does not start at position 0 or end with a separator)
+        if ((h - 1) >= 0 && this->STpIdx2BVIdx[h - 1] != SEPARATOR_DIGIT && (h + j) < this->STpIdx2BVIdx.size() && this->STpIdx2BVIdx[h + j] != SEPARATOR_DIGIT)
+        {
+            int wordIdx = (int) ((float)i / (float)BITSINWORD);
+
+            //check if it's a valid infix starting position
+            if (this->B[wordIdx] & (1 << ((i % BITSINWORD) - 1)))
+            {
+                //update position
+                i = i + j;
+                wordIdx = (int) ((float)i / (float)BITSINWORD);
+
+                //check the word vector has enough words in it
+                if (wordIdx >= (int)v.size()) {
+                    int k;
+                    for (k = v.size(); k <= wordIdx; k++) {
+                        v.push_back(0ul);
+                    }
+                }
+
+                //write position to v
+                v[wordIdx] = v[wordIdx] | (1 << ((i % BITSINWORD) - 1));
+            }
+        }
+    }
+    else
+    {
+        for (const auto & child : this->STp.children(u)) {
+            this->recFindAllChildNodes(child, v, j);
+        }
+    }
 }
 
 /**
@@ -180,11 +296,12 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                         {
                             for (const pair<int,int> & match : this->umsa->getMatches()) {
                                 posIdx = match.first;
-                                matchIdx = this->pos + posIdx + 1;
+                                matchIdx = this->pos + posIdx;
                                 pattId = match.second;
                                 this->report(matchIdx, posIdx, pattId);
                                 //@TODO it might be that the same posIdx matches multiple patterns so just report the first one?
                             }
+                            this->umsa->clearMatches();
                         }
                         else
                         {
@@ -192,7 +309,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                             {
                                 const pair<int,int> match = *this->umsa->getMatches().begin();
                                 posIdx = match.first;
-                                matchIdx = this->pos + 1;
+                                matchIdx = this->pos;
                                 pattId = match.second;
                                 this->report(matchIdx, posIdx, pattId);
                                 break;
@@ -201,10 +318,11 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                             {
                                 for (const pair<int,int> & match : this->umsa->getMatches()) {
                                     posIdx = match.first;
-                                    matchIdx = this->pos + 1;
+                                    matchIdx = this->pos;
                                     pattId = match.second;
                                     this->report(matchIdx, posIdx, pattId);
                                 }
+                                this->umsa->clearMatches();
                             }
                         }
                         matchFound = true;
@@ -227,7 +345,10 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     }
     else
     {
-        //keep track of f/F counts and if segment is determinate
+        //build equivalent of BorderPrefixTable for current segment
+        B1 = this->buildBorderPrefixWordVector(S);
+
+        //keep track of f/F counts and if segment is determinate, and if there's an epsilon (deletion)
         if (S.size() == 1)
         {
             this->f += S[0].length();
@@ -237,15 +358,14 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
         {
             for (stringI = S.begin(); stringI != S.end(); ++stringI)
             {
-                if (*stringI != EPSILON) {
+                if (*stringI == EPSILON) {
+                    B1 = this->WordVectorOR(B1, this->B);
+                } else {
                     this->F += (*stringI).length();
                 }
             }
             isDeterminateSegment = false;
         }
-
-        //build equivalent of BorderPrefixTable for current segment
-        B1 = this->buildBorderPrefixWordVector(S);
 
         //loop through the strings in the segment
         for (stringI = S.begin(); stringI != S.end(); ++stringI)
@@ -253,8 +373,6 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             if (*stringI != EPSILON)
             {
                 m = (*stringI).length();
-
-                cout << "Got here 0" << endl;
 
                 //step 1 - if string is longer than patten then do a full search on it
                 if (m >= this->minP)
@@ -265,39 +383,39 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                         {
                             for (const pair<int,int> & match : this->umsa->getMatches()) {
                                 posIdx = match.first;
-                                matchIdx = this->pos + posIdx + 1;
+                                matchIdx = this->pos + posIdx;
                                 pattId = match.second;
                                 this->report(matchIdx, posIdx, pattId);
                             }
+                            this->umsa->clearMatches();
                         }
                         else
                         {
-                            if (this->reportOnce)
+                            if (this->reportOnce && !matchFound)
                             {
                                 const pair<int,int> match = *this->umsa->getMatches().begin();
                                 posIdx = match.first;
-                                matchIdx = this->pos + 1;
+                                matchIdx = this->pos;
                                 pattId = match.second;
                                 this->report(matchIdx, posIdx, pattId);
-                                break;
+                                this->umsa->clearMatches();
                             }
                             else
                             {
                                 for (const pair<int,int> & match : this->umsa->getMatches()) {
                                     posIdx = match.first;
-                                    matchIdx = this->pos + 1;
+                                    matchIdx = this->pos;
                                     pattId = match.second;
                                     this->report(matchIdx, posIdx, pattId);
                                 }
+                                this->umsa->clearMatches();
                             }
                         }
                         matchFound = true;
                     }
                 }
 
-                cout << "Got here 0.1" << endl;
-
-                //step 2 - if string is a suffix of a previously determined prefix, then report a match
+                //step 2 - if string is a suffix of a previously determined prefix or infix, then report a match
                 B2 = this->B;
                 if (m < this->maxP) {
                     suffixMatchFound = this->umsa->search(*stringI, B2);
@@ -305,28 +423,27 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                     suffixMatchFound = this->umsa->search((*stringI).substr(m - this->maxP), B2);
                 }
                 if (suffixMatchFound) {
-                    if (this->reportOnce)
+                    if (this->reportOnce && !matchFound)
                     {
                         const pair<int,int> match = *this->umsa->getMatches().begin();
                         posIdx = match.first;
-                        matchIdx = this->pos + 1;
+                        matchIdx = this->pos;
                         pattId = match.second;
                         this->report(matchIdx, posIdx, pattId);
-                        break;
+                        this->umsa->clearMatches();
                     }
                     else
                     {
                         for (const pair<int,int> & match : this->umsa->getMatches()) {
                             posIdx = match.first;
-                            matchIdx = this->pos + 1;
+                            matchIdx = this->pos;
                             pattId = match.second;
                             this->report(matchIdx, posIdx, pattId);
                         }
+                        this->umsa->clearMatches();
                     }
                     matchFound = true;
                 }
-
-                cout << "Got here 0.3" << endl;
 
                 //step 3 - if string is short, then it could be an infix, so determine it is actual infix and mark its position accordingly
                 if (m < (this->maxP - 1))
@@ -334,9 +451,6 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                     this->Np++;
                     this->Nm += m;
                     B2 = this->occVector(*stringI);
-
-                    cout << "Got here 0.4" << endl;
-
                     B1 = this->WordVectorOR(B1, B2);
                 }
             }
@@ -346,12 +460,13 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 
         //update position
         if (isDeterminateSegment) {
-            this->pos = this->f;
+            this->pos += S[0].length();
         } else {
             this->pos++;
         }
     }
 
+    //stop timer
     this->duration += clock() - start;
 
     return matchFound;
@@ -385,7 +500,9 @@ WordVector MultiEDSM::WordVectorOR(const WordVector & a, const WordVector & b)
 WordVector MultiEDSM::WordVectorAND(const WordVector & a, const WordVector & b)
 {
     WordVector c;
-    unsigned int i, m = min(a.size(), b.size()), n = max(a.size(), b.size());
+    unsigned int i;
+    unsigned int m = min(a.size(), b.size());
+    unsigned int n = max(a.size(), b.size());
     for (i = 0; i < m; i++) {
         c.push_back(a[i] & b[i]);
     }
@@ -393,131 +510,6 @@ WordVector MultiEDSM::WordVectorAND(const WordVector & a, const WordVector & b)
         c.push_back(0ul);
     }
     return c;
-}
-
-/**
- * The Shift-And algorithm performs the equivalent of creating a BorderPrefixTable
- * and this function just returns a WordVector with the prefixes of patterns
- * identified in the suffixes of all strings in a segment.
- *
- * @param S A segment
- * @return A WordVector with the prefixes marked
- */
-WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
-{
-    WordVector c;
-    unsigned int m, i = 0;
-    Segment::const_iterator stringI;
-
-    for (stringI = S.begin(); stringI != S.end(); ++stringI)
-    {
-        if (*stringI != EPSILON)
-        {
-            m = (*stringI).length();
-            if (m >= this->maxP) {
-                this->umsa->search((*stringI).substr(m - this->maxP + 1));
-            } else {
-                this->umsa->search(*stringI);
-            }
-            if (i == 0) {
-                c = this->umsa->getLastSearchState();
-            } else {
-                c = this->WordVectorOR(c, this->umsa->getLastSearchState());
-            }
-            i++;
-        }
-    }
-
-    return c;
-}
-
-/**
- * occVector function for demarcating valid infix starting positions. @TODO rewrite
- *
- * @param a @TODO
- * @return @TODO
- */
-WordVector MultiEDSM::occVector(const string & a)
-{
-    cst_node_t explicitNode = this->STp.root();
-    string::const_iterator it;
-    uint64_t char_pos = 0;
-    unsigned int j = 0;
-    for (it = a.begin(); it != a.end(); ++it)
-    {
-        if (forward_search(this->STp, explicitNode, it - a.begin(), *it, char_pos) > 0) {
-            j++;
-        } else {
-            break;
-        }
-    }
-
-    WordVector v;
-
-    //if a is present in P
-    if (j == a.length()) {
-        cout << "Got here 0.5 " << a << endl;
-        this->recFindAllChildNodes(explicitNode, v, j);
-    }
-
-    return v;
-}
-
-/**
-* Recursively finds leaves in the tree from node u and updates v
-*
-* @param u The starting node
-* @param v The bitvector where leaves string lengths are encoded to
-* @param j The length of the match to move bits along correctly
-*/
-void MultiEDSM::recFindAllChildNodes(const cst_node_t & u, WordVector & v, const unsigned int j)
-{
-    if (this->STp.is_leaf(u))
-    {
-        //sn(u) gets the suffix index from the leaf node u, while STpIdx2BVIdx converts it to the correct index
-        cout << "checking leaf" << endl;
-        int h = (int)this->STp.sn(u);
-        cout << "h:" << h << ", STpIdx2BVIdx size:" << this->STpIdx2BVIdx.size() << endl;
-        int i = (int)this->STpIdx2BVIdx[h];
-
-        cout << "Got here 1" << endl;
-
-        int wordIdx = (int) ((float)i / (float)BITSINWORD);
-
-        cout << "wordIdx: " << wordIdx << endl;
-
-        //check if it's a valid infix starting position
-        if (this->B[wordIdx] & (1 << (i % BITSINWORD)))
-        {
-            cout << "update pos" << endl;
-            //update position
-            i = i + j;
-            wordIdx = (int) ((float)i / (float)BITSINWORD);
-
-            cout << "wordIdx: " << wordIdx << endl;
-
-            //check the word vector has enough words in it
-            if (wordIdx >= (int)v.size()) {
-                int k;
-                for (k = v.size(); k <= wordIdx; k++) {
-                    v.push_back(0ul);
-                }
-            }
-            //write position to v
-            v[wordIdx] = v[wordIdx] | (1 << (i % BITSINWORD));
-        }
-    }
-    else
-    {
-        /*cst_node_t broke = this->STp.children(u)[2];
-        cout << this->STp.children(broke).size() << endl;
-        cout << extract(this->STp, this->STp.children(u)[2]) << endl;
-        this->recFindAllChildNodes(this->STp.children(u)[2], v, j); // this is explicitNode leading to leaves 1 and 9 of ACACA"CACCA#$. Not sure why throws segfault
-        */
-        for (const auto & child : this->STp.children(u)) {
-            this->recFindAllChildNodes(child, v, j);
-        }
-    }
 }
 
 /**

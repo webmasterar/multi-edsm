@@ -31,6 +31,7 @@ int main(int argc, char * argv[])
     patterns.push_back("ACACA");
     patterns.push_back("CACCA");
     MultiEDSM multiedsm("ACGT", patterns);
+
     vector<string> segment;
     segment.push_back("CAACACA");
     segment.push_back("E");
