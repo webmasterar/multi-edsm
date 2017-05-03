@@ -81,7 +81,9 @@ public:
     UnrestrictedMultiShiftAnd(const std::string & alphabet);
     void addPattern(const std::string & pattern);
     bool search(const std::string & text);
+    bool search(const std::string & text, unsigned int i);
     bool search(const std::string & text, std::vector<WORD> & startingSearchState);
+    bool search(const std::string & text, std::vector<WORD> & startingSearchState, unsigned int i);
     std::map<int,int> getMatches() const;
     std::vector<WORD> getLastSearchState() const;
     void clearMatches();

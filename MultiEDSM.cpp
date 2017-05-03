@@ -305,7 +305,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                         }
                         else
                         {
-                            if (this->reportOnce)
+                            if (this->reportOnce && !matchFound)
                             {
                                 const pair<int,int> match = *this->umsa->getMatches().begin();
                                 posIdx = match.first;
@@ -314,7 +314,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                 this->report(matchIdx, posIdx, pattId);
                                 break;
                             }
-                            else
+                            else if (!this->reportOnce)
                             {
                                 for (const pair<int,int> & match : this->umsa->getMatches()) {
                                     posIdx = match.first;
@@ -400,7 +400,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                 this->report(matchIdx, posIdx, pattId);
                                 this->umsa->clearMatches();
                             }
-                            else
+                            else if (!this->reportOnce)
                             {
                                 for (const pair<int,int> & match : this->umsa->getMatches()) {
                                     posIdx = match.first;
@@ -420,7 +420,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 if (m < this->maxP) {
                     suffixMatchFound = this->umsa->search(*stringI, B2);
                 } else {
-                    suffixMatchFound = this->umsa->search((*stringI).substr(m - this->maxP), B2);
+                    suffixMatchFound = this->umsa->search(*stringI, B2, m - this->maxP);
                 }
                 if (suffixMatchFound) {
                     if (this->reportOnce && !matchFound)
@@ -432,7 +432,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                         this->report(matchIdx, posIdx, pattId);
                         this->umsa->clearMatches();
                     }
-                    else
+                    else if (!this->reportOnce)
                     {
                         for (const pair<int,int> & match : this->umsa->getMatches()) {
                             posIdx = match.first;

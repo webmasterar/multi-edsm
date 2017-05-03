@@ -111,28 +111,56 @@ void UnrestrictedMultiShiftAnd::addPattern(const std::string & pattern)
 
 /**
  * Search a text
+ *
  * @param text
- * @return True if one or matches found, otherwise False
+ * @return True if one or more matches found, otherwise False
  */
 bool UnrestrictedMultiShiftAnd::search(const string & text)
 {
+    return this->search(text, 0);
+}
+
+/**
+ * Search a text starting at position i
+ *
+ * @param text
+ * @param i position i in text
+ * @return True if one or more matches found, otherwise False
+ */
+bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int i)
+{
     //initialize vector D to have a fresh state for the new search
     this->D.assign(this->L, 0ul);
-    return this->search(text, this->D);
+    return this->search(text, this->D, i);
 }
 
 /**
  * Search a text but supply an initial search state - this is useful for searching
- * text provided intermittently (online algorithm). For simple searches just use
+ * text provided intermittently (on-line algorithm).
+ *
+ * @param text
+ * @param startingSearchState A std::vector<WORD> with L elements
+ * @return True if one or more matches found, otherwise False
+ */
+bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState)
+{
+    return this->search(text, startingSearchState, 0);
+}
+
+/**
+ * Search a text but supply an initial search state - this is useful for searching
+ * text provided intermittently (on-line algorithm). Also, an initial starting
+ * position i in the text can be specified. For simple searches just use
  * UnrestrictedMultiShiftAnd::search()
  *
  * @param text
  * @param startingSearchState A std::vector<WORD> with L elements
- * @return True if one or matches found, otherwise False
+ * @param i position i in text
+ * @return True if one or more matches found, otherwise False
  */
-bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState)
+bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState, unsigned int i)
 {
-    unsigned int i, j, k, n = text.length();
+    unsigned int j, k, n = text.length();
     bool matchFound = false;
 
     if (this->M == 0) {
@@ -144,7 +172,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
     this->D = startingSearchState;
     if (this->D.size() < this->L) {
         j = this->L - this->D.size();
-        for (i = 0; i < j; i++) {
+        for (k = 0; k < j; k++) {
             this->D.push_back(0ul);
         }
     }
@@ -155,7 +183,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
     WORD carryMask = 1ul << (BITSINWORD - 1);
 
     //loop through the text
-    for (i = 0; i < n; i++)
+    for (; i < n; i++)
     {
         carry = 0;
         charIdx = (int) this->Sigma[(int)text[i]] - 1;

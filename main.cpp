@@ -30,19 +30,21 @@ int main(int argc, char * argv[])
     vector<string> patterns;
     patterns.push_back("ACACA");
     patterns.push_back("CACCA");
+    patterns.push_back("CACACAT");
     MultiEDSM multiedsm("ACGT", patterns);
 
     vector<string> segment;
     segment.push_back("CAACACA");
-    segment.push_back("E");
+    segment.push_back(EPSILON);
     segment.push_back("CACC");
     multiedsm.searchNextSegment(segment);
     segment.clear();
     segment.push_back("AA");
+    segment.push_back(EPSILON);
     segment.push_back("AC");
     multiedsm.searchNextSegment(segment);
     segment.clear();
-    segment.push_back("CA");
+    segment.push_back("CAT");
     multiedsm.searchNextSegment(segment);
     return 0;
 }
