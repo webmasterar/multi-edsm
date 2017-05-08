@@ -19,6 +19,7 @@
 #define __MULTI_EDSM__
 
 #include <cstdlib>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>
@@ -29,6 +30,32 @@
 #define EPSILON "E"
 #define BUFFERSIZE 1000000
 #define SEPARATOR_DIGIT -1
+
+//
+// Fast implementations of bitvector operations:
+//
+// FFS: Find First Set - find the index of the first set bit in a computer word.
+//      e.g. 10010000 --> 5.
+// CLZ: Count Leading Zeros - Counts the number of preceding zero bits in a
+//      computer word. e.g. 00010000 --> 3.
+//
+#if INTPTR_MAX == INT32_MAX
+    #ifndef clz
+        #define clz(x) __builtin_clz((x))
+    #endif
+    #ifndef ffs
+        #define ffs(x) __builtin_ffs((x))
+    #endif
+#elif INTPTR_MAX == INT64_MAX
+    #ifndef clz
+        #define clz(x) __builtin_clzl((x))
+    #endif
+    #ifndef ffs
+        #define ffs(x) __builtin_ffsl((x))
+    #endif
+#else
+    #error "Unsupported architecture - neither 64 nor 32 bit!"
+#endif
 
 typedef sdsl::cst_sct3<> cst_t;
 typedef cst_t::node_type cst_node_t;
@@ -43,13 +70,15 @@ class MultiEDSM
 {
 private:
 
-    void recFindAllChildNodes(const cst_node_t & u, WordVector & v, const unsigned int j);
+    WordVector recAssignOVMem(const cst_node_t & u);
 
     void preprocessPatterns();
 
     WordVector WordVectorOR(const WordVector & a, const WordVector & b);
 
     WordVector WordVectorAND(const WordVector & a, const WordVector & b);
+
+    WordVector WordVectorSPECIALSHIFT(const WordVector & x, unsigned int m);
 
 protected:
     /**
@@ -68,14 +97,29 @@ protected:
     std::vector<std::string> patterns;
 
     /**
-     * @var STpIdx2BVIdx A tool to return the correct index of the bitvector from the suffix tree position - uses O(M) space, O(1) time
+     * @var STpIdx2BVIdx A tool to return the correct index of the bitvector from the suffix tree position - uses O(M + k) space, O(1) time lookup
      */
     std::vector<int> STpIdx2BVIdx;
+
+    /**
+     * @var Pos2PatId A tool to return the correct pattern id from the index of a bit in the bitvector - uses O(M) space, O(1) time lookup
+     */
+    std::vector<int> Pos2PatId;
+
+    /**
+     * @var OVMem Holds the computer words storing pattern positions for OccVector()
+     */
+    std::vector<WordVector> OVMem;
 
     /**
      * @var M The total length of the patterns
      */
     unsigned int M;
+
+    /**
+     * @var R The total length of the patterns plus the separators
+     */
+    unsigned int R;
 
     /**
      * @var minP The length of the smallest pattern in patterns
@@ -162,6 +206,8 @@ protected:
     void report(const unsigned int matchIdx, const unsigned int posIdx, const unsigned int pattId);
 
     WordVector buildBorderPrefixWordVector(const Segment & S);
+
+    void constructOV();
 
     WordVector occVector(const std::string & a);
 

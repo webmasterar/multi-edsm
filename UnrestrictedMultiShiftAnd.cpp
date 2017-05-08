@@ -4,8 +4,8 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include <map>
 #include <cmath>
+#include <map>
 #include "UnrestrictedMultiShiftAnd.hpp"
 
 using namespace std;
@@ -50,7 +50,7 @@ void UnrestrictedMultiShiftAnd::reportPatternIds(bool report)
  *
  * @param pattern
  */
-void UnrestrictedMultiShiftAnd::addPattern(const std::string & pattern)
+void UnrestrictedMultiShiftAnd::addPattern(const string & pattern)
 {
     unsigned int i, j, m = pattern.length();
 
@@ -113,7 +113,7 @@ void UnrestrictedMultiShiftAnd::addPattern(const std::string & pattern)
  * Search a text
  *
  * @param text
- * @return True if one or more matches found, otherwise False
+ * @return True if one or matches found, otherwise False
  */
 bool UnrestrictedMultiShiftAnd::search(const string & text)
 {
@@ -139,7 +139,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int i)
  * text provided intermittently (on-line algorithm).
  *
  * @param text
- * @param startingSearchState A std::vector<WORD> with L elements
+ * @param startingSearchState A vector<WORD> with L elements
  * @return True if one or more matches found, otherwise False
  */
 bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState)
@@ -149,14 +149,12 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
 
 /**
  * Search a text but supply an initial search state - this is useful for searching
- * text provided intermittently (on-line algorithm). Also, an initial starting
- * position i in the text can be specified. For simple searches just use
+ * text provided intermittently (online algorithm). For simple searches just use
  * UnrestrictedMultiShiftAnd::search()
  *
  * @param text
- * @param startingSearchState A std::vector<WORD> with L elements
- * @param i position i in text
- * @return True if one or more matches found, otherwise False
+ * @param startingSearchState A vector<WORD> with L elements
+ * @return True if one or matches found, otherwise False
  */
 bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState, unsigned int i)
 {
@@ -172,7 +170,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
     this->D = startingSearchState;
     if (this->D.size() < this->L) {
         j = this->L - this->D.size();
-        for (k = 0; k < j; k++) {
+        for (i = 0; i < j; i++) {
             this->D.push_back(0ul);
         }
     }
@@ -210,7 +208,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
                     } else {
                         this->matches.insert(pair<int,int>((int)i, -1));
                     }
-                    checking = checking >> k;
+                    checking = checking ^ (1ul << (k - 1));
                 }
             }
 
@@ -224,7 +222,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
 /**
  * After doing a search, get the last state of the search
  */
-std::vector<WORD> UnrestrictedMultiShiftAnd::getLastSearchState() const
+vector<WORD> UnrestrictedMultiShiftAnd::getLastSearchState() const
 {
     return this->D;
 }
@@ -254,9 +252,9 @@ unsigned int UnrestrictedMultiShiftAnd::getTotalPatternLength() const
 }
 
 /**
- * Get a map of all the matches found - <index_in_t, pattern_id>
+ * Get a multimap of all the matches found - <index_in_t, pattern_id>
  */
-std::map<int,int> UnrestrictedMultiShiftAnd::getMatches() const
+multimap<int,int> UnrestrictedMultiShiftAnd::getMatches() const
 {
     return this->matches;
 }

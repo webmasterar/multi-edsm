@@ -28,9 +28,10 @@ using namespace std;
 int main(int argc, char * argv[])
 {
     vector<string> patterns;
-    patterns.push_back("ACACA");
-    patterns.push_back("CACCA");
-    patterns.push_back("CACACAT");
+    //patterns.push_back("ACACA");  //seg[0]
+    //patterns.push_back("CACCAA"); //seg[0-1]
+    //patterns.push_back("CCCA");   //seg[0,2]
+    patterns.push_back("CACCACCA"); //seg[0-2]
     MultiEDSM multiedsm("ACGT", patterns);
 
     vector<string> segment;

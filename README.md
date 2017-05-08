@@ -1,6 +1,6 @@
-## EDSM
+## Multi-EDSM
 
-Elastic Degenerate String Matching.
+Multiple string matching in Elastic Degenerate Strings.
 
 If you make use of this software, please cite the following:
 
@@ -8,21 +8,20 @@ If you make use of this software, please cite the following:
 
 ### How to Install
 
-You may need to install one or more libraries before compiling EDSM. Please read INSTALL.md.
+You may need to install one or more libraries before compiling Multi-EDSM. Please read INSTALL.md.
 
 ### How to Execute
 
-`~$ ./edsm seq.txt pattern`
+`~$ ./multiedsm seq.txt patterns.txt`
 
 or
 
-`~$ ./edsm reference.fasta variants.vcf pattern`
+`~$ ./multiedsm reference.fasta variants.vcf pattern.txt`
 
-The `pattern` may be a string or the path to a file containing a single pattern.
+The patterns.txt file should be a set of strings separated by line breaks.
 
 If you want to use a compressed vcf file (*.vcf.gz), please make sure its accompanying tbi file is also present in the same directory. You can also use `Tabix` to generate a tbi file.
 
 ### License
 
 GNU GPLv3 License; Copyright (C) 2017 Chang Liu, Solon P. Pissis, Ahmad Retha and Fatima Vayani.
-

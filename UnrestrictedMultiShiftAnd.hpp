@@ -17,7 +17,7 @@
 #elif INTPTR_MAX == INT64_MAX
     #define ffs(x) __builtin_ffsl((x))
 #else
-    #error "Unsupported architecture - neither 64 nor 32 bit!"
+    #error "Unsupported architecture - neither 64 or 32 bit!"
 #endif
 
 class UnrestrictedMultiShiftAnd
@@ -62,10 +62,10 @@ protected:
      */
     std::string alphabet;
     /**
-     * @var matches A map of ending positions where a match was found and the id
-     * of the pattern discovered, <index_in_t, pattern_id>
+     * @var matches A multimap of ending positions where a match was found and
+     * the id of the pattern discovered, <index_in_t, pattern_id>
      */
-    std::map<int,int> matches;
+    std::multimap<int,int> matches;
 
     /**
      * @var positions A map of ending positions and the id of the pattern that is found there
@@ -84,7 +84,7 @@ public:
     bool search(const std::string & text, unsigned int i);
     bool search(const std::string & text, std::vector<WORD> & startingSearchState);
     bool search(const std::string & text, std::vector<WORD> & startingSearchState, unsigned int i);
-    std::map<int,int> getMatches() const;
+    std::multimap<int,int> getMatches() const;
     std::vector<WORD> getLastSearchState() const;
     void clearMatches();
     unsigned int getNumberOfPatterns() const;

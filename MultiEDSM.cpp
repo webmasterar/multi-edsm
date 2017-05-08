@@ -46,6 +46,7 @@ MultiEDSM::MultiEDSM(const std::string & alphabet, const std::vector<std::string
     this->d = 0;
     this->D = 0;
     this->M = 0;
+    this->R = 0;
     this->Np = 0;
     this->Nm = 0;
     this->pos = 0;
@@ -66,6 +67,7 @@ MultiEDSM::~MultiEDSM()
 
 /**
  * Proprocess the patterns - initialize the bitvector and the suffix tree tools
+ * @TODO consider adding this->R to count suffix tree string len
  */
 void MultiEDSM::preprocessPatterns()
 {
@@ -92,13 +94,16 @@ void MultiEDSM::preprocessPatterns()
         }
         while ((this->alphabet.find(sep) != string::npos) || (sep == 0));
 
-        //update STpIdx2BVIdx datastructure with correct index of STp match for bitvector
+        //update STpIdx2BVIdx and Pos2PatId datastructures with correct index of
+        //STp match for bitvector and pattern id based on bit position in bitvector
         h = this->patterns[i].length();
+        this->M += h;
         for (j = 0; j < h; j++) {
-            this->STpIdx2BVIdx.push_back(this->M + j - i);
+            this->STpIdx2BVIdx.push_back(this->R + j - i);
+            this->Pos2PatId.push_back(i);
         }
         this->STpIdx2BVIdx.push_back(SEPARATOR_DIGIT);
-        this->M += h + 1;
+        this->R += h + 1;
 
         //find min/max pattern length
         if (h < this->minP) {
@@ -108,13 +113,92 @@ void MultiEDSM::preprocessPatterns()
             this->maxP = h;
         }
     }
-    p.pop_back();
+    p.pop_back(); //remove unnecessary separator char as sdsl already adds \0 to end
+
+    cout << "STpIdx2BVIdx: ";
+    for (const int i : this->STpIdx2BVIdx) {
+        cout << i;
+    }
+    cout << endl;
+    cout << "Pos2PatId: ";
+    for (const int i : this->Pos2PatId) {
+        cout << i;
+    }
+    cout << endl;
 
     //construct the suffix tree of patterns with seperators
     construct_im(this->STp, p.c_str(), sizeof(char));
 
+    //construct occVector datastructure
+    this->constructOV();
+
     //stop timer
     this->duration += clock() - start;
+}
+
+/**
+ * Construct the occVector tool. Requires O(M + k) time (i.e. the number of nodes
+ * in a suffix tree is at most 2M, and k is the number of patterns, represented
+ * by different seperators). Requires O((M + k) * [(M + k) / w]) space, because
+ * each node stores at most O([(M + k) / w]) computer words.
+ */
+void MultiEDSM::constructOV()
+{
+    this->OVMem.clear();
+    unsigned int i, numNodes = this->STp.nodes();
+    for (i = 0; i < numNodes; i++) {
+        WordVector v(1, 0ul);
+        this->OVMem.push_back(v);
+    }
+    this->recAssignOVMem(this->STp.root());
+
+    cout << "OVMem:" << endl;
+    for (i = 0; i < numNodes; i++) {
+        cout << this->OVMem[i][0] << endl;
+    }
+}
+
+/**
+ * Recursively traverses the suffix tree STp and denotes starting positions of
+ * substrings, encoding them into WordVectors, and combining them as it moves
+ * back up the tree. Space efficient because it only uses as many computer words
+ * as necessary.
+ */
+WordVector MultiEDSM::recAssignOVMem(const cst_node_t & u)
+{
+    int id = this->STp.id(u);
+
+    if (this->STp.is_leaf(u))
+    {
+        int h = (int)this->STp.sn(u); //h is index in suffix tree string
+        int i = (int)this->STpIdx2BVIdx[h]; //i is index in bitvector
+        int j = this->OVMem[id].size(); //current size of the OVMem[id] WordVector
+
+        //make sure it is not first letter or last letter in a pattern
+        if (h > 0 && this->STpIdx2BVIdx[h - 1] != SEPARATOR_DIGIT && \
+           (h + 1) < ((int)this->R - 1) && this->STpIdx2BVIdx[h + 1] != SEPARATOR_DIGIT)
+        {
+            int wordIdx = (int) ((float)i / (float)BITSINWORD);
+            int bitShifts = i % BITSINWORD;
+
+            //ensure word vector has enough words in it
+            while (j <= wordIdx) {
+                this->OVMem[id].push_back(0ul);
+                j++;
+            }
+
+            //write position to OVMem[id]
+            this->OVMem[id][wordIdx] = this->OVMem[id][wordIdx] | (1ul << bitShifts);
+        }
+    }
+    else
+    {
+        for (const auto & child : this->STp.children(u)) {
+            this->OVMem[id] = this->WordVectorOR(this->OVMem[id], this->recAssignOVMem(child));
+        }
+    }
+
+    return this->OVMem[id];
 }
 
 /**
@@ -137,7 +221,7 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
         {
             m = (*stringI).length();
             if (m >= this->maxP) {
-                this->umsa->search((*stringI).substr(m - this->maxP + 1));
+                this->umsa->search(*stringI, m - this->maxP + 1);
             } else {
                 this->umsa->search(*stringI);
             }
@@ -174,24 +258,29 @@ WordVector MultiEDSM::occVector(const string & a)
         }
     }
 
-    WordVector v(1, 0ul);
+    WordVector v;
 
     //if a is present in P
     if (j == a.length()) {
-        this->recFindAllChildNodes(explicitNode, v, j);
+        int id = this->STp.id(explicitNode);
+        v = this->OVMem[id];
+        cout << "OccVector(" << a << "): " << v[0] << endl;
     }
 
     return v;
 }
 
 /**
+* @deprecated This is not required as already done in preprocessing stage
+* @TODO Remove
+*
 * Recursively finds leaves in the tree from node u and updates v
 *
 * @param u The starting node
 * @param v The bitvector where leaves string lengths are encoded to
 * @param j The length of the match to move bits along correctly
 */
-void MultiEDSM::recFindAllChildNodes(const cst_node_t & u, WordVector & v, const unsigned int j)
+/*void MultiEDSM::recFindAllChildNodes(const cst_node_t & u, WordVector & v, const unsigned int j)
 {
     if (this->STp.is_leaf(u))
     {
@@ -230,7 +319,7 @@ void MultiEDSM::recFindAllChildNodes(const cst_node_t & u, WordVector & v, const
             this->recFindAllChildNodes(child, v, j);
         }
     }
-}
+}*/
 
 /**
  * Report match found. The results can be obtained by calling MultiEDSM::getMatches()
@@ -333,6 +422,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 
         //build equivalent of BorderPrefixTable for next segment to use
         this->B = this->buildBorderPrefixWordVector(S);
+
+        cout << "Pos:" << this->pos << " B:" << this->B[0] << endl;
 
         //update position
         if (isDeterminateSegment) {
@@ -450,13 +541,22 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 {
                     this->Np++;
                     this->Nm += m;
-                    B2 = this->occVector(*stringI);
+                    B2 = WordVectorAND(this->B, this->occVector(*stringI));
+                    if (B2.size() > 0) {
+                        cout << "B2 before: " << B2[0] << endl;
+                    }
+                    B2 = WordVectorSPECIALSHIFT(B2, m);
+                    if (B2.size() > 0) {
+                        cout << "B2 after: " << B2[0] << endl;
+                    }
                     B1 = this->WordVectorOR(B1, B2);
                 }
             }
         }
 
         this->B = B1;
+
+        cout << "Pos:" << this->pos << " B:" << this->B[0] << endl;
 
         //update position
         if (isDeterminateSegment) {
@@ -482,9 +582,21 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 WordVector MultiEDSM::WordVectorOR(const WordVector & a, const WordVector & b)
 {
     WordVector c;
-    unsigned int i, m = min(a.size(), b.size());
+    unsigned int i, m = min(a.size(), b.size()), n = max(a.size(), b.size());
     for (i = 0; i < m; i++) {
         c.push_back(a[i] | b[i]);
+    }
+    if (a.size() > b.size())
+    {
+        for (; i < n; i++) {
+            c.push_back(a[i]);
+        }
+    }
+    else
+    {
+        for (; i < n; i++) {
+            c.push_back(b[i]);
+        }
     }
     return c;
 }
@@ -492,7 +604,6 @@ WordVector MultiEDSM::WordVectorOR(const WordVector & a, const WordVector & b)
 /**
  * The bitwise AND operation performed on WordVectors.
  *
- * @deprecated Unused, consider deleting @TODO
  * @param a
  * @param b
  * @return (a & b)
@@ -502,15 +613,91 @@ WordVector MultiEDSM::WordVectorAND(const WordVector & a, const WordVector & b)
     WordVector c;
     unsigned int i;
     unsigned int m = min(a.size(), b.size());
-    unsigned int n = max(a.size(), b.size());
     for (i = 0; i < m; i++) {
         c.push_back(a[i] & b[i]);
     }
-    for (; i < n; i++) {
-        c.push_back(0ul);
-    }
     return c;
 }
+
+/**
+ * A special left shifting algorithm for use with OccVector result. It ensures a
+ * shift operation is not performed if it overlaps into the next pattern in the
+ * bitvector.
+ *
+ * @param x
+ * @param m The length of the string being checked
+ * @return A WordVector containing only the states of valid infixes
+ */
+WordVector MultiEDSM::WordVectorSPECIALSHIFT(const WordVector & x, unsigned int m)
+{
+    WordVector c;
+
+    WORD temp;
+    unsigned int i, j, currPos, updPos, currPattId, updPattId, updWordIdx;
+    for (i = 0; i < x.size(); i++)
+    {
+        temp = x[i];
+        while (temp)
+        {
+            j = ffs(temp) - 1;
+            currPos = i * BITSINWORD + j;
+            currPattId = this->Pos2PatId[currPos];
+            updPos = currPos + m;
+            updPattId = this->Pos2PatId[updPos];
+            if (currPattId == updPattId)
+            {
+                updWordIdx = (unsigned int) ((float)updPos / (float)BITSINWORD);
+                while (updWordIdx >= c.size()) {
+                    c.push_back(0ul);
+                }
+                c[updWordIdx] = c[updWordIdx] | (1ul << (updPos % BITSINWORD));
+            }
+            temp = temp ^ (1ul << j);
+        }
+    }
+
+    return c;
+}
+
+/**
+ * @deprecated Incomplete and possibly unnecessary
+ * @TODO remove
+ */
+/*WordVector MultiEDSM::WordVectorLEFTSHIFT(const WordVector & a, unsigned int m)
+{
+    if (m == 0) {
+        return a;
+    }
+
+    //work out how many words needed to create c
+    int wordsRequired;
+    int lastIdx = a.size() - 1;
+    while (lastIdx > -1 && a[lastIdx] == 0) {
+        lastIdx--;
+    }
+    if (lastIdx == -1) {
+        wordsRequired = 1;
+    } else {
+        int bitsRequired = BITSINWORD - clz(a[lastIdx]) + m + (lastIdx * BITSINWORD);
+        wordsRequired = 1 + (int)((float)bitsRequired / (float)BITSINWORD);
+    }
+    WordVector c(wordsRequired, 0ul);
+
+    //create carry vector and mask
+    int numWordsToCarry = 1 + (int)((float)m / (float)BITSINWORD);
+    WordVector carry(numWordsToCarry, 0ul);
+    WORD temp = 0ul;
+    WORD carryMask = ULONG_MAX << (BITSINWORD - m);
+    unsigned int i, j;
+    for (i = 0; i < a.size(); i++)
+    {
+        c[i] = (a[i] << m) | (temp >> (BITSINWORD - m));
+        temp = a[i] & carryMask;
+    }
+    if (temp != 0) {
+        c[i] = temp >> (BITSINWORD - m);
+    }
+}*/
 
 /**
 * Get a list of the positions of matches found.
