@@ -28,10 +28,12 @@ using namespace std;
 int main(int argc, char * argv[])
 {
     vector<string> patterns;
-    //patterns.push_back("ACACA");  //seg[0]
-    //patterns.push_back("CACCAA"); //seg[0-1]
-    //patterns.push_back("CCCA");   //seg[0,2]
+    patterns.push_back("ACACA");    //seg[0], seg[0,2]
+    patterns.push_back("CACCAA");   //seg[0-1]
+    patterns.push_back("CCCA");     //seg[0,2]
     patterns.push_back("CACCACCA"); //seg[0-2]
+    patterns.push_back("CCAACATT"); //seg[0-1-2-3]
+    patterns.push_back("CCAACATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"); //seg[0-1-2-3]
     MultiEDSM multiedsm("ACGT", patterns);
 
     vector<string> segment;
@@ -46,6 +48,10 @@ int main(int argc, char * argv[])
     multiedsm.searchNextSegment(segment);
     segment.clear();
     segment.push_back("CAT");
+    multiedsm.searchNextSegment(segment);
+    segment.clear();
+    segment.push_back("T");
+    segment.push_back("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
     multiedsm.searchNextSegment(segment);
     return 0;
 }
