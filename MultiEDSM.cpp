@@ -24,7 +24,8 @@
 #include <divsufsort64.h>
 #include <sdsl/bit_vectors.hpp>
 #include <sdsl/suffix_trees.hpp>
-#include "UnrestrictedMultiShiftAnd.hpp"
+//#include "UnrestrictedMultiShiftAnd.hpp"
+#include "MyUMSA.hpp"
 #include "MultiEDSM.hpp"
 
 using namespace sdsl;
@@ -78,7 +79,8 @@ void MultiEDSM::preprocessPatterns()
     clock_t start = clock();
 
     //initialize Shift-And searching tool
-    this->umsa = new UnrestrictedMultiShiftAnd(this->alphabet);
+    // this->umsa = new UnrestrictedMultiShiftAnd(this->alphabet);
+    this->umsa = new MyUMSA(this->alphabet);
     this->umsa->reportPatternIds(this->reportPatterns);
 
     //add patterns to bitvector and build suffix tree string
@@ -488,7 +490,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                     this->Np++;
                     this->Nm += m;
                     B2 = WordVectorAND(this->B, this->occVector(*stringI));
-                    B2 = WordVectorSPECIALSHIFT(B2, m);
+                    B2 = WordVectorLeftShift(B2, m);
                     B1 = this->WordVectorOR(B1, B2);
                 }
             }
@@ -561,9 +563,9 @@ WordVector MultiEDSM::WordVectorAND(const WordVector & a, const WordVector & b)
 /**
  * A special left shifting algorithm for use with OccVector result. It ensures a
  * shift operation is not performed if it overlaps into the next pattern in the
- * bitvector. Time taken realistically: O([M/w])... or really
+ * bitvector. Time taken on average I predict: O(bits(x) + [M/w])... or really
  * worst-Worst-WORST case, where there is a match at every single position, then
- * O(M).
+ * O(M + [M/w])!
  *
  * @param x
  * @param m The length of the string being checked
@@ -598,6 +600,79 @@ WordVector MultiEDSM::WordVectorSPECIALSHIFT(const WordVector & x, unsigned int 
     }
 
     return c;
+}
+
+/**
+ * A simple left shifting algorithm for use with OccVector result. It shifts all
+ * the words in a WordVector m times, making sure the moving 1's don't overspill
+ * past the end position of a pattern into the next pattern. Time taken O(m[M/w]).
+ *
+ * @param x
+ * @param m The length of the string being checked
+ * @return A WordVector containing only the states of valid infixes
+ */
+WordVector MultiEDSM::WordVectorSIMPLESHIFT(const WordVector & x, unsigned int m)
+{
+    unsigned int s = x.size();
+    if (s == 0) {
+        return x;
+    }
+    WordVector c = x;
+    WordVector ends = this->umsa->getEndingStates();
+
+    WORD carryMask = 1ul << (BITSINWORD - 1);
+    WORD temp, carry;
+    unsigned int h, i;
+    for (h = 0; h < m; h++)
+    {
+        carry = 0;
+        for (i = 0; i < s; i++)
+        {
+            temp = c[i];
+            c[i] = (c[i] << 1) | carry; //left shift and apply the carried 1
+            c[i] = c[i] ^ (ends[i] & c[i]); //if 1 passes pattern boundard (end), then remove it because it is an illegal shift
+            carry = (WORD)((carryMask & temp) != 0); //work out if we need to carry a 1 to the next word
+            if (carry && (i == (s - 1))) { //identify if we need to expand c
+                c.push_back(0ul);
+                s++;
+            }
+        }
+    }
+
+    return c;
+}
+
+/**
+ * Performs the left-shift operation for the WordVector returned from running the
+ * OccVector tool. This operation is potentially expensive so there are two
+ * different ways to do it:
+ *  - MultiEDSM::WordVectorSPECIALSHIFT() has a worst case time of O(bits(x) + [M/w])
+ *    or O(M + [M/w]) if there is a huge number of set bits in x.
+ *  - MultiEDSM::WordVectorSIMPLESHIFT() has a worst case time of O(m[M/w])
+ *    because it does m shift operations over [M/w] words.
+ * So, to get the best performance, we do a triage and identify which of the
+ * methods does it in the least time. The triage check itself takes O([M/w]) time.
+ *
+ * @param x
+ * @param m The length of the string being checked
+ * @return A WordVector containing only the states of valid infixes
+ */
+WordVector MultiEDSM::WordVectorLeftShift(const WordVector & x, unsigned int m)
+{
+    unsigned int i = 0, p = 0, s = x.size();
+    unsigned int specialShiftTime = 0, simpleShiftTime = m * s;
+
+    while (i < s && specialShiftTime <= simpleShiftTime)
+    {
+        p += popcount(x[i]);
+        specialShiftTime = p + s;
+        i++;
+    }
+
+    if (simpleShiftTime <= specialShiftTime) {
+        return this->WordVectorSIMPLESHIFT(x, m);
+    }
+    return this->WordVectorSPECIALSHIFT(x, m);
 }
 
 /**

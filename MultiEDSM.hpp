@@ -25,7 +25,8 @@
 #include <memory>
 #include <sdsl/util.hpp>
 #include <sdsl/suffix_trees.hpp>
-#include "UnrestrictedMultiShiftAnd.hpp"
+//#include "UnrestrictedMultiShiftAnd.hpp"
+#include "MyUMSA.hpp"
 
 #define EPSILON "E"
 #define BUFFERSIZE 1000000
@@ -46,12 +47,18 @@
     #ifndef ffs
         #define ffs(x) __builtin_ffs((x))
     #endif
+    #ifndef popcount
+        #define popcount(x) __builtin_popcount((x))
+    #endif
 #elif INTPTR_MAX == INT64_MAX
     #ifndef clz
         #define clz(x) __builtin_clzl((x))
     #endif
     #ifndef ffs
         #define ffs(x) __builtin_ffsl((x))
+    #endif
+    #ifndef popcount
+        #define popcount(x) __builtin_popcountl((x))
     #endif
 #else
     #error "Unsupported architecture - neither 64 nor 32 bit!"
@@ -79,6 +86,8 @@ private:
     WordVector WordVectorAND(const WordVector & a, const WordVector & b);
 
     WordVector WordVectorSPECIALSHIFT(const WordVector & x, unsigned int m);
+
+    WordVector WordVectorSIMPLESHIFT(const WordVector & x, unsigned int m);
 
 protected:
     /**
@@ -169,9 +178,10 @@ protected:
     WordVector B;
 
     /**
-     * @var umsa UnrestrictedMultiShiftAnd object used for searching - stores the bitvector of the patterns
+     * @var umsa MyUMSA object used for searching - stores the bitvector of the patterns
      */
-    UnrestrictedMultiShiftAnd * umsa;
+    MyUMSA * umsa;
+    //UnrestrictedMultiShiftAnd * umsa;
 
     /**
      * @var f The total length of determinate segments searched
@@ -210,6 +220,8 @@ protected:
     void constructOV();
 
     WordVector occVector(const std::string & a);
+
+    WordVector WordVectorLeftShift(const WordVector & x, unsigned int m);
 
 public:
 
