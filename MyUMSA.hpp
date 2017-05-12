@@ -32,8 +32,9 @@ public:
     /**
      * @constructor Calls superclass -- see UnrestrictedMultiShiftAnd doc for more info
      * @param alphabet
+     * @param reportPatternPositions
      */
-    MyUMSA(const std::string & alphabet) : UnrestrictedMultiShiftAnd(alphabet) {};
+    MyUMSA(const std::string & alphabet, bool reportPatternPositions = true) : UnrestrictedMultiShiftAnd(alphabet, reportPatternPositions) {};
 
     /**
      * This function simply returns a WordVector containing the ending states of

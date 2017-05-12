@@ -25,7 +25,6 @@
 #include <memory>
 #include <sdsl/util.hpp>
 #include <sdsl/suffix_trees.hpp>
-//#include "UnrestrictedMultiShiftAnd.hpp"
 #include "MyUMSA.hpp"
 
 #define EPSILON "E"
@@ -39,6 +38,8 @@
 //      e.g. 10010000 --> 5.
 // CLZ: Count Leading Zeros - Counts the number of preceding zero bits in a
 //      computer word. e.g. 00010000 --> 3.
+// POPCOUNT: Count set bits - Counts the number of set bits in a computer word.
+//      e.g. 01101000 --> 3.
 //
 #if INTPTR_MAX == INT32_MAX
     #ifndef clz
@@ -69,17 +70,19 @@ typedef cst_t::node_type cst_node_t;
 typedef cst_t::size_type cst_size_t;
 typedef cst_t::char_type cst_char_t;
 typedef std::vector<std::tuple<unsigned int, unsigned int>> ResultSet;
-typedef std::vector<std::string> Segment;
 typedef std::vector<WORD> WordVector;
-typedef std::vector<Segment> GenIndSeq;
+typedef std::vector<std::string> Segment;
+typedef std::vector<Segment> ElasticDegenerateSequence;
 
 class MultiEDSM
 {
 private:
 
-    WordVector recAssignOVMem(const cst_node_t & u);
-
     void preprocessPatterns();
+
+    void constructOV();
+
+    WordVector recAssignOVMem(const cst_node_t & u);
 
     WordVector WordVectorOR(const WordVector & a, const WordVector & b);
 
@@ -213,11 +216,9 @@ protected:
      */
     unsigned int Nm;
 
-    void report(const unsigned int matchIdx, const unsigned int posIdx, const unsigned int pattId);
+    void report(const unsigned int matchIdx, const unsigned int posIdx, const int pattId);
 
     WordVector buildBorderPrefixWordVector(const Segment & S);
-
-    void constructOV();
 
     WordVector occVector(const std::string & a);
 

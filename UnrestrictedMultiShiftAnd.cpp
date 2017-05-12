@@ -14,11 +14,12 @@ using namespace std;
  * @constructor An alphabet must be supplied of the letters that will be used in the patterns
  *
  * @param alphabet A list of characters used in the text/patterns e.g. ACGT
+ * @param reportPatternPositions Report positions when matches found?
  */
-UnrestrictedMultiShiftAnd::UnrestrictedMultiShiftAnd(const string & alphabet)
+UnrestrictedMultiShiftAnd::UnrestrictedMultiShiftAnd(const string & alphabet, bool reportPatternPositions)
 {
     this->alphabet = alphabet;
-    this->reportPatterns = true;
+    this->reportPatterns = reportPatternPositions;
     this->N = 0;
     this->M = 0;
     this->L = 1;
@@ -33,16 +34,6 @@ UnrestrictedMultiShiftAnd::UnrestrictedMultiShiftAnd(const string & alphabet)
         v.push_back(0ul);
     }
     this->Bv.push_back(v);
-}
-
-/**
- * Turn pattern id discovered reporting on or off. By default it is on.
- *
- * @param report Report positions or not
- */
-void UnrestrictedMultiShiftAnd::reportPatternIds(bool report)
-{
-    this->reportPatterns = report;
 }
 
 /**
@@ -124,14 +115,27 @@ bool UnrestrictedMultiShiftAnd::search(const string & text)
  * Search a text starting at position i
  *
  * @param text
- * @param i position i in text
+ * @param pos position in text to start searching from
  * @return True if one or more matches found, otherwise False
  */
-bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int i)
+bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int pos)
+{
+    return this->search(text, pos, text.length());
+}
+
+/**
+ * Search a text starting at position i
+ *
+ * @param text
+ * @param pos position in text to start searching from
+ * @param len The number of characters to search from position pos
+ * @return True if one or more matches found, otherwise False
+ */
+bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int pos, unsigned int len)
 {
     //initialize vector D to have a fresh state for the new search
     this->D.assign(this->L, 0ul);
-    return this->search(text, this->D, i);
+    return this->search(text, this->D, pos, len);
 }
 
 /**
@@ -144,7 +148,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int i)
  */
 bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState)
 {
-    return this->search(text, startingSearchState, 0);
+    return this->search(text, startingSearchState, 0, text.length());
 }
 
 /**
@@ -154,12 +158,28 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
  *
  * @param text
  * @param startingSearchState A vector<WORD> with L elements
+ * @param pos position in text to start searching from
  * @return True if one or matches found, otherwise False
  */
-bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState, unsigned int i)
+bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState, unsigned int pos)
 {
-    unsigned int j, k, n = text.length();
-    bool matchFound = false;
+    return this->search(text, startingSearchState, pos, text.length());
+}
+
+/**
+ * Search a text but supply an initial search state - this is useful for searching
+ * text provided intermittently (online algorithm). For simple searches just use
+ * UnrestrictedMultiShiftAnd::search()
+ *
+ * @param text
+ * @param startingSearchState A vector<WORD> with L elements
+ * @param pos position in text to start searching from
+ * @param len The number of characters to search from position pos
+ * @return True if one or matches found, otherwise False
+ */
+bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState, unsigned int pos, unsigned int len)
+{
+    unsigned int i, j, k, n;
 
     if (this->M == 0) {
         cerr << "No patterns added to search." << endl;
@@ -175,8 +195,13 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
         }
     }
 
+    //calculate starting and ending positions of search
+    i = min((int)pos, (int)text.length() - 1);
+    n = min(i + len, (unsigned int)text.length());
+
     //init tracking vars
     int charIdx;
+    bool matchFound = false;
     WORD temp, carry, checking;
     WORD carryMask = 1ul << (BITSINWORD - 1);
 
@@ -202,13 +227,15 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
                 //find out position(s) of the match
                 while (checking)
                 {
-                    k = ffs(checking);
+                    k = ffs(checking) - 1;
                     if (this->reportPatterns) {
-                        this->matches.insert(pair<int,int>((int)i, this->positions.find(j * BITSINWORD + k - 1)->second));
+                        // this->matches.insert(pair<int,int>((int)i, this->positions.find(j * BITSINWORD + k)->second));
+                        this->matches.push_back(pair<int,int>((int)i, this->positions.find(j * BITSINWORD + k)->second));
                     } else {
-                        this->matches.insert(pair<int,int>((int)i, -1));
+                        // this->matches.insert(pair<int,int>((int)i, -1));
+                        this->matches.push_back(pair<int,int>((int)i, -1));
                     }
-                    checking = checking ^ (1ul << (k - 1));
+                    checking = checking ^ (1ul << k);
                 }
             }
 
@@ -254,7 +281,8 @@ unsigned int UnrestrictedMultiShiftAnd::getTotalPatternLength() const
 /**
  * Get a multimap of all the matches found - <index_in_t, pattern_id>
  */
-multimap<int,int> UnrestrictedMultiShiftAnd::getMatches() const
+// multimap<int,int> UnrestrictedMultiShiftAnd::getMatches() const
+vector<pair<int,int>> UnrestrictedMultiShiftAnd::getMatches() const
 {
     return this->matches;
 }

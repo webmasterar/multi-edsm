@@ -24,7 +24,6 @@
 #include <divsufsort64.h>
 #include <sdsl/bit_vectors.hpp>
 #include <sdsl/suffix_trees.hpp>
-//#include "UnrestrictedMultiShiftAnd.hpp"
 #include "MyUMSA.hpp"
 #include "MultiEDSM.hpp"
 
@@ -79,25 +78,20 @@ void MultiEDSM::preprocessPatterns()
     clock_t start = clock();
 
     //initialize Shift-And searching tool
-    // this->umsa = new UnrestrictedMultiShiftAnd(this->alphabet);
-    this->umsa = new MyUMSA(this->alphabet);
-    this->umsa->reportPatternIds(this->reportPatterns);
+    this->umsa = new MyUMSA(this->alphabet, this->reportPatterns);
 
     //add patterns to bitvector and build suffix tree string
     string p = "";
-    char sep = 1;
+    char sep = '$';
     unsigned int h, i, j;
     for (i = 0; i < this->patterns.size(); i++)
     {
         //create bitvector of pattern - for Shift-And
         this->umsa->addPattern(this->patterns[i]);
 
-        //add pattern to p and append with unique seperator - for suffix tree
-        p += this->patterns[i] + sep;
-        do {
-            sep = (sep + 1) % (CHAR_MAX + 1);
-        }
-        while ((this->alphabet.find(sep) != string::npos) || (sep == '\0'));
+        //add pattern to p and append with seperator for building suffix tree of patterns
+        p += this->patterns[i];
+        p += sep;
 
         //update STpIdx2BVIdx and Pos2PatId datastructures with correct index of
         //STp match for bitvector and pattern id based on bit position in bitvector
@@ -214,10 +208,10 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
         if (*stringI != EPSILON)
         {
             m = (*stringI).length();
-            if (m >= this->maxP) {
-                this->umsa->search(*stringI, m - this->maxP + 1);
-            } else {
+            if (m < this->maxP) {
                 this->umsa->search(*stringI);
+            } else {
+                this->umsa->search(*stringI, m - this->maxP + 1);
             }
             if (i == 0) {
                 c = this->umsa->getLastSearchState();
@@ -227,6 +221,8 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
             i++;
         }
     }
+
+    this->umsa->clearMatches();
 
     return c;
 }
@@ -271,7 +267,7 @@ WordVector MultiEDSM::occVector(const string & a)
  * @param posIdx The position inside a segment where the match was found
  * @param pattId The pattern id
  */
-void MultiEDSM::report(const unsigned int matchIdx, const unsigned int posIdx, const unsigned int pattId)
+void MultiEDSM::report(const unsigned int matchIdx, const unsigned int posIdx, const int pattId)
 {
     cout << "Match found. matchIdx " << matchIdx << ", posIdx " << posIdx << ", pattId " << pattId << endl;
 }
@@ -283,7 +279,7 @@ void MultiEDSM::report(const unsigned int matchIdx, const unsigned int posIdx, c
  *  - O(N*[M/w]) time for BorderPrefixTable construction
  *  - O([M/w]) time for epsilon
  *  - O(max(m)*[M/w]) time for suffix matching in step 2
- *  - O([max_bits(a,b)/w]) time for step 3 bitwise-OR operation and O(M) for specialShift
+ *  - O([max_bits(a,b)/w]) time for step 3 bitwise-OR operation and O(min((M + [M/w]), (M([M/w]))) for LeftShift
  *  - O([M/w]) extra space
  */
 bool MultiEDSM::searchNextSegment(const Segment & S)
@@ -293,9 +289,9 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 
     //match variables
     bool matchFound = false;
-    bool suffixMatchFound = false;
     bool isDeterminateSegment = false;
-    unsigned int matchIdx, posIdx, pattId;
+    unsigned int matchIdx, posIdx;
+    int pattId;
 
     //temp state variables, segment string iterator
     unsigned int m;
@@ -351,6 +347,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                 matchIdx = this->pos;
                                 pattId = match.second;
                                 this->report(matchIdx, posIdx, pattId);
+                                this->umsa->clearMatches();
                                 break;
                             }
                             else if (!this->reportOnce)
@@ -375,8 +372,10 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 
         //update position
         if (isDeterminateSegment) {
+            this->d++;
             this->pos = this->f;
         } else {
+            this->D++;
             this->pos++;
         }
 
@@ -456,17 +455,17 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 
                 //step 2 - if string is a suffix of a previously determined prefix or infix, then report a match
                 B2 = this->B;
-                if (m < this->maxP) {
-                    suffixMatchFound = this->umsa->search(*stringI, B2);
-                } else {
-                    suffixMatchFound = this->umsa->search(*stringI, B2, m - this->maxP);
-                }
-                if (suffixMatchFound) {
+                if (this->umsa->search(*stringI, B2, 0, this->maxP - 1))
+                {
                     if (this->reportOnce && !matchFound)
                     {
                         const pair<int,int> match = *this->umsa->getMatches().begin();
                         posIdx = match.first;
-                        matchIdx = this->pos;
+                        if (isDeterminateSegment) {
+                            matchIdx = this->pos + posIdx;
+                        } else {
+                            matchIdx = this->pos;
+                        }
                         pattId = match.second;
                         this->report(matchIdx, posIdx, pattId);
                         this->umsa->clearMatches();
@@ -475,7 +474,11 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                     {
                         for (const pair<int,int> & match : this->umsa->getMatches()) {
                             posIdx = match.first;
-                            matchIdx = this->pos;
+                            if (isDeterminateSegment) {
+                                matchIdx = this->pos + posIdx;
+                            } else {
+                                matchIdx = this->pos;
+                            }
                             pattId = match.second;
                             this->report(matchIdx, posIdx, pattId);
                         }
@@ -496,13 +499,15 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             }
         }
 
-        //update the search state for the next segment
+        //update the state for the next segment search
         this->B = B1;
 
         //update position
         if (isDeterminateSegment) {
+            this->d++;
             this->pos += S[0].length();
         } else {
+            this->D++;
             this->pos++;
         }
     }
@@ -563,7 +568,9 @@ WordVector MultiEDSM::WordVectorAND(const WordVector & a, const WordVector & b)
 /**
  * A special left shifting algorithm for use with OccVector result. It ensures a
  * shift operation is not performed if it overlaps into the next pattern in the
- * bitvector. Time taken on average I predict: O(bits(x) + [M/w])... or really
+ * bitvector. This method uses the Pos2PatId datastructure to identify if a shift
+ * illegally crosses into the next pattern, so takes O(M) space.
+ * Time taken on average I predict: O(bits(x) + [M/w])... or really
  * worst-Worst-WORST case, where there is a match at every single position, then
  * O(M + [M/w])!
  *
@@ -605,7 +612,9 @@ WordVector MultiEDSM::WordVectorSPECIALSHIFT(const WordVector & x, unsigned int 
 /**
  * A simple left shifting algorithm for use with OccVector result. It shifts all
  * the words in a WordVector m times, making sure the moving 1's don't overspill
- * past the end position of a pattern into the next pattern. Time taken O(m[M/w]).
+ * past the end position of a pattern into the next pattern. Time taken is
+ * O(m[M/w]), and does not use up any extra space because the ending positions
+ * are obtained from UMSA's Shift-And algorithm, occupying O([M/w]) space.
  *
  * @param x
  * @param m The length of the string being checked
