@@ -39,6 +39,10 @@ MultiEDSM::MultiEDSM(const string & alphabet, const vector<string> & patterns)
 {
     this->alphabet = alphabet;
     this->patterns = patterns;
+    if (patterns.size() == 0) {
+        cerr << "Error: Empty pattern set!" << endl;
+        throw 1;
+    }
     this->minP = UINT_MAX;
     this->maxP = 0;
     this->f = 0;
@@ -52,7 +56,7 @@ MultiEDSM::MultiEDSM(const string & alphabet, const vector<string> & patterns)
     this->pos = 0;
     this->primed = false;
     this->duration = 0;
-    this->reportOnce = true;
+    this->reportOnce = false;
     this->reportPatterns = true;
     this->preprocessPatterns();
 }
@@ -82,10 +86,16 @@ void MultiEDSM::preprocessPatterns()
 
     //add patterns to bitvector and build suffix tree string
     string p = "";
-    char sep = '$';
+    char sep = '#';
     unsigned int h, i, j;
     for (i = 0; i < this->patterns.size(); i++)
     {
+        h = this->patterns[i].length();
+        if (h == 0) {
+            cerr << "Error: zero-length pattern given!" << endl;
+            throw 1;
+        }
+
         //create bitvector of pattern - for Shift-And
         this->umsa->addPattern(this->patterns[i]);
 
@@ -95,9 +105,14 @@ void MultiEDSM::preprocessPatterns()
 
         //update STpIdx2BVIdx and Pos2PatId datastructures with correct index of
         //STp match for bitvector and pattern id based on bit position in bitvector
-        h = this->patterns[i].length();
         this->M += h;
-        for (j = 0; j < h; j++) {
+        for (j = 0; j < h; j++)
+        {
+            if (this->alphabet.find(patterns[i][j]) == string::npos)
+            {
+                cerr << "Error: Invalid character found in pattern: " << (int) patterns[i][j] << endl;
+                throw 1;
+            }
             this->STpIdx2BVIdx.push_back(this->R + j - i);
             this->Pos2PatId.push_back(i);
         }
@@ -161,7 +176,7 @@ WordVector MultiEDSM::recAssignOVMem(const cst_node_t & u)
         if (h > 0 && this->STpIdx2BVIdx[h - 1] != SEPARATOR_DIGIT && \
            (h + 1) < ((int)this->R - 1) && this->STpIdx2BVIdx[h + 1] != SEPARATOR_DIGIT)
         {
-            int wordIdx = (int) ((float)i / (float)BITSINWORD);
+            int wordIdx = (int) ((float)(i - 1) / (float)BITSINWORD);
             int bitShifts = (i % BITSINWORD) - 1;
 
             //ensure word vector has enough words in it

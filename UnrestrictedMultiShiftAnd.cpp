@@ -69,7 +69,7 @@ void UnrestrictedMultiShiftAnd::addPattern(const string & pattern)
 
     //process the pattern for Bitvector Bv
     int charIdx;
-    unsigned int currWordIdx = this->L - 1;
+    unsigned int currWordIdx = (int) ((float)this->M / (float)BITSINWORD);
     unsigned int currBitIdx = this->M % BITSINWORD;
     for (i = 0; i < m; i++)
     {
@@ -84,7 +84,7 @@ void UnrestrictedMultiShiftAnd::addPattern(const string & pattern)
     }
 
     //process the pattern to set Start bit in Sv
-    currWordIdx = this->L - 1;
+    currWordIdx = (int) ((float)this->M / (float)BITSINWORD);
     currBitIdx = this->M % BITSINWORD;
     this->Sv[currWordIdx] = this->Sv[currWordIdx] | (1ul << currBitIdx);
 
