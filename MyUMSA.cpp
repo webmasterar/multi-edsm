@@ -1,4 +1,19 @@
-//License MIT 2017 Ahmad Retha
+/*
+    MultiEDSM: Multiple Elastic Degenerate String Matching
+
+    Copyright (C) 2017 Ahmad Retha and Solon P. Pissis.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <iostream>
 #include <cstdlib>
@@ -6,7 +21,7 @@
 #include <vector>
 #include <cmath>
 #include <map>
-#include "UnrestrictedMultiShiftAnd.hpp"
+#include "MyUMSA.hpp"
 
 using namespace std;
 
@@ -14,12 +29,12 @@ using namespace std;
  * @constructor An alphabet must be supplied of the letters that will be used in the patterns
  *
  * @param alphabet A list of characters used in the text/patterns e.g. ACGT
- * @param reportPatternPositions Report positions when matches found?
+ * @param reportPatterns Report positions when matches found?
  */
-UnrestrictedMultiShiftAnd::UnrestrictedMultiShiftAnd(const string & alphabet, bool reportPatternPositions)
+MyUMSA::MyUMSA(const string & alphabet, bool reportPatterns)
 {
     this->alphabet = alphabet;
-    this->reportPatterns = reportPatternPositions;
+    this->reportPatterns = reportPatterns;
     this->N = 0;
     this->M = 0;
     this->L = 1;
@@ -41,7 +56,7 @@ UnrestrictedMultiShiftAnd::UnrestrictedMultiShiftAnd(const string & alphabet, bo
  *
  * @param pattern
  */
-void UnrestrictedMultiShiftAnd::addPattern(const string & pattern)
+void MyUMSA::addPattern(const string & pattern)
 {
     unsigned int i, j, m = pattern.length();
 
@@ -69,10 +84,14 @@ void UnrestrictedMultiShiftAnd::addPattern(const string & pattern)
 
     //process the pattern for Bitvector Bv
     int charIdx;
-    unsigned int currWordIdx = (int) ((float)this->M / (float)BITSINWORD);
+    unsigned int currWordIdx = (unsigned int) ((float)this->M / (float)BITSINWORD);
     unsigned int currBitIdx = this->M % BITSINWORD;
     for (i = 0; i < m; i++)
     {
+        //keep a record of pattern id at this position - for search results
+        this->positions.push_back(this->N);
+
+        //mark the position of characters in the Bv bitvector
         charIdx = (int) this->Sigma[(int)pattern[i]];
         if (charIdx > 0) {
             this->Bv[currWordIdx][charIdx - 1] = this->Bv[currWordIdx][charIdx - 1] | (1ul << currBitIdx);
@@ -84,7 +103,7 @@ void UnrestrictedMultiShiftAnd::addPattern(const string & pattern)
     }
 
     //process the pattern to set Start bit in Sv
-    currWordIdx = (int) ((float)this->M / (float)BITSINWORD);
+    currWordIdx = (unsigned int) ((float)this->M / (float)BITSINWORD);
     currBitIdx = this->M % BITSINWORD;
     this->Sv[currWordIdx] = this->Sv[currWordIdx] | (1ul << currBitIdx);
 
@@ -93,11 +112,6 @@ void UnrestrictedMultiShiftAnd::addPattern(const string & pattern)
     this->M = this->M + m;
     this->N = this->N + 1;
     this->Ev[this->L - 1] = this->Ev[this->L - 1] | (1ul << ((this->M % BITSINWORD) - 1));
-
-    //keep a record of position the pattern is stored and pattern id - for search results
-    if (this->reportPatterns) {
-        this->positions.insert(pair<int,int>(this->M - 1, this->N - 1));
-    }
 }
 
 /**
@@ -106,7 +120,7 @@ void UnrestrictedMultiShiftAnd::addPattern(const string & pattern)
  * @param text
  * @return True if one or matches found, otherwise False
  */
-bool UnrestrictedMultiShiftAnd::search(const string & text)
+bool MyUMSA::search(const string & text)
 {
     return this->search(text, 0);
 }
@@ -118,7 +132,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text)
  * @param pos position in text to start searching from
  * @return True if one or more matches found, otherwise False
  */
-bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int pos)
+bool MyUMSA::search(const string & text, unsigned int pos)
 {
     return this->search(text, pos, text.length());
 }
@@ -131,7 +145,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int pos)
  * @param len The number of characters to search from position pos
  * @return True if one or more matches found, otherwise False
  */
-bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int pos, unsigned int len)
+bool MyUMSA::search(const string & text, unsigned int pos, unsigned int len)
 {
     //initialize vector D to have a fresh state for the new search
     this->D.assign(this->L, 0ul);
@@ -146,7 +160,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, unsigned int pos, un
  * @param startingSearchState A vector<WORD> with L elements
  * @return True if one or more matches found, otherwise False
  */
-bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState)
+bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState)
 {
     return this->search(text, startingSearchState, 0, text.length());
 }
@@ -154,14 +168,14 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
 /**
  * Search a text but supply an initial search state - this is useful for searching
  * text provided intermittently (online algorithm). For simple searches just use
- * UnrestrictedMultiShiftAnd::search()
+ * MyUMSA::search()
  *
  * @param text
  * @param startingSearchState A vector<WORD> with L elements
  * @param pos position in text to start searching from
  * @return True if one or matches found, otherwise False
  */
-bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState, unsigned int pos)
+bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, unsigned int pos)
 {
     return this->search(text, startingSearchState, pos, text.length());
 }
@@ -169,7 +183,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
 /**
  * Search a text but supply an initial search state - this is useful for searching
  * text provided intermittently (online algorithm). For simple searches just use
- * UnrestrictedMultiShiftAnd::search()
+ * MyUMSA::search()
  *
  * @param text
  * @param startingSearchState A vector<WORD> with L elements
@@ -177,7 +191,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
  * @param len The number of characters to search from position pos
  * @return True if one or matches found, otherwise False
  */
-bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & startingSearchState, unsigned int pos, unsigned int len)
+bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, unsigned int pos, unsigned int len)
 {
     unsigned int i, j, k, n;
 
@@ -188,7 +202,8 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
 
     //Make sure vector D has sufficient memory for the search
     this->D = startingSearchState;
-    if (this->D.size() < this->L) {
+    if (this->D.size() < this->L)
+    {
         j = this->L - this->D.size();
         for (i = 0; i < j; i++) {
             this->D.push_back(0ul);
@@ -202,7 +217,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
     //init tracking vars
     int charIdx;
     bool matchFound = false;
-    WORD temp, carry, checking;
+    WORD temp, carry, check;
     WORD carryMask = 1ul << (BITSINWORD - 1);
 
     //loop through the text
@@ -219,24 +234,15 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
             this->D[j] = (((this->D[j] << 1) | carry) | this->Sv[j]) & this->Bv[j][charIdx];
 
             //check if any matches found
-            checking = this->D[j] & this->Ev[j];
-            if (checking)
+            check = this->D[j] & this->Ev[j];
+            while (check)
             {
                 matchFound = true;
-
-                //find out position(s) of the match
-                while (checking)
-                {
-                    k = ffs(checking) - 1;
-                    if (this->reportPatterns) {
-                        // this->matches.insert(pair<int,int>((int)i, this->positions.find(j * BITSINWORD + k)->second));
-                        this->matches.push_back(pair<int,int>((int)i, this->positions.find(j * BITSINWORD + k)->second));
-                    } else {
-                        // this->matches.insert(pair<int,int>((int)i, -1));
-                        this->matches.push_back(pair<int,int>((int)i, -1));
-                    }
-                    checking = checking ^ (1ul << k);
+                k = ffs(check) - 1;
+                if (this->reportPatterns) {
+                    this->matches.push_back(pair<int,int>((int)i, this->positions[j * BITSINWORD + k]));
                 }
+                check = check ^ (1ul << k);
             }
 
             carry = (WORD) ((carryMask & temp) != 0);
@@ -249,7 +255,7 @@ bool UnrestrictedMultiShiftAnd::search(const string & text, vector<WORD> & start
 /**
  * After doing a search, get the last state of the search
  */
-vector<WORD> UnrestrictedMultiShiftAnd::getLastSearchState() const
+vector<WORD> MyUMSA::getLastSearchState() const
 {
     return this->D;
 }
@@ -257,7 +263,7 @@ vector<WORD> UnrestrictedMultiShiftAnd::getLastSearchState() const
 /**
  * Clear matches
  */
-void UnrestrictedMultiShiftAnd::clearMatches()
+void MyUMSA::clearMatches()
 {
     this->matches.clear();
 }
@@ -265,7 +271,7 @@ void UnrestrictedMultiShiftAnd::clearMatches()
 /**
  * Get the number of patterns already added
  */
-unsigned int UnrestrictedMultiShiftAnd::getNumberOfPatterns() const
+unsigned int MyUMSA::getNumberOfPatterns() const
 {
     return this->N;
 }
@@ -273,7 +279,7 @@ unsigned int UnrestrictedMultiShiftAnd::getNumberOfPatterns() const
 /**
  * Get the total length of the patterns added
  */
-unsigned int UnrestrictedMultiShiftAnd::getTotalPatternLength() const
+unsigned int MyUMSA::getTotalPatternLength() const
 {
     return this->M;
 }
@@ -281,8 +287,35 @@ unsigned int UnrestrictedMultiShiftAnd::getTotalPatternLength() const
 /**
  * Get a multimap of all the matches found - <index_in_t, pattern_id>
  */
-// multimap<int,int> UnrestrictedMultiShiftAnd::getMatches() const
-vector<pair<int,int>> UnrestrictedMultiShiftAnd::getMatches() const
+vector<pair<int,int>> MyUMSA::getMatches() const
 {
     return this->matches;
+}
+
+/**
+ * This function simply returns a WordVector containing the ending states of
+ * the Shift-And patterns, where the 1s are indicators of matching positions
+ * for when a pattern successfully matches in a searched text
+ *
+ * @return A WordVector marking the ending positions/states of the pattern set
+ */
+vector<WORD> MyUMSA::getEndingStates() const
+{
+    return this->Ev;
+}
+
+/**
+ * Enable reporting of matches
+ */
+void MyUMSA::enableReporting()
+{
+    this->reportPatterns = true;
+}
+
+/**
+ * Disable reporting of matches
+ */
+void MyUMSA::disableReporting()
+{
+    this->reportPatterns = false;
 }

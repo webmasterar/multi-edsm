@@ -72,7 +72,7 @@ MultiEDSM::~MultiEDSM()
 /**
  * Proprocess the patterns - initialize the bitvector and OccVector tools.
  * Complexity:
- *  - Shift-And time O(M + sigma*[M/w]) and space O(sigma*[M/w]).
+ *  - Shift-And time and space O(M + sigma*[M/w]).
  *  - Suffix Tree time and space O(M + k), where k is number of patterns.
  *  - OccVector construction time O(M + k), space O((M + k) * [M/w])
  */
@@ -147,7 +147,6 @@ void MultiEDSM::preprocessPatterns()
  */
 void MultiEDSM::constructOV()
 {
-    this->OVMem.clear();
     unsigned int i, numNodes = this->STp.nodes();
     for (i = 0; i < numNodes; i++) {
         WordVector v(1, 0ul);
@@ -218,6 +217,8 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
     unsigned int m, i = 0;
     Segment::const_iterator stringI;
 
+    this->umsa->disableReporting();
+
     for (stringI = S.begin(); stringI != S.end(); ++stringI)
     {
         if (*stringI != EPSILON)
@@ -237,7 +238,7 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
         }
     }
 
-    this->umsa->clearMatches();
+    this->umsa->enableReporting();
 
     return c;
 }
@@ -278,9 +279,9 @@ WordVector MultiEDSM::occVector(const string & a)
 /**
  * Report match found. The results can be obtained by calling MultiEDSM::getMatches()
  *
- * @param matchIdx The index of the ending position where the match was found
+ * @param matchIdx The index of the ending position in the EDT where the match was found
  * @param posIdx The position inside a segment where the match was found
- * @param pattId The pattern id
+ * @param pattId The id of the pattern found
  */
 void MultiEDSM::report(const unsigned int matchIdx, const unsigned int posIdx, const int pattId)
 {
@@ -293,8 +294,8 @@ void MultiEDSM::report(const unsigned int matchIdx, const unsigned int posIdx, c
  *  - O(N*[M/w]) time for long Shift-And search
  *  - O(N*[M/w]) time for BorderPrefixTable construction
  *  - O([M/w]) time for epsilon
- *  - O(max(m)*[M/w]) time for suffix matching in step 2
- *  - O([max_bits(a,b)/w]) time for step 3 bitwise-OR operation and O(min((M + [M/w]), (M([M/w]))) for LeftShift
+ *  - O(N*[M/w]) worst-case time for suffix matching in step 2
+ *  - O([M/w]) worst-case time for step 3 bitwise-OR operation and O(min((M + [M/w]), (M([M/w]))) for LeftShift
  *  - O([M/w]) extra space
  */
 bool MultiEDSM::searchNextSegment(const Segment & S)
@@ -349,7 +350,6 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                 matchIdx = this->pos + posIdx;
                                 pattId = match.second;
                                 this->report(matchIdx, posIdx, pattId);
-                                //@TODO it might be that the same posIdx matches multiple patterns so just report the first one?
                             }
                             this->umsa->clearMatches();
                         }
@@ -427,7 +427,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             {
                 m = (*stringI).length();
 
-                //step 1 - if string is longer than patten then do a full search on it
+                //step 1 - if string is longer than pattern then do a full search on it
                 if (m >= this->minP)
                 {
                     if (this->umsa->search(*stringI))
@@ -534,7 +534,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 }
 
 /**
- * The bitwise OR operation performed on WordVectors. Time taken: O([max_bits(a,b)/w])
+ * The bitwise OR operation performed on WordVectors. Time taken: O([max_words_used(a,b)/w])
  *
  * @param a
  * @param b
@@ -563,7 +563,7 @@ WordVector MultiEDSM::WordVectorOR(const WordVector & a, const WordVector & b)
 }
 
 /**
- * The bitwise AND operation performed on WordVectors. Time taken: O([min_bits(a,b)/w])
+ * The bitwise AND operation performed on WordVectors. Time taken: O([min_words_used(a,b)/w])
  *
  * @param a
  * @param b
@@ -585,9 +585,9 @@ WordVector MultiEDSM::WordVectorAND(const WordVector & a, const WordVector & b)
  * shift operation is not performed if it overlaps into the next pattern in the
  * bitvector. This method uses the Pos2PatId datastructure to identify if a shift
  * illegally crosses into the next pattern, so takes O(M) space.
- * Time taken on average I predict: O(bits(x) + [M/w])... or really
- * worst-Worst-WORST case, where there is a match at every single position, then
- * O(M + [M/w])!
+ * Time taken on average I predict: O(num_set_bits(x) + [M/w])... or really
+ * worst-Worst-WORST case, where there is a match at every single position, which
+ * is very-Very-VERY unlikely then O(M + [M/w])!
  *
  * @param x
  * @param m The length of the string being checked
@@ -670,7 +670,7 @@ WordVector MultiEDSM::WordVectorSIMPLESHIFT(const WordVector & x, unsigned int m
  * Performs the left-shift operation for the WordVector returned from running the
  * OccVector tool. This operation is potentially expensive so there are two
  * different ways to do it:
- *  - MultiEDSM::WordVectorSPECIALSHIFT() has a worst case time of O(bits(x) + [M/w])
+ *  - MultiEDSM::WordVectorSPECIALSHIFT() has a worst case time of O(num_set_bits(x) + [M/w])
  *    or O(M + [M/w]) if there is a huge number of set bits in x.
  *  - MultiEDSM::WordVectorSIMPLESHIFT() has a worst case time of O(m[M/w])
  *    because it does m shift operations over [M/w] words.

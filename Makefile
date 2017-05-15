@@ -12,7 +12,7 @@ LFLAGS= -std=c++11 -DNDEBUG -lz -lm -lpthread -I . \
 
 EXE=    multiedsm
 
-SRC=    main.cpp MultiEDSM.cpp UnrestrictedMultiShiftAnd.cpp
+SRC=    main.cpp MultiEDSM.cpp MyUMSA.cpp
 
 #
 # No need to edit below this line
