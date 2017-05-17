@@ -104,6 +104,7 @@ public:
     std::vector<std::pair<int,int>> getMatches() const;
     std::vector<WORD> getLastSearchState() const;
     std::vector<WORD> getEndingStates() const;
+    std::vector<unsigned int> getPatternPositions() const;
     unsigned int getNumberOfPatterns() const;
     unsigned int getTotalPatternLength() const;
     void addPattern(const std::string & pattern);

@@ -69,7 +69,7 @@ typedef sdsl::cst_sct3<> cst_t;
 typedef cst_t::node_type cst_node_t;
 typedef cst_t::size_type cst_size_t;
 typedef cst_t::char_type cst_char_t;
-typedef std::vector<std::tuple<unsigned int, unsigned int>> ResultSet;
+typedef std::vector<std::pair<unsigned int, unsigned int>> ResultSet;
 typedef std::vector<WORD> WordVector;
 typedef std::vector<std::string> Segment;
 typedef std::vector<Segment> ElasticDegenerateSequence;
@@ -116,7 +116,7 @@ protected:
     /**
      * @var Pos2PatId A tool to return the correct pattern id from the index of a bit in the bitvector - uses O(M) space, O(1) time lookup
      */
-    std::vector<int> Pos2PatId;
+    std::vector<unsigned int> Pos2PatId;
 
     /**
      * @var OVMem Holds the computer words storing pattern positions for OccVector()

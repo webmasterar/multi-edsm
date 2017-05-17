@@ -319,3 +319,13 @@ void MyUMSA::disableReporting()
 {
     this->reportPatterns = false;
 }
+
+/**
+ * Returns a list where for any given position it contains the id of the pattern
+ *
+ * @return vector containing pattern id at every position in the bitvector
+ */
+vector<unsigned int> MyUMSA::getPatternPositions() const
+{
+    return this->positions;
+}

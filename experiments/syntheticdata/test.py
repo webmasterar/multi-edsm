@@ -30,9 +30,9 @@ patternsFile = './randomPatterns/' + str(args.pattern_size) + '_' + str(args.tot
 resultsFile = './results/' + str(args.pattern_size) + '_' + str(args.total_size) + '_' + sequenceFileName + '.txt'
 
 if args.recreate_files:
-	if os.path.is_file(patternsFile):
+	if os.path.isfile(patternsFile):
 		os.remove(patternsFile)
-	if os.path.is_file(resultsFile):
+	if os.path.isfile(resultsFile):
 		os.remove(resultsFile)
 
 #
@@ -59,4 +59,3 @@ with open(resultsFile, 'w') as f:
 	f.write(output)
 
 print output
-

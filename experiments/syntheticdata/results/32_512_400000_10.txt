@@ -6,7 +6,7 @@ No. degenerate bases (F): 1064155
 No. determinate segments (d): 34372
 No. degenerate segments (D): 38006
 No. strings processed shorter than pattern (N'): 243793
-EDSM-BV processing time: 1.48198s.
+EDSM-BV processing time: 0.918807s.
 
-1.52user 0.02system 0:01.54elapsed 99%CPU (0avgtext+0avgdata 12760maxresident)k
-0inputs+0outputs (0major+2421minor)pagefaults 0swaps
+0.94user 0.01system 0:00.95elapsed 99%CPU (0avgtext+0avgdata 12808maxresident)k
+0inputs+0outputs (0major+2420minor)pagefaults 0swaps

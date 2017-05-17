@@ -103,8 +103,8 @@ void MultiEDSM::preprocessPatterns()
         p += this->patterns[i];
         p += sep;
 
-        //update STpIdx2BVIdx and Pos2PatId datastructures with correct index of
-        //STp match for bitvector and pattern id based on bit position in bitvector
+        //update STpIdx2BVIdx datastructures with correct index of STp match for
+        //bitvector and pattern id based on bit position in bitvector
         this->M += h;
         for (j = 0; j < h; j++)
         {
@@ -114,7 +114,6 @@ void MultiEDSM::preprocessPatterns()
                 throw 1;
             }
             this->STpIdx2BVIdx.push_back(this->R + j - i);
-            this->Pos2PatId.push_back(i);
         }
         this->STpIdx2BVIdx.push_back(SEPARATOR_DIGIT);
         this->R += h + 1;
@@ -131,6 +130,9 @@ void MultiEDSM::preprocessPatterns()
 
     //construct the suffix tree of patterns with seperators
     construct_im(this->STp, p.c_str(), sizeof(char));
+
+    //tool to get pattern id from any given position in the bitvector/p
+    this->Pos2PatId = this->umsa->getPatternPositions();
 
     //construct occVector datastructure
     this->constructOV();
@@ -277,7 +279,11 @@ WordVector MultiEDSM::occVector(const string & a)
 }
 
 /**
- * Report match found. The results can be obtained by calling MultiEDSM::getMatches()
+ * Report match found. The results can be obtained by calling MultiEDSM::getMatches().
+ * Note: Although three arguments are taken by this method, we only report two
+ * of them: the Position and the PatternId. The posIdx parameter, the relative
+ * position inside a segment may be useful for some reasons but we do not
+ * currently report it.
  *
  * @param matchIdx The index of the ending position in the EDT where the match was found
  * @param posIdx The position inside a segment where the match was found
@@ -285,7 +291,7 @@ WordVector MultiEDSM::occVector(const string & a)
  */
 void MultiEDSM::report(const unsigned int matchIdx, const unsigned int posIdx, const int pattId)
 {
-    cout << "Match found. matchIdx " << matchIdx << ", posIdx " << posIdx << ", pattId " << pattId << endl;
+    this->matches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
 }
 
 /**

@@ -327,31 +327,18 @@ int main(int argc, char * argv[])
     cout << "No. strings processed shorter than pattern (N'): " << multiedsm.getNp() << endl;
     cout << "EDSM-BV processing time: " << multiedsm.getDuration() << "s." << endl << endl;
 
-    return 0;
+    if (multiedsm.getMatches().size() == 0)
+    {
+        cout << "No matches found." << endl;
+    }
+    else
+    {
+        cout << multiedsm.getMatches().size() << " matches found!" << endl << endl;
+        cout << "Position,PatternId" << endl << "------------------" << endl;
+        for (const pair<unsigned int, unsigned int> & match : multiedsm.getMatches()) {
+            cout << match.first << "," << match.second << endl;
+        }
+    }
 
-    // patterns.push_back("ACACA");    //seg[0], seg[0,2]
-    // patterns.push_back("CACCAA");   //seg[0-1]
-    // patterns.push_back("CCCA");     //seg[0,2]
-    // patterns.push_back("CACCACCA"); //seg[0-2]
-    // patterns.push_back("CCAACATT"); //seg[0-1-2-3]
-    // patterns.push_back("CCAACATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"); //seg[0-1-2-3]
-    // MultiEDSM multiedsm("ACGT", patterns);
-    // vector<string> segment;
-    // segment.push_back("CAACACA");
-    // segment.push_back(EPSILON);
-    // segment.push_back("CACC");
-    // multiedsm.searchNextSegment(segment);
-    // segment.clear();
-    // segment.push_back("AA");
-    // segment.push_back(EPSILON);
-    // segment.push_back("AC");
-    // multiedsm.searchNextSegment(segment);
-    // segment.clear();
-    // segment.push_back("CAT");
-    // multiedsm.searchNextSegment(segment);
-    // segment.clear();
-    // segment.push_back("T");
-    // segment.push_back("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
-    // multiedsm.searchNextSegment(segment);
-    // return 0;
+    return 0;
 }

@@ -1,0 +1,32 @@
+Multi-EDSM searching...
+
+Match found. matchIdx 4866, posIdx 0, pattId 8453
+Match found. matchIdx 12101, posIdx 6, pattId 1853
+Match found. matchIdx 24162, posIdx 4, pattId 5828
+Match found. matchIdx 27751, posIdx 5, pattId 9054
+Match found. matchIdx 32797, posIdx 0, pattId 1708
+Match found. matchIdx 35677, posIdx 3, pattId 4169
+Match found. matchIdx 35678, posIdx 0, pattId 1058
+Match found. matchIdx 58528, posIdx 1, pattId 717
+Match found. matchIdx 59146, posIdx 2, pattId 6442
+Match found. matchIdx 65912, posIdx 2, pattId 1745
+Match found. matchIdx 66323, posIdx 0, pattId 4365
+Match found. matchIdx 67639, posIdx 1, pattId 4369
+Match found. matchIdx 82773, posIdx 7, pattId 9093
+Match found. matchIdx 82918, posIdx 2, pattId 9029
+Match found. matchIdx 89642, posIdx 1, pattId 3537
+Match found. matchIdx 90018, posIdx 1, pattId 6149
+Match found. matchIdx 91908, posIdx 0, pattId 3733
+Match found. matchIdx 93941, posIdx 1, pattId 3582
+Match found. matchIdx 93942, posIdx 0, pattId 3582
+Match found. matchIdx 97086, posIdx 0, pattId 7521
+
+No. determinate bases (f): 90459
+No. degenerate bases (F): 266735
+No. determinate segments (d): 8613
+No. degenerate segments (D): 9541
+No. strings processed shorter than pattern (N'): 59419
+EDSM-BV processing time: 11.6703s.
+
+11.24user 0.70system 0:12.07elapsed 98%CPU (0avgtext+0avgdata 3530416maxresident)k
+3792inputs+0outputs (6major+883048minor)pagefaults 0swaps

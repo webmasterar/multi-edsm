@@ -1,0 +1,18 @@
+Multi-EDSM searching...
+
+Match found. matchIdx 1764, posIdx 2, pattId 810
+Match found. matchIdx 12612, posIdx 3, pattId 2840
+Match found. matchIdx 13287, posIdx 2, pattId 658
+Match found. matchIdx 49909, posIdx 5, pattId 3142
+Match found. matchIdx 59393, posIdx 3, pattId 572
+Match found. matchIdx 62570, posIdx 2, pattId 3053
+
+No. determinate bases (f): 90459
+No. degenerate bases (F): 266735
+No. determinate segments (d): 8613
+No. degenerate segments (D): 9541
+No. strings processed shorter than pattern (N'): 59419
+EDSM-BV processing time: 4.83023s.
+
+4.66user 0.23system 0:04.89elapsed 99%CPU (0avgtext+0avgdata 958256maxresident)k
+0inputs+0outputs (0major+239702minor)pagefaults 0swaps
