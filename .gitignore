@@ -1,10 +1,7 @@
-libsdsl/*
 sdsl-lite/*
 vcflib/
-experiments/realdata/data/*
+experiments/realdata/datasets/*
 experiments/words/*
 multiedsm
-edsm.cpp
-edsm.hpp
 *.o
 *.exe

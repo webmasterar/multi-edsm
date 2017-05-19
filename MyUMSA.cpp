@@ -234,15 +234,16 @@ bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, uns
             this->D[j] = (((this->D[j] << 1) | carry) | this->Sv[j]) & this->Bv[j][charIdx];
 
             //check if any matches found
-            check = this->D[j] & this->Ev[j];
-            while (check)
+            if (this->reportPatterns)
             {
-                matchFound = true;
-                k = ffs(check) - 1;
-                if (this->reportPatterns) {
+                check = this->D[j] & this->Ev[j];
+                while (check)
+                {
+                    matchFound = true;
+                    k = ffs(check) - 1;
                     this->matches.push_back(pair<int,int>((int)i, this->positions[j * BITSINWORD + k]));
+                    check = check ^ (1ul << k);
                 }
-                check = check ^ (1ul << k);
             }
 
             carry = (WORD) ((carryMask & temp) != 0);
