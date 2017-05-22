@@ -193,7 +193,8 @@ WordVector MultiEDSM::recAssignOVMem(const cst_node_t & u)
     else
     {
         for (const auto & child : this->STp.children(u)) {
-            this->OVMem[id] = this->WordVectorOR(this->OVMem[id], this->recAssignOVMem(child));
+            // this->OVMem[id] = this->WordVectorOR(this->OVMem[id], this->recAssignOVMem(child));
+            this->WordVectorOR_IP(this->OVMem[id], this->recAssignOVMem(child));
         }
     }
 
@@ -234,7 +235,8 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
             if (i == 0) {
                 c = this->umsa->getLastSearchState();
             } else {
-                c = this->WordVectorOR(c, this->umsa->getLastSearchState());
+                // c = this->WordVectorOR(c, this->umsa->getLastSearchState());
+                this->WordVectorOR_IP(c, this->umsa->getLastSearchState());
             }
             i++;
         }
@@ -418,7 +420,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             for (stringI = S.begin(); stringI != S.end(); ++stringI)
             {
                 if (*stringI == EPSILON) {
-                    B1 = this->WordVectorOR(B1, this->B);
+                    // B1 = this->WordVectorOR(B1, this->B);
+                    this->WordVectorOR_IP(B1, this->B);
                 } else {
                     this->F += (*stringI).length();
                 }
@@ -515,7 +518,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                     this->Nm += m;
                     B2 = WordVectorAND(this->B, this->occVector(*stringI));
                     B2 = WordVectorLeftShift(B2, m);
-                    B1 = this->WordVectorOR(B1, B2);
+                    // B1 = this->WordVectorOR(B1, B2);
+                    this->WordVectorOR_IP(B1, B2);
                 }
             }
         }
@@ -540,6 +544,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 }
 
 /**
+ * @deprecated MultiEDSM::WordVectorOR_IP() is more efficient.
+ *
  * The bitwise OR operation performed on WordVectors. Time taken: O([max_words_used(a,b)/w])
  *
  * @param a
@@ -569,6 +575,39 @@ WordVector MultiEDSM::WordVectorOR(const WordVector & a, const WordVector & b)
 }
 
 /**
+ * The bitwise OR operation performed 'in place' on parameter a. This is a more
+ * efficient way to update a than calling MultiEDSM::WordVectorOR().
+ *
+ * @param a Subject WordVector which will be altered
+ * @param b Object WordVector
+ */
+void MultiEDSM::WordVectorOR_IP(WordVector & a, const WordVector & b)
+{
+    unsigned int i, as = a.size(), bs = b.size();
+    if (as == bs)
+    {
+        for (i = 0; i < as; i++) {
+            a[i] = a[i] | b[i];
+        }
+    }
+    else if (as > bs)
+    {
+        for (i = 0; i < bs; i++) {
+            a[i] = a[i] | b[i];
+        }
+    }
+    else
+    {
+        for (i = 0; i < as; i++) {
+            a[i] = a[i] | b[i];
+        }
+        for (; i < bs; i++) {
+            a.push_back(b[i]);
+        }
+    }
+}
+
+/**
  * The bitwise AND operation performed on WordVectors. Time taken: O([min_words_used(a,b)/w])
  *
  * @param a
@@ -584,6 +623,24 @@ WordVector MultiEDSM::WordVectorAND(const WordVector & a, const WordVector & b)
         c.push_back(a[i] & b[i]);
     }
     return c;
+}
+
+/**
+ * @deprecated because MultiEDSM::WordVectorAND() is the only form required.
+ *
+ * The bitwise AND operation performed 'in place' on parameter a. This is a more
+ * efficient way to update than calling MultiEDSM::WordVectorAND().
+ *
+ * @param a WordVector subject which will be altered
+ * @param b WordVector object
+ */
+void MultiEDSM::WordVectorAND_IP(WordVector & a, const WordVector & b)
+{
+    unsigned int i, m = min(a.size(), b.size());
+    for (i = 0; i < m; i++) {
+        a[i] = a[i] & b[i];
+    }
+    a.resize(m);
 }
 
 /**

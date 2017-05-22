@@ -86,7 +86,11 @@ private:
 
     WordVector WordVectorOR(const WordVector & a, const WordVector & b);
 
+    void WordVectorOR_IP(WordVector & a, const WordVector & b);
+
     WordVector WordVectorAND(const WordVector & a, const WordVector & b);
+
+    void WordVectorAND_IP(WordVector & a, const WordVector & b);
 
     WordVector WordVectorSPECIALSHIFT(const WordVector & x, unsigned int m);
 

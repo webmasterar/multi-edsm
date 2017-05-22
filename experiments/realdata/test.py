@@ -39,8 +39,8 @@ patterns are automatically extracted from the EDS file. Optionally, specify the 
 minimum and maximum pattern length with the --min-size and --max-size options.')
 parser.add_argument('eds_file', type=argparse.FileType('r'), help='The EDS file to read')
 parser.add_argument('num_patterns', type=int, help='How many patterns to search for')
-parser.add_argument('--min-size', type=int, default=10, help='The minimum pattern size')
-parser.add_argument('--max-size', type=int, default=1000, help='The maximum pattern size')
+parser.add_argument('--min-size', type=int, default=10, help='The minimum pattern size, default: 10')
+parser.add_argument('--max-size', type=int, default=1000, help='The maximum pattern size, default: 1000')
 parser.add_argument('--recreate-files', action='store_true', help='Delete and recreate the pattern file')
 args = parser.parse_args()
 
@@ -53,8 +53,18 @@ if args.num_patterns <= 0:
 
 edsFileName = os.path.basename(args.eds_file.name)
 edsFileName = ".".join(edsFileName.split('.')[0:-1])
-patternsFile = './patterns/' + edsFileName + '_' + str(args.num_patterns) + '.txt'
-resultsFile = './results/' + edsFileName + '_' + str(args.num_patterns) + '.txt'
+patternsFile = './patterns/' + edsFileName + '_' + str(args.num_patterns)
+if args.min_size == args.max_size:
+	patternsFile += '_' + str(args.min_size)
+else:
+	patternsFile += '_' + str(args.min_size) + '-' + str(args.max_size)
+patternsFile += '.txt'
+resultsFile = './results/' + edsFileName + '_' + str(args.num_patterns)
+if args.min_size == args.max_size:
+	resultsFile += '_' + str(args.min_size)
+else:
+	resultsFile += '_' + str(args.min_size) + '-' + str(args.max_size)
+resultsFile += '.txt'
 
 if args.recreate_files:
 	if os.path.isfile(patternsFile):

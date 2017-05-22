@@ -226,27 +226,38 @@ bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, uns
         carry = 0;
         charIdx = (int) this->Sigma[(int)text[i]] - 1;
 
-        //loop through the words
-        for (j = 0; j < this->L; j++)
+        if (charIdx == -1)
         {
-            temp = this->D[j];
-
-            this->D[j] = (((this->D[j] << 1) | carry) | this->Sv[j]) & this->Bv[j][charIdx];
-
-            //check if any matches found
-            if (this->reportPatterns)
+            //character not in patterns so clear D
+            for (j = 0; j < this->L; j++)
             {
-                check = this->D[j] & this->Ev[j];
-                while (check)
-                {
-                    matchFound = true;
-                    k = ffs(check) - 1;
-                    this->matches.push_back(pair<int,int>((int)i, this->positions[j * BITSINWORD + k]));
-                    check = check ^ (1ul << k);
-                }
+                this->D[j] = 0;
             }
+        }
+        else
+        {
+            //loop through the words
+            for (j = 0; j < this->L; j++)
+            {
+                temp = this->D[j];
 
-            carry = (WORD) ((carryMask & temp) != 0);
+                this->D[j] = (((this->D[j] << 1) | carry) | this->Sv[j]) & this->Bv[j][charIdx];
+
+                //check if any matches found
+                if (this->reportPatterns)
+                {
+                    check = this->D[j] & this->Ev[j];
+                    while (check)
+                    {
+                        matchFound = true;
+                        k = ffs(check) - 1;
+                        this->matches.push_back(pair<int,int>((int)i, this->positions[j * BITSINWORD + k]));
+                        check = check ^ (1ul << k);
+                    }
+                }
+
+                carry = (WORD) ((carryMask & temp) != 0);
+            }
         }
     }
 
