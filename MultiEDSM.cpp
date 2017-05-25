@@ -717,7 +717,7 @@ WordVector MultiEDSM::WordVectorSIMPLESHIFT(const WordVector & x, unsigned int m
         {
             temp = c[i];
             c[i] = (c[i] << 1) | carry; //left shift and apply the carried 1
-            c[i] = c[i] ^ (ends[i] & c[i]); //if 1 passes pattern boundard (end), then remove it because it is an illegal shift
+            c[i] = c[i] ^ (ends[i] & c[i]); //if 1 passes pattern boundary (end), then remove it because it is an illegal shift
             carry = (WORD)((carryMask & temp) != 0); //work out if we need to carry a 1 to the next word
             if (carry && (i == (s - 1))) { //identify if we need to expand c
                 c.push_back(0ul);
@@ -737,8 +737,8 @@ WordVector MultiEDSM::WordVectorSIMPLESHIFT(const WordVector & x, unsigned int m
  *    or O(M + [M/w]) if there is a huge number of set bits in x.
  *  - MultiEDSM::WordVectorSIMPLESHIFT() has a worst case time of O(m[M/w])
  *    because it does m shift operations over [M/w] words.
- * So, to get the best performance, we do a triage and identify which of the
- * methods does it in the least time. The triage check itself takes O([M/w]) time.
+ * To get the best performance, we do a triage and identify which of the methods
+ * does it in the least time. The triage check itself takes O([M/w]) time.
  *
  * @param x
  * @param m The length of the string being checked

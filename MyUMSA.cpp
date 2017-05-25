@@ -216,6 +216,7 @@ bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, uns
 
     //init tracking vars
     int charIdx;
+    bool zeroed = false;
     bool matchFound = false;
     WORD temp, carry, check;
     WORD carryMask = 1ul << (BITSINWORD - 1);
@@ -228,10 +229,14 @@ bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, uns
 
         if (charIdx == -1)
         {
-            //character not in patterns so clear D
-            for (j = 0; j < this->L; j++)
+            if (!zeroed)
             {
-                this->D[j] = 0;
+                //character not in patterns so clear D
+                for (j = 0; j < this->L; j++)
+                {
+                    this->D[j] = 0;
+                }
+                zeroed = true;
             }
         }
         else
@@ -258,6 +263,7 @@ bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, uns
 
                 carry = (WORD) ((carryMask & temp) != 0);
             }
+            zeroed = false;
         }
     }
 
