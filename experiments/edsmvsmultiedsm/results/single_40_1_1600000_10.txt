@@ -1,0 +1,18 @@
+EDSM-BV searching...
+
+No. determinate bases (f): 1447721
+No. degenerate bases (F): 4252889
+No. determinate segments (d): 137677
+No. degenerate segments (D): 152279
+No. strings processed shorter than pattern (N'): 452385
+EDSM-BV processing time: 1.01742s.
+
+No matches found.
+1.09user 0.13system 0:01.43elapsed 85%CPU (0avgtext+0avgdata 12884maxresident)k
+16688inputs+0outputs (6major+2416minor)pagefaults 0swaps
+
+EDSM-BV running time: 1.4475440979
+
+
+
+Total Running Time of EDSM-BV: 1.4475440979

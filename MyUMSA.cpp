@@ -122,7 +122,7 @@ void MyUMSA::addPattern(const string & pattern)
  */
 bool MyUMSA::search(const string & text)
 {
-    return this->search(text, 0);
+    return this->search(text, 0, text.length());
 }
 
 /**
