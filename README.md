@@ -12,11 +12,15 @@ You may need to install one or more libraries before compiling Multi-EDSM. Pleas
 
 ### How to Execute
 
-`~$ ./multiedsm seq.txt patterns.txt`
+If you are searching an EDS format file:
 
-or
+`~$ ./multiedsm --sequence-file seq.eds --patterns-file patterns.txt`
 
-`~$ ./multiedsm reference.fasta variants.vcf pattern.txt`
+If you are searching a reference sequence in FASTA format along with its VCF file:
+
+`~$ ./multiedsm --sequence-file reference.fasta --variants-file variants.vcf --patterns-file pattern.txt`
+
+For more options read the help instructions: `~$ ./multiedsm --help`.
 
 The patterns.txt file should be a set of strings separated by line breaks.
 

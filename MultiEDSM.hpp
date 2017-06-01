@@ -27,7 +27,9 @@
 #include <sdsl/suffix_trees.hpp>
 #include "MyUMSA.hpp"
 
+#define SIGMA 4
 #define EPSILON "E"
+#define ALPHABET "ACGT"
 #define BUFFERSIZE 1000000
 #define SEPARATOR_DIGIT -1
 

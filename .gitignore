@@ -1,6 +1,7 @@
 sdsl-lite/*
 vcflib/
 experiments/realdata/datasets/*
+experiments/readmapping/*
 experiments/words/*
 multiedsm
 *.o

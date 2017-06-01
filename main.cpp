@@ -17,6 +17,9 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <climits>
+#include <getopt.h>
+#include <unistd.h>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -53,289 +56,463 @@ char getNextChar(ifstream & f)
     return c;
 }
 
-int main(int argc, char * argv[])
+/**
+ * Convert raw string like 3.5g (3.5 gigabytes) to 3584 (megabytes)
+ */
+unsigned int getMemLimitMB(string rawString)
 {
-    string help = "There are two ways to run Multiple Elastic Degenerate String Matching (Multi-EDSM) ---\n\
-    \tUsage: ./multiedsm seq.txt patterns.txt\n\
-    \tUsage: ./multiedsm reference.fasta variants.vcf patterns.txt";
-
-    if (argc == 1 || (argc == 2 && (strcmp("--help", argv[1]) == 0 || strcmp("-h", argv[1]) == 0))) {
-        cout << help << endl;
-        return 0;
+    int l = rawString.length();
+    if (l == 0) {
+        return UINT_MAX;
     }
-
-    if (!(argc == 4 || argc == 3)) {
-        cerr << "Invalid number of arguments!" << endl;
-        cout << help << endl;
-        return 1;
-    }
-
-    //pattern file
-    string pattFile;
-    if (argc == 3) {
-        pattFile = argv[2];
+    char unit = rawString[l - 1];
+    if (unit == 'm' || unit == 'M') {
+        return (unsigned int) ceil(atof(rawString.substr(0, l - 1).c_str()));
+    } else if (unit == 'g' || unit == 'G') {
+        return (unsigned int) ceil(atof(rawString.substr(0, l - 1).c_str()) * 1024);
     } else {
-        pattFile = argv[3];
+        cerr << "Invalid memory argument used: \"" << rawString << "\"! Continuing with unlimited memory." << endl;
+        return UINT_MAX;
     }
-    ifstream pf(pattFile.c_str(), ios::in);
-    if (!pf.good()) {
-        cerr << "Error: Failed to open pattern file!" << endl;
-        return 1;
+}
+
+/**
+ * Search for patterns using the Reference fasta file with variants file
+ *
+ * @param multiedsm The multiedsm object (reference)
+ * @param seqFile The FASTA sequence file name
+ * @param varFile The variants file name
+ * @return False on error
+ */
+bool searchVCF(MultiEDSM * multiedsm, string & seqFile, string & varFile)
+{
+    ifstream rf(seqFile.c_str(), ios::in);
+    if (!rf.good()) {
+        cerr << "Error: Failed to open reference file!" << endl;
+        return false;
     }
 
-    //patterns
-    vector<string> patterns;
-    string pattern;
-    while(getline(pf, pattern)) {
-        patterns.push_back(pattern);
+    VariantCallFile vf;
+    vf.open(varFile);
+    if (!vf.is_open()) {
+        cerr << "Error: Failed to open variants file!" << endl;
+        return false;
     }
-    pf.close();
 
-    //MultiEDSM
-    MultiEDSM multiedsm("ACGT", patterns);
-    cout << "Multi-EDSM searching..." << endl << endl;
+    //initialize fasta file reading and segment creation helper variables
+    string tBuff = "";
+    tBuff.reserve(BUFFERSIZE);
+    char c;
+    unsigned int rfIdx = 1, vfIdx = 0, i = 0;
+    Segment segment;
 
-    //Searching Reference+VCF file
-    if (argc == 4)
+    //skip first line of fasta file
+    getline(rf, tBuff);
+    tBuff = "";
+
+    //create variables for reading through vcf records and looking for duplicates
+    Variant var(vf), vBuffer(vf), var2(vf);
+    bool hasMoreVariants = true;
+    Segment vAlleles;
+
+    //read first variant and possibly successive duplicates for the same position, removing duplicate alleles
+    hasMoreVariants = vf.getNextVariant(var);
+    if (hasMoreVariants)
     {
-        string refName = argv[1];
-        ifstream rf(refName.c_str(), ios::in);
-        if (!rf.good()) {
-            cerr << "Error: Failed to open reference file!" << endl;
-            return 1;
-        }
-
-        string vcfName = argv[2];
-        VariantCallFile vf;
-        vf.open(vcfName);
-        if (!vf.is_open()) {
-            cerr << "Error: Failed to open variants file!" << endl;
-            return 1;
-        }
-
-        //initialize fasta file reading and segment creation helper variables
-        string tBuff = "";
-        tBuff.reserve(BUFFERSIZE);
-        char c;
-        unsigned int rfIdx = 1, vfIdx = 0, i = 0;
-        Segment segment;
-
-        //skip first line of fasta file
-        getline(rf, tBuff);
-        tBuff = "";
-
-        //create variables for reading through vcf records and looking for duplicates
-        Variant var(vf), vBuffer(vf), var2(vf);
-        bool hasMoreVariants = true;
-        Segment vAlleles;
-
-        //read first variant and possibly successive duplicates for the same position, removing duplicate alleles
-        hasMoreVariants = vf.getNextVariant(var);
-        if (hasMoreVariants)
-        {
-            vfIdx = (unsigned int) var.position;
-            for (const auto & a : var.alleles) {
-                if (a[0] != '<') {
-                    vAlleles.push_back(a);
-                }
-            }
-            while (true) {
-                hasMoreVariants = vf.getNextVariant(var2);
-                if (hasMoreVariants)
-                {
-                    if (var2.position == var.position) {
-                        for (const auto & a : var2.alt) {
-                            if (a[0] != '<') {
-                                vAlleles.push_back(a);
-                            }
-                        }
-                    } else {
-                        vBuffer = var2;
-                        break;
-                    }
-                }
-                else
-                {
-                    break;
-                }
+        vfIdx = (unsigned int) var.position;
+        for (const auto & a : var.alleles) {
+            if (a[0] != '<') {
+                vAlleles.push_back(a);
             }
         }
-
-        //go through the reference sequence
-        while ((c = getNextChar(rf)) != '\0')
-        {
-            if (!(c == 'A' || c == 'C' || c == 'G' || c == 'T' || c == 'N')) {
-                continue;
-            }
-
-            if (rfIdx != vfIdx)
+        while (true) {
+            hasMoreVariants = vf.getNextVariant(var2);
+            if (hasMoreVariants)
             {
-                tBuff += c;
-                i++;
-                if (i >= BUFFERSIZE) {
-                    segment.clear();
-                    segment.push_back(tBuff);
-                    multiedsm.searchNextSegment(segment);
-                    tBuff = "";
-                    i = 0;
-                }
-            }
-            else
-            {
-                segment.clear();
-                if (tBuff.length() > 0) {
-                    segment.push_back(tBuff);
-                    multiedsm.searchNextSegment(segment);
-                    tBuff = "";
-                }
-
-                //then search current variant
-                if (vAlleles.size() > 0) {
-                    multiedsm.searchNextSegment(vAlleles);
-                    vAlleles.clear();
-                }
-
-                //fetch the next variant to be searched for when its position comes up
-                if (vBuffer.alleles.size() > 0)
-                {
-                    vfIdx = (unsigned int) vBuffer.position;
-                    for (const auto & a : vBuffer.alleles) {
+                if (var2.position == var.position) {
+                    for (const auto & a : var2.alt) {
                         if (a[0] != '<') {
                             vAlleles.push_back(a);
                         }
                     }
+                } else {
+                    vBuffer = var2;
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
 
-                    vBuffer.alleles.clear();
+    //go through the reference sequence
+    while ((c = getNextChar(rf)) != '\0')
+    {
+        if (!(c == 'A' || c == 'C' || c == 'G' || c == 'T' || c == 'N')) {
+            continue;
+        }
 
-                    while (true) {
-                        hasMoreVariants = vf.getNextVariant(var2);
-                        if (hasMoreVariants)
-                        {
-                            if (vfIdx == (unsigned int) var2.position) {
-                                for (const auto & a : var2.alt) {
-                                    if (a[0] != '<') {
-                                        vAlleles.push_back(a);
-                                    }
+        if (rfIdx != vfIdx)
+        {
+            tBuff += c;
+            i++;
+            if (i >= BUFFERSIZE) {
+                segment.clear();
+                segment.push_back(tBuff);
+                multiedsm->searchNextSegment(segment);
+                tBuff = "";
+                i = 0;
+            }
+        }
+        else
+        {
+            segment.clear();
+            if (tBuff.length() > 0) {
+                segment.push_back(tBuff);
+                multiedsm->searchNextSegment(segment);
+                tBuff = "";
+            }
+
+            //then search current variant
+            if (vAlleles.size() > 0) {
+                multiedsm->searchNextSegment(vAlleles);
+                vAlleles.clear();
+            }
+
+            //fetch the next variant to be searched for when its position comes up
+            if (vBuffer.alleles.size() > 0)
+            {
+                vfIdx = (unsigned int) vBuffer.position;
+                for (const auto & a : vBuffer.alleles) {
+                    if (a[0] != '<') {
+                        vAlleles.push_back(a);
+                    }
+                }
+
+                vBuffer.alleles.clear();
+
+                while (true) {
+                    hasMoreVariants = vf.getNextVariant(var2);
+                    if (hasMoreVariants)
+                    {
+                        if (vfIdx == (unsigned int) var2.position) {
+                            for (const auto & a : var2.alt) {
+                                if (a[0] != '<') {
+                                    vAlleles.push_back(a);
                                 }
-                            } else {
-                                vBuffer = var2;
-                                break;
                             }
-                        }
-                        else
-                        {
+                        } else {
+                            vBuffer = var2;
                             break;
                         }
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
-
-            rfIdx++;
-        }
-        if (tBuff.length() > 0)
-        {
-            segment.clear();
-            segment.push_back(tBuff);
-            multiedsm.searchNextSegment(segment);
-            tBuff = "";
         }
 
-        rf.close();
+        rfIdx++;
     }
-    //searching custom EDS format file
-    else
+    if (tBuff.length() > 0)
     {
-        //open sequence file
-        ifstream eds(argv[1], ios::in);
-        if (!eds.good()) {
-            cerr << "Error. Unable to open sequence file!" << endl;
-            return 1;
-        }
+        segment.clear();
+        segment.push_back(tBuff);
+        multiedsm->searchNextSegment(segment);
+        tBuff = "";
+    }
 
-        //initialize variables required for searching
-        Segment tempSeg;
-        string x = "";
-        x.reserve(BUFFERSIZE);
-        char c = 0;
-        bool inDegSeg = false;
-        unsigned int i = 0, j = 0;
+    rf.close();
 
-        //go through the sequence file
-        while ((c = getNextChar(eds)) != '\0')
+    return true;
+}
+
+/**
+ * Search for patterns using the EDS (Elastic Degenerate Sequence) format file
+ *
+ * @param multiedsm The multiedsm object (reference)
+ * @param seqFile The EDS sequence file name
+ * @return 0=Success, 1=Error
+ */
+int searchEDS(MultiEDSM * multiedsm, string & seqFile)
+{
+    //open sequence file
+    ifstream eds(seqFile.c_str(), ios::in);
+    if (!eds.good()) {
+        cerr << "Error. Unable to open sequence file!" << endl;
+        return false;
+    }
+
+    //initialize variables required for searching
+    Segment tempSeg;
+    string x = "";
+    x.reserve(BUFFERSIZE);
+    char c = 0;
+    bool inDegSeg = false;
+    unsigned int i = 0, j = 0;
+
+    //go through the sequence file
+    while ((c = getNextChar(eds)) != '\0')
+    {
+        if (i == 0 && c == '{')
         {
-            if (i == 0 && c == '{')
-            {
-                inDegSeg = true;
-            }
-            else if (c == ',')
-            {
+            inDegSeg = true;
+        }
+        else if (c == ',')
+        {
+            tempSeg.push_back(x);
+            x = "";
+            j = 0;
+        }
+        else if (c == '}' || (c == '{' && i > 0))
+        {
+            if (x.length() > 0) {
                 tempSeg.push_back(x);
                 x = "";
                 j = 0;
+                multiedsm->searchNextSegment(tempSeg);
+                tempSeg.clear();
             }
-            else if (c == '}' || (c == '{' && i > 0))
-            {
-                if (x.length() > 0) {
-                    tempSeg.push_back(x);
-                    x = "";
-                    j = 0;
-                    multiedsm.searchNextSegment(tempSeg);
-                    tempSeg.clear();
-                }
-                inDegSeg = (c == '{');
-            }
-            else if (c != '{')
-            {
-                switch (c) {
-                    case 'A':
-                    case 'C':
-                    case 'G':
-                    case 'T':
-                    case 'N':
-                    case EPSILON[0]:
-                        x += c;
-                        j++;
-                        if (!inDegSeg && j == BUFFERSIZE)
-                        {
-                            tempSeg.push_back(x);
-                            x = "";
-                            j = 0;
-                            multiedsm.searchNextSegment(tempSeg);
-                            tempSeg.clear();
-                        }
-                        break;
-                }
-            }
-            i++;
+            inDegSeg = (c == '{');
         }
-        if (x != "") {
-            tempSeg.push_back(x);
-            multiedsm.searchNextSegment(tempSeg);
-            x = "";
-            tempSeg.clear();
+        else if (c != '{')
+        {
+            switch (c) {
+                case 'A':
+                case 'C':
+                case 'G':
+                case 'T':
+                case 'N':
+                case EPSILON[0]:
+                    x += c;
+                    j++;
+                    if (!inDegSeg && j == BUFFERSIZE)
+                    {
+                        tempSeg.push_back(x);
+                        x = "";
+                        j = 0;
+                        multiedsm->searchNextSegment(tempSeg);
+                        tempSeg.clear();
+                    }
+                    break;
+            }
+        }
+        i++;
+    }
+    if (x != "") {
+        tempSeg.push_back(x);
+        multiedsm->searchNextSegment(tempSeg);
+        x = "";
+        tempSeg.clear();
+    }
+
+    eds.close();
+
+    return true;
+}
+
+/**
+ * Main.
+ */
+int main(int argc, char * argv[])
+{
+    //parse command-line options
+    int c, x = 0, optind = 1;
+    string seqF, varF, patF, memL;
+    static struct option long_options[] = {
+        {"sequence-file", required_argument, 0, 's'},
+        {"variants-file", required_argument, 0, 'v'},
+        {"patterns-file", required_argument, 0, 'p'},
+        {"mem-limit",     required_argument, 0, 'm'},
+        {"help",          no_argument,       0, 'h'},
+        {0,               0,                 0, 0}
+    };
+
+    string help = "Multiple Elastic Degenerate String Matching (Multi-EDSM) ---\n\n\
+Example EDS Type Search: ./multiedsm --sequence-file seq.eds --patterns-file patterns.txt\n\
+Example FASTA+VCF Type Search: ./multiedsm --sequence-file reference.fasta --variants-file variants.vcf --patterns-file patterns.txt\n\n\
+Standard (Required) Arguments:\n\
+  -s\t--sequence-file\t<str>\tThe EDS or reference FASTA file. Use the correct file for the correct search type.\n\
+  -v\t--variants-file\t<str>\tThe VCF variants-file. Support for .vcf.gz. Use only with FASTA+VCF search type.\n\
+  -p\t--patterns-file\t<str>\tThe patterns file. Each pattern must be on a different line.\n\n\
+Optional Arguments:\n\
+  -m\t--mem-limit\t<float>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers, e.g. 3.5g\n\n\
+Miscellaneous:\n\
+  -h\t--help\t\t<void>\tThis help message.\n";
+
+    while ((c = getopt_long(argc, argv, "s:v:p:m:h", long_options, &optind)) != -1)
+    {
+        switch (c)
+        {
+            case 's':
+                seqF = optarg;
+                x++;
+                break;
+            case 'v':
+                varF = optarg;
+                x++;
+                break;
+            case 'p':
+                patF = optarg;
+                x++;
+                break;
+            case 'm':
+                memL = optarg;
+                break;
+            case 'h':
+                cout << help << endl;
+                return 0;
+            default:
+                cerr << "Error: unrecognised argument." << endl << help << endl;
+                return 1;
+        }
+    }
+
+    if (x == 2)
+    {
+        if (seqF == "" || patF == "") {
+            cerr << "Error: Invalid arguments!" << endl << help << endl;
+            return 1;
+        }
+    }
+    else if (x == 3)
+    {
+        if (seqF == "" || varF == "" || patF == "") {
+            cerr << "Error: Invalid arguments!" << endl << help << endl;
+            return 1;
+        }
+    }
+    else
+    {
+        cerr << "Error: Invalid number of arguments!" << endl << help << endl;
+        return 1;
+    }
+
+    //open patterns file and search patterns in batches
+    bool success;
+    unsigned int M = 0, k = 0, batchNo = 1, batchCount = 0, memLimit = getMemLimitMB(memL);
+    unsigned int f = 0, F = 0, d = 0, D = 0, Np = 0;
+    double duration = 0.0;
+    unsigned int stp, stp2pos, pos2pat, ovmem, shiftand, total;
+    vector<pair<unsigned int, unsigned int>> foundList;
+    vector<string> patterns;
+    string pattern;
+    ifstream pf(patF.c_str(), ios::in);
+    if (!pf.good()) {
+        cerr << "Error: Failed to open pattern file!" << endl;
+        return 1;
+    }
+    cout << "Multi-EDSM started..." << endl << endl;
+    while(getline(pf, pattern))
+    {
+        M += pattern.length();
+        k++;
+        stp = M + k;
+        stp2pos = sizeof(unsigned int) * stp;
+        pos2pat = sizeof(unsigned int) * M;
+        ovmem = (unsigned int) ceil(stp / BITSINWORD) * stp * WORDSIZE;
+        shiftand = (unsigned int) ceil(M / BITSINWORD) * (3 + SIGMA) * WORDSIZE;
+        patterns.push_back(pattern);
+        total = (unsigned int) ((M + stp + stp2pos + pos2pat + ovmem + shiftand + BUFFERSIZE) / (1024 * 1024));
+        if (total >= memLimit)
+        {
+            //perform the search
+            MultiEDSM multiedsm(ALPHABET, patterns);
+            if (x == 3) {
+                success = searchVCF(&multiedsm, seqF, varF);
+            } else {
+                success = searchEDS(&multiedsm, seqF);
+            }
+            if (!success) {
+                return 1;
+            }
+            cout << "Searched batch " << batchNo << " containing " << k << " patterns." << endl;
+            //grab the results and update statistics
+            for (const pair<unsigned int, unsigned int> & match : multiedsm.getMatches()) {
+                foundList.push_back(pair<unsigned int, unsigned int>(match.first, match.second + batchCount));
+            }
+            f += multiedsm.getf();
+            F += multiedsm.getF();
+            d += multiedsm.getd();
+            D += multiedsm.getD();
+            Np += multiedsm.getNp();
+            duration += multiedsm.getDuration();
+            //reset batch searching variables
+            M = 0;
+            k = 0;
+            batchNo++;
+            batchCount += patterns.size();
+            patterns.clear();
+        }
+    }
+    pf.close();
+
+    //search the remaining patterns
+    MultiEDSM multiedsm(ALPHABET, patterns);
+    if (patterns.size() > 0)
+    {
+        //perform the search
+        if (x == 3) {
+            success = searchVCF(&multiedsm, seqF, varF);
+        } else {
+            success = searchEDS(&multiedsm, seqF);
         }
 
-        eds.close();
+        if (!success) {
+            return 1;
+        }
+        if (batchNo > 1) {
+            cout << "Searched batch " << batchNo << " containing " << k << " patterns." << endl;
+        }
+        //grab the results and update statistics
+        for (const pair<unsigned int, unsigned int> & match : multiedsm.getMatches()) {
+            foundList.push_back(pair<unsigned int, unsigned int>(match.first, match.second + batchCount));
+        }
+        f += multiedsm.getf();
+        F += multiedsm.getF();
+        d += multiedsm.getd();
+        D += multiedsm.getD();
+        Np += multiedsm.getNp();
+        duration += multiedsm.getDuration();
+        //reset batch searching variables
+        patterns.clear();
+        M = 0;
+        k = 0;
     }
 
     //output results
     cout << endl;
-    cout << "No. determinate bases (f): " << multiedsm.getf() << endl;
-    cout << "No. degenerate bases (F): " << multiedsm.getF() << endl;
-    cout << "No. determinate segments (d): " << multiedsm.getd() << endl;
-    cout << "No. degenerate segments (D): " << multiedsm.getD() << endl;
-    cout << "No. strings processed shorter than pattern (N'): " << multiedsm.getNp() << endl;
-    cout << "EDSM-BV processing time: " << multiedsm.getDuration() << "s." << endl << endl;
+    if (batchNo > 1)
+    {
+        cout << "Patterns searched in " << batchNo << " batches." << endl;
+        cout << "No. determinate bases (f): (" << f << " processed) " << multiedsm.getf() << endl;
+        cout << "No. degenerate bases (F): (" << F << " processed) " << multiedsm.getF() << endl;
+        cout << "No. determinate segments (d): (" << d << " processed) " << multiedsm.getd() << endl;
+        cout << "No. degenerate segments (D): (" << D << " processed) " << multiedsm.getD() << endl;
+    }
+    else
+    {
+        cout << "No. determinate bases (f): " << f << endl;
+        cout << "No. degenerate bases (F): " << F << endl;
+        cout << "No. determinate segments (d): " << d << endl;
+        cout << "No. degenerate segments (D): " << D << endl;
+    }
+    cout << "No. strings processed shorter than pattern (N'): " << Np << endl;
+    cout << "EDSM-BV processing time: " << duration << "s." << endl << endl;
 
-    if (multiedsm.getMatches().size() == 0)
+    if (foundList.size() == 0)
     {
         cout << "No matches found." << endl;
     }
     else
     {
-        cout << multiedsm.getMatches().size() << " matches found!" << endl << endl;
+        cout << foundList.size() << " matches found!" << endl << endl;
         cout << "Position,PatternId" << endl << "------------------" << endl;
-        for (const pair<unsigned int, unsigned int> & match : multiedsm.getMatches()) {
+        for (const pair<unsigned int, unsigned int> & match : foundList) {
             cout << match.first << "," << match.second << endl;
         }
     }
