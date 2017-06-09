@@ -394,10 +394,10 @@ Miscellaneous:\n\
 
     //open patterns file and search patterns in batches
     bool success;
-    unsigned int M = 0, k = 0, batchNo = 1, batchCount = 0, memLimit = getMemLimitMB(memL);
+    unsigned int batchNo = 1, batchCount = 0, memLimit = getMemLimitMB(memL);
     unsigned int f = 0, F = 0, d = 0, D = 0, Np = 0;
     double duration = 0.0;
-    unsigned int stp, stp2pos, pos2pat, ovmem, shiftand, total;
+    unsigned long long int M = 0, k = 0, stpnodes, suffixtree, stp2pos, pos2pat, ovmem, shiftand, total;
     vector<pair<unsigned int, unsigned int>> foundList;
     vector<string> patterns;
     string pattern;
@@ -407,61 +407,72 @@ Miscellaneous:\n\
         return 1;
     }
     cout << "Multi-EDSM started..." << endl << endl;
+    MultiEDSM * multiedsm = NULL;
     while(getline(pf, pattern))
     {
-        M += pattern.length();
+        M += pattern.length();                                                              //patterns vector
         k++;
-        stp = M + k;
-        stp2pos = sizeof(unsigned int) * stp;
-        pos2pat = sizeof(unsigned int) * M;
-        ovmem = (unsigned int) ceil(stp / BITSINWORD) * stp * WORDSIZE;
-        shiftand = (unsigned int) ceil(M / BITSINWORD) * (3 + SIGMA) * WORDSIZE;
+        stpnodes = M + k;                                                                   //pattern string for STp
+        suffixtree = WORDSIZE * stpnodes;                                                   //STp
+        stp2pos = sizeof(unsigned int) * stpnodes;                                          //stp2pos
+        pos2pat = sizeof(unsigned int) * M;                                                 //pattern positions vector
+        ovmem = (unsigned long long int) ceil(stpnodes / BITSINWORD) * WORDSIZE * stpnodes * 1.25; //ovmem
+        shiftand = (unsigned long long int) ceil(M / BITSINWORD) * (3 + SIGMA) * WORDSIZE;  //shiftand, sigma & Sv, Ev and D
         patterns.push_back(pattern);
-        total = (unsigned int) ((M + stp + stp2pos + pos2pat + ovmem + shiftand + BUFFERSIZE) / (1024 * 1024));
+        total = (unsigned long long int) ((M + stpnodes + suffixtree + stp2pos + pos2pat + ovmem + shiftand + BUFFERSIZE) / (1024 * 1000));
         if (total >= memLimit)
         {
+            //clear last object
+            if (multiedsm != NULL) {
+                delete multiedsm;
+            }
             //perform the search
-            MultiEDSM multiedsm(ALPHABET, patterns);
+            multiedsm = new MultiEDSM(ALPHABET, patterns);
+            patterns.clear();
             if (x == 3) {
-                success = searchVCF(&multiedsm, seqF, varF);
+                success = searchVCF(multiedsm, seqF, varF);
             } else {
-                success = searchEDS(&multiedsm, seqF);
+                success = searchEDS(multiedsm, seqF);
             }
             if (!success) {
                 return 1;
             }
             cout << "Searched batch " << batchNo << " containing " << k << " patterns." << endl;
             //grab the results and update statistics
-            for (const pair<unsigned int, unsigned int> & match : multiedsm.getMatches()) {
+            for (const pair<unsigned int, unsigned int> & match : multiedsm->getMatches()) {
                 foundList.push_back(pair<unsigned int, unsigned int>(match.first, match.second + batchCount));
             }
-            f += multiedsm.getf();
-            F += multiedsm.getF();
-            d += multiedsm.getd();
-            D += multiedsm.getD();
-            Np += multiedsm.getNp();
-            duration += multiedsm.getDuration();
+            f += multiedsm->getf();
+            F += multiedsm->getF();
+            d += multiedsm->getd();
+            D += multiedsm->getD();
+            Np += multiedsm->getNp();
+            duration += multiedsm->getDuration();
+            //upadte batch vars
+            batchNo++;
+            batchCount += k;
             //reset batch searching variables
             M = 0;
             k = 0;
-            batchNo++;
-            batchCount += patterns.size();
-            patterns.clear();
         }
     }
     pf.close();
 
     //search the remaining patterns
-    MultiEDSM multiedsm(ALPHABET, patterns);
     if (patterns.size() > 0)
     {
+        //clear last object
+        if (multiedsm != NULL) {
+            delete multiedsm;
+        }
+        multiedsm = new MultiEDSM(ALPHABET, patterns);
+        patterns.clear();
         //perform the search
         if (x == 3) {
-            success = searchVCF(&multiedsm, seqF, varF);
+            success = searchVCF(multiedsm, seqF, varF);
         } else {
-            success = searchEDS(&multiedsm, seqF);
+            success = searchEDS(multiedsm, seqF);
         }
-
         if (!success) {
             return 1;
         }
@@ -469,17 +480,16 @@ Miscellaneous:\n\
             cout << "Searched batch " << batchNo << " containing " << k << " patterns." << endl;
         }
         //grab the results and update statistics
-        for (const pair<unsigned int, unsigned int> & match : multiedsm.getMatches()) {
+        for (const pair<unsigned int, unsigned int> & match : multiedsm->getMatches()) {
             foundList.push_back(pair<unsigned int, unsigned int>(match.first, match.second + batchCount));
         }
-        f += multiedsm.getf();
-        F += multiedsm.getF();
-        d += multiedsm.getd();
-        D += multiedsm.getD();
-        Np += multiedsm.getNp();
-        duration += multiedsm.getDuration();
+        f += multiedsm->getf();
+        F += multiedsm->getF();
+        d += multiedsm->getd();
+        D += multiedsm->getD();
+        Np += multiedsm->getNp();
+        duration += multiedsm->getDuration();
         //reset batch searching variables
-        patterns.clear();
         M = 0;
         k = 0;
     }
@@ -489,10 +499,10 @@ Miscellaneous:\n\
     if (batchNo > 1)
     {
         cout << "Patterns searched in " << batchNo << " batches." << endl;
-        cout << "No. determinate bases (f): (" << f << " processed) " << multiedsm.getf() << endl;
-        cout << "No. degenerate bases (F): (" << F << " processed) " << multiedsm.getF() << endl;
-        cout << "No. determinate segments (d): (" << d << " processed) " << multiedsm.getd() << endl;
-        cout << "No. degenerate segments (D): (" << D << " processed) " << multiedsm.getD() << endl;
+        cout << "No. determinate bases (f): (" << f << " processed) " << multiedsm->getf() << endl;
+        cout << "No. degenerate bases (F): (" << F << " processed) " << multiedsm->getF() << endl;
+        cout << "No. determinate segments (d): (" << d << " processed) " << multiedsm->getd() << endl;
+        cout << "No. degenerate segments (D): (" << D << " processed) " << multiedsm->getD() << endl;
     }
     else
     {
@@ -500,6 +510,9 @@ Miscellaneous:\n\
         cout << "No. degenerate bases (F): " << F << endl;
         cout << "No. determinate segments (d): " << d << endl;
         cout << "No. degenerate segments (D): " << D << endl;
+    }
+    if (multiedsm != NULL) {
+        delete multiedsm;
     }
     cout << "No. strings processed shorter than pattern (N'): " << Np << endl;
     cout << "EDSM-BV processing time: " << duration << "s." << endl << endl;

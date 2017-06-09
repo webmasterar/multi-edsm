@@ -40,7 +40,7 @@ MyUMSA::MyUMSA(const string & alphabet, bool reportPatterns)
     this->L = 1;
     this->Sv.push_back(0ul);
     this->Ev.push_back(0ul);
-    this->D.push_back(0ul);
+    //this->D.push_back(0ul);
     vector<WORD> v;
     unsigned int i;
     for (i = 0; i < this->alphabet.length(); i++)
@@ -58,60 +58,49 @@ MyUMSA::MyUMSA(const string & alphabet, bool reportPatterns)
  */
 void MyUMSA::addPattern(const string & pattern)
 {
-    unsigned int i, j, m = pattern.length();
+    int charIdx;
+    unsigned int wordIdx, bitIdx, i, j, m = pattern.length();
+    unsigned int lastIdx = m - 1;
 
-    //if we need more memory to hold the new pattern then create and initialize new words
-    unsigned int l = (unsigned int) ceil((double)(this->M + m) / (double)BITSINWORD);
-    unsigned int numWordsDiff = l - this->L;
-    if (numWordsDiff > 0)
+    for (i = 0; i < m; i++)
     {
-        for (i = 0; i < numWordsDiff; i++)
+        charIdx = (int) this->Sigma[(int)pattern[i]];
+        wordIdx = (unsigned int) ((double)(this->M + i) / (double)BITSINWORD);
+        bitIdx = (unsigned int) ((this->M + i) % BITSINWORD);
+
+        //expand memory if required
+        if (this->L == wordIdx)
         {
             this->Sv.push_back(0ul);
             this->Ev.push_back(0ul);
-            this->D.push_back(0ul);
-        }
-        for (i = 0; i < numWordsDiff; i++)
-        {
+            //this->D.push_back(0ul);
             vector<WORD> v;
             for (j = 0; j < this->alphabet.length(); j++)
             {
                 v.push_back(0ul);
             }
             this->Bv.push_back(v);
+            this->L = this->L + 1;
         }
-    }
 
-    //process the pattern for Bitvector Bv
-    int charIdx;
-    unsigned int currWordIdx = (unsigned int) ((float)this->M / (float)BITSINWORD);
-    unsigned int currBitIdx = this->M % BITSINWORD;
-    for (i = 0; i < m; i++)
-    {
         //keep a record of pattern id at this position - for search results
         this->positions.push_back(this->N);
-
-        //mark the position of characters in the Bv bitvector
-        charIdx = (int) this->Sigma[(int)pattern[i]];
+        //mark letter position of pattern
         if (charIdx > 0) {
-            this->Bv[currWordIdx][charIdx - 1] = this->Bv[currWordIdx][charIdx - 1] | (1ul << currBitIdx);
+            this->Bv[wordIdx][charIdx - 1] = this->Bv[wordIdx][charIdx - 1] | (1ul << bitIdx);
         }
-        currBitIdx = ++currBitIdx % BITSINWORD;
-        if (currBitIdx == 0) {
-            currWordIdx++;
+        //mark start position of pattern
+        if (i == 0) {
+            this->Sv[wordIdx] = this->Sv[wordIdx] | (1ul << bitIdx);
+        }
+        //mark end position of pattern
+        if (i == lastIdx) {
+            this->Ev[wordIdx] = this->Ev[wordIdx] | (1ul << bitIdx);
         }
     }
 
-    //process the pattern to set Start bit in Sv
-    currWordIdx = (unsigned int) ((float)this->M / (float)BITSINWORD);
-    currBitIdx = this->M % BITSINWORD;
-    this->Sv[currWordIdx] = this->Sv[currWordIdx] | (1ul << currBitIdx);
-
-    //process the pattern to set End bit in Ev and update the class variables
-    this->L = this->L + numWordsDiff;
     this->M = this->M + m;
     this->N = this->N + 1;
-    this->Ev[this->L - 1] = this->Ev[this->L - 1] | (1ul << ((this->M % BITSINWORD) - 1));
 }
 
 /**

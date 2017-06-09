@@ -22,6 +22,7 @@
 #include <vector>
 #include <ctime>
 #include <divsufsort64.h>
+#include <sdsl/util.hpp>
 #include <sdsl/bit_vectors.hpp>
 #include <sdsl/suffix_trees.hpp>
 #include "MyUMSA.hpp"
@@ -38,7 +39,6 @@ using namespace std;
 MultiEDSM::MultiEDSM(const string & alphabet, const vector<string> & patterns)
 {
     this->alphabet = alphabet;
-    this->patterns = patterns;
     if (patterns.size() == 0) {
         cerr << "Error: Empty pattern set!" << endl;
         throw 1;
@@ -58,7 +58,7 @@ MultiEDSM::MultiEDSM(const string & alphabet, const vector<string> & patterns)
     this->duration = 0;
     this->reportOnce = false;
     this->reportPatterns = true;
-    this->preprocessPatterns();
+    this->preprocessPatterns(patterns);
 }
 
 /**
@@ -75,8 +75,10 @@ MultiEDSM::~MultiEDSM()
  *  - Shift-And time and space O(M + sigma*[M/w]).
  *  - Suffix Tree time and space O(M + k), where k is number of patterns.
  *  - OccVector construction time O(M + k), space O((M + k) * [M/w])
+ *
+ * @param patterns
  */
-void MultiEDSM::preprocessPatterns()
+void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
 {
     //start timer
     clock_t start = clock();
@@ -88,19 +90,19 @@ void MultiEDSM::preprocessPatterns()
     string p = "";
     char sep = '#';
     unsigned int h, i, j;
-    for (i = 0; i < this->patterns.size(); i++)
+    for (i = 0; i < patterns.size(); i++)
     {
-        h = this->patterns[i].length();
+        h = patterns[i].length();
         if (h == 0) {
             cerr << "Error: zero-length pattern given!" << endl;
             throw 1;
         }
 
         //create bitvector of pattern - for Shift-And
-        this->umsa->addPattern(this->patterns[i]);
+        this->umsa->addPattern(patterns[i]);
 
         //add pattern to p and append with seperator for building suffix tree of patterns
-        p += this->patterns[i];
+        p += patterns[i];
         p += sep;
 
         //update STpIdx2BVIdx datastructures with correct index of STp match for
@@ -139,6 +141,9 @@ void MultiEDSM::preprocessPatterns()
 
     //stop timer
     this->duration += clock() - start;
+
+    // cout << "Preproccessing " << patterns.size() << " patterns of size M=" \
+    //      << this->M << " completed in " << this->getDuration() << "s." << endl;
 }
 
 /**
@@ -155,6 +160,10 @@ void MultiEDSM::constructOV()
         this->OVMem.push_back(v);
     }
     this->recAssignOVMem(this->STp.root());
+    unsigned int numWords = 0;
+    for (i = 0; i < numNodes; i++) {
+        numWords += this->OVMem[i].size();
+    }
 }
 
 /**
@@ -165,20 +174,21 @@ void MultiEDSM::constructOV()
  */
 WordVector MultiEDSM::recAssignOVMem(const cst_node_t & u)
 {
-    int id = this->STp.id(u);
+    unsigned int id = this->STp.id(u);
 
     if (this->STp.is_leaf(u))
     {
-        int h = (int)this->STp.sn(u); //h is index in suffix tree string
-        int i = (int)this->STpIdx2BVIdx[h]; //i is index in bitvector
-        int j = this->OVMem[id].size(); //current size of the OVMem[id] WordVector
+        unsigned int h = this->STp.sn(u);        //h is index in suffix tree string
+        int i = this->STpIdx2BVIdx[h];           //i is index in bitvector
+        unsigned int j = this->OVMem[id].size(); //current size of the OVMem[id] WordVector
 
         //make sure it is not first letter or last letter in a pattern
         if (h > 0 && this->STpIdx2BVIdx[h - 1] != SEPARATOR_DIGIT && \
-           (h + 1) < ((int)this->R - 1) && this->STpIdx2BVIdx[h + 1] != SEPARATOR_DIGIT)
+           (h + 1) < (this->R - 1) && this->STpIdx2BVIdx[h + 1] != SEPARATOR_DIGIT)
         {
-            int wordIdx = (int) ((float)(i - 1) / (float)BITSINWORD);
-            int bitShifts = (i % BITSINWORD) - 1;
+            //calculate bit position
+            unsigned int wordIdx = (unsigned int) ((float)(i - 1) / (float)BITSINWORD);
+            unsigned int bitShifts = (i - 1) % BITSINWORD;
 
             //ensure word vector has enough words in it
             while (j <= wordIdx) {

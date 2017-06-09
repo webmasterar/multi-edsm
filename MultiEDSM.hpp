@@ -80,7 +80,7 @@ class MultiEDSM
 {
 private:
 
-    void preprocessPatterns();
+    void preprocessPatterns(const std::vector<std::string> & patterns);
 
     void constructOV();
 
@@ -108,11 +108,6 @@ protected:
      * @var alphabet The alphabet of the patterns
      */
     std::string alphabet;
-
-    /**
-     * @var patterns The determinate patterns to find in T
-     */
-    std::vector<std::string> patterns;
 
     /**
      * @var STpIdx2BVIdx A tool to return the correct index of the bitvector from the suffix tree position - uses O(M + k) space, O(1) time lookup
