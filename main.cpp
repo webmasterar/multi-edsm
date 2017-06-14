@@ -416,7 +416,7 @@ Miscellaneous:\n\
         suffixtree = WORDSIZE * stpnodes;                                                   //STp
         stp2pos = sizeof(unsigned int) * stpnodes;                                          //stp2pos
         pos2pat = sizeof(unsigned int) * M;                                                 //pattern positions vector
-        ovmem = (unsigned long long int) ceil(stpnodes / BITSINWORD) * WORDSIZE * stpnodes * 1.25; //ovmem
+        ovmem = (unsigned long long int) ceil(stpnodes / BITSINWORD) * WORDSIZE * stpnodes * 1.25; //ovmem -- 1.25 is for vector overhead
         shiftand = (unsigned long long int) ceil(M / BITSINWORD) * (3 + SIGMA) * WORDSIZE;  //shiftand, sigma & Sv, Ev and D
         patterns.push_back(pattern);
         total = (unsigned long long int) ((M + stpnodes + suffixtree + stp2pos + pos2pat + ovmem + shiftand + BUFFERSIZE) / (1024 * 1000));
@@ -515,7 +515,7 @@ Miscellaneous:\n\
         delete multiedsm;
     }
     cout << "No. strings processed shorter than pattern (N'): " << Np << endl;
-    cout << "EDSM-BV processing time: " << duration << "s." << endl << endl;
+    cout << "Multi-EDSM processing time: " << duration << "s." << endl << endl;
 
     if (foundList.size() == 0)
     {

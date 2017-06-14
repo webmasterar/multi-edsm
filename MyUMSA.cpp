@@ -261,8 +261,10 @@ bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, uns
 
 /**
  * After doing a search, get the last state of the search
+ *
+ * @return The last state of the search
  */
-vector<WORD> MyUMSA::getLastSearchState() const
+const vector<WORD> & MyUMSA::getLastSearchState() const
 {
     return this->D;
 }
@@ -306,7 +308,7 @@ vector<pair<int,int>> MyUMSA::getMatches() const
  *
  * @return A WordVector marking the ending positions/states of the pattern set
  */
-vector<WORD> MyUMSA::getEndingStates() const
+const vector<WORD> & MyUMSA::getEndingStates() const
 {
     return this->Ev;
 }
@@ -332,7 +334,7 @@ void MyUMSA::disableReporting()
  *
  * @return vector containing pattern id at every position in the bitvector
  */
-vector<unsigned int> MyUMSA::getPatternPositions() const
+const vector<unsigned int> & MyUMSA::getPatternPositions() const
 {
     return this->positions;
 }

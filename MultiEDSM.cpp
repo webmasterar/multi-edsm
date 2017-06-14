@@ -203,7 +203,6 @@ WordVector MultiEDSM::recAssignOVMem(const cst_node_t & u)
     else
     {
         for (const auto & child : this->STp.children(u)) {
-            // this->OVMem[id] = this->WordVectorOR(this->OVMem[id], this->recAssignOVMem(child));
             this->WordVectorOR_IP(this->OVMem[id], this->recAssignOVMem(child));
         }
     }
@@ -234,7 +233,7 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
 
     for (stringI = S.begin(); stringI != S.end(); ++stringI)
     {
-        if (*stringI != EPSILON)
+        if (stringI[0] != EPSILON)
         {
             m = (*stringI).length();
             if (m < this->maxP) {
@@ -245,7 +244,6 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
             if (i == 0) {
                 c = this->umsa->getLastSearchState();
             } else {
-                // c = this->WordVectorOR(c, this->umsa->getLastSearchState());
                 this->WordVectorOR_IP(c, this->umsa->getLastSearchState());
             }
             i++;
@@ -264,7 +262,7 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
  * @param a A substring
  * @return Starting positions of substring a encoded into a bitvector
  */
-WordVector MultiEDSM::occVector(const string & a)
+unsigned int MultiEDSM::occVector(const string & a)
 {
     cst_node_t explicitNode = this->STp.root();
     string::const_iterator it;
@@ -279,15 +277,7 @@ WordVector MultiEDSM::occVector(const string & a)
         }
     }
 
-    WordVector v;
-
-    //if a is present in P
-    if (j == a.length()) {
-        int id = this->STp.id(explicitNode);
-        v = this->OVMem[id];
-    }
-
-    return v;
+    return (j == a.length()) ? this->STp.id(explicitNode) : 0;
 }
 
 /**
@@ -328,7 +318,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     int pattId;
 
     //temp state variables, segment string iterator
-    unsigned int m;
+    unsigned int k, m;
     WordVector B1, B2;
     Segment::const_iterator stringI;
 
@@ -345,7 +335,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
         {
             for (stringI = S.begin(); stringI != S.end(); ++stringI)
             {
-                if (*stringI != EPSILON) {
+                if (stringI[0] != EPSILON) {
                     this->F += (*stringI).length();
                 }
             }
@@ -355,7 +345,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
         //search for the patterns
         for (stringI = S.begin(); stringI != S.end(); ++stringI)
         {
-            if (*stringI != EPSILON)
+            if (stringI[0] != EPSILON)
             {
                 if ((*stringI).length() >= this->minP)
                 {
@@ -429,8 +419,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
         {
             for (stringI = S.begin(); stringI != S.end(); ++stringI)
             {
-                if (*stringI == EPSILON) {
-                    // B1 = this->WordVectorOR(B1, this->B);
+                if (stringI[0] == EPSILON) {
                     this->WordVectorOR_IP(B1, this->B);
                 } else {
                     this->F += (*stringI).length();
@@ -442,7 +431,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
         //loop through the strings in the segment
         for (stringI = S.begin(); stringI != S.end(); ++stringI)
         {
-            if (*stringI != EPSILON)
+            if (stringI[0] != EPSILON)
             {
                 m = (*stringI).length();
 
@@ -526,10 +515,14 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 {
                     this->Np++;
                     this->Nm += m;
-                    B2 = WordVectorAND(this->B, this->occVector(*stringI));
-                    B2 = WordVectorLeftShift(B2, m);
-                    // B1 = this->WordVectorOR(B1, B2);
-                    this->WordVectorOR_IP(B1, B2);
+                    k = this->occVector(*stringI);
+                    if (k != 0)
+                    {
+                        B2 = this->B;
+                        this->WordVectorAND_IP(B2, this->OVMem[k]);
+                        this->WordVectorLeftShift_IP(B2, m);
+                        this->WordVectorOR_IP(B1, B2);
+                    }
                 }
             }
         }
@@ -554,39 +547,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 }
 
 /**
- * @deprecated MultiEDSM::WordVectorOR_IP() is more efficient.
- *
- * The bitwise OR operation performed on WordVectors. Time taken: O([max_words_used(a,b)/w])
- *
- * @param a
- * @param b
- * @return (a | b)
- */
-WordVector MultiEDSM::WordVectorOR(const WordVector & a, const WordVector & b)
-{
-    WordVector c;
-    unsigned int i, m = min(a.size(), b.size()), n = max(a.size(), b.size());
-    for (i = 0; i < m; i++) {
-        c.push_back(a[i] | b[i]);
-    }
-    if (a.size() > b.size())
-    {
-        for (; i < n; i++) {
-            c.push_back(a[i]);
-        }
-    }
-    else
-    {
-        for (; i < n; i++) {
-            c.push_back(b[i]);
-        }
-    }
-    return c;
-}
-
-/**
- * The bitwise OR operation performed 'in place' on parameter a. This is a more
- * efficient way to update a than calling MultiEDSM::WordVectorOR().
+ * The bitwise OR operation performed 'in place' on parameter a.
  *
  * @param a Subject WordVector which will be altered
  * @param b Object WordVector
@@ -618,39 +579,21 @@ void MultiEDSM::WordVectorOR_IP(WordVector & a, const WordVector & b)
 }
 
 /**
- * The bitwise AND operation performed on WordVectors. Time taken: O([min_words_used(a,b)/w])
- *
- * @param a
- * @param b
- * @return (a & b)
- */
-WordVector MultiEDSM::WordVectorAND(const WordVector & a, const WordVector & b)
-{
-    WordVector c;
-    unsigned int i;
-    unsigned int m = min(a.size(), b.size());
-    for (i = 0; i < m; i++) {
-        c.push_back(a[i] & b[i]);
-    }
-    return c;
-}
-
-/**
- * @deprecated because MultiEDSM::WordVectorAND() is the only form required.
- *
- * The bitwise AND operation performed 'in place' on parameter a. This is a more
- * efficient way to update than calling MultiEDSM::WordVectorAND().
+ * The bitwise AND operation performed 'in place' on parameter a. Time taken:
+ * O([M/w])
  *
  * @param a WordVector subject which will be altered
  * @param b WordVector object
  */
 void MultiEDSM::WordVectorAND_IP(WordVector & a, const WordVector & b)
 {
-    unsigned int i, m = min(a.size(), b.size());
+    unsigned int i, m = min(a.size(), b.size()), n = a.size();
     for (i = 0; i < m; i++) {
         a[i] = a[i] & b[i];
     }
-    a.resize(m);
+    for (; i < n; i++) {
+        a[i] = 0;
+    }
 }
 
 /**
@@ -658,21 +601,18 @@ void MultiEDSM::WordVectorAND_IP(WordVector & a, const WordVector & b)
  * shift operation is not performed if it overlaps into the next pattern in the
  * bitvector. This method uses the Pos2PatId datastructure to identify if a shift
  * illegally crosses into the next pattern, so takes O(M) space.
- * Time taken on average I predict: O(num_set_bits(x) + [M/w])... or really
+ * Time taken is roughly: O(num_set_bits(x) + [M/w])... or really
  * worst-Worst-WORST case, where there is a match at every single position, which
  * is very-Very-VERY unlikely then O(M + [M/w])!
  *
  * @param x
  * @param m The length of the string being checked
- * @return A WordVector containing only the states of valid infixes
  */
-WordVector MultiEDSM::WordVectorSPECIALSHIFT(const WordVector & x, unsigned int m)
+void MultiEDSM::WordVectorSPECIALSHIFT_IP(WordVector & x, unsigned int m)
 {
-    WordVector c;
-
     WORD temp;
-    unsigned int i, j, currPos, updPos, currPattId, updPattId, updWordIdx;
-    for (i = 0; i < x.size(); i++)
+    unsigned int i, j, currPos, updPos, currPattId, updPattId, currWordIdx, updWordIdx, n = x.size();
+    for (i = 0; i < n; i++)
     {
         temp = x[i];
         while (temp)
@@ -684,17 +624,16 @@ WordVector MultiEDSM::WordVectorSPECIALSHIFT(const WordVector & x, unsigned int 
             updPattId = this->Pos2PatId[updPos];
             if (currPattId == updPattId)
             {
+                //remove old bit position
+                currWordIdx = (unsigned int) ((float)currPos / (float)BITSINWORD);
+                x[currWordIdx] = x[currWordIdx] ^ (1ul << j);
+                //set new bit position
                 updWordIdx = (unsigned int) ((float)updPos / (float)BITSINWORD);
-                while (updWordIdx >= c.size()) {
-                    c.push_back(0ul);
-                }
-                c[updWordIdx] = c[updWordIdx] | (1ul << (updPos % BITSINWORD));
+                x[updWordIdx] = x[updWordIdx] | (1ul << (updPos % BITSINWORD));
             }
             temp = temp ^ (1ul << j);
         }
     }
-
-    return c;
 }
 
 /**
@@ -706,55 +645,45 @@ WordVector MultiEDSM::WordVectorSPECIALSHIFT(const WordVector & x, unsigned int 
  *
  * @param x
  * @param m The length of the string being checked
- * @return A WordVector containing only the states of valid infixes
  */
-WordVector MultiEDSM::WordVectorSIMPLESHIFT(const WordVector & x, unsigned int m)
+void MultiEDSM::WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m)
 {
-    unsigned int s = x.size();
-    if (s == 0) {
-        return x;
-    }
-    WordVector c = x;
-    WordVector ends = this->umsa->getEndingStates();
+    const WordVector & ends = this->umsa->getEndingStates();
 
-    WORD carryMask = 1ul << (BITSINWORD - 1);
-    WORD temp, carry;
-    unsigned int h, i;
-    for (h = 0; h < m; h++)
+    WORD temp, carry, carryMask = 1ul << (BITSINWORD - 1);
+    unsigned int i, j, k = x.size();
+    for (i = 0; i < m; i++)
     {
         carry = 0;
-        for (i = 0; i < s; i++)
+        for (j = 0; j < k; j++)
         {
-            temp = c[i];
-            c[i] = (c[i] << 1) | carry; //left shift and apply the carried 1
-            c[i] = c[i] ^ (ends[i] & c[i]); //if 1 passes pattern boundary (end), then remove it because it is an illegal shift
+            temp = x[j];
+            x[j] = (x[j] << 1) | carry; //left shift and apply the carried 1
+            x[j] = x[j] ^ (ends[j] & x[j]); //if 1 passes pattern boundary (end), then remove it because it is an illegal shift
             carry = (WORD)((carryMask & temp) != 0); //work out if we need to carry a 1 to the next word
-            if (carry && (i == (s - 1))) { //identify if we need to expand c
-                c.push_back(0ul);
-                s++;
+            if (carry && (j == (k - 1))) { //identify if we need to expand x //@TODO maybe this is not required because x will always be the correct size?
+               x.push_back(0ul);
+               k++;
             }
         }
     }
-
-    return c;
 }
 
 /**
- * Performs the left-shift operation for the WordVector returned from running the
+ * Performs the left-shift operation for the WordVector returned after running the
  * OccVector tool. This operation is potentially expensive so there are two
  * different ways to do it:
- *  - MultiEDSM::WordVectorSPECIALSHIFT() has a worst case time of O(num_set_bits(x) + [M/w])
+ *  - MultiEDSM::WordVectorSPECIALSHIFT_IP() has a worst case time of O(num_set_bits(x) + [M/w])
  *    or O(M + [M/w]) if there is a huge number of set bits in x.
- *  - MultiEDSM::WordVectorSIMPLESHIFT() has a worst case time of O(m[M/w])
+ *  - MultiEDSM::WordVectorSIMPLESHIFT_IP() has a worst case time of O(m[M/w])
  *    because it does m shift operations over [M/w] words.
  * To get the best performance, we do a triage and identify which of the methods
  * does it in the least time. The triage check itself takes O([M/w]) time.
  *
  * @param x
  * @param m The length of the string being checked
- * @return A WordVector containing only the states of valid infixes
  */
-WordVector MultiEDSM::WordVectorLeftShift(const WordVector & x, unsigned int m)
+void MultiEDSM::WordVectorLeftShift_IP(WordVector & x, unsigned int m)
 {
     unsigned int i = 0, p = 0, s = x.size();
     unsigned int specialShiftTime = 0, simpleShiftTime = m * s;
@@ -767,9 +696,10 @@ WordVector MultiEDSM::WordVectorLeftShift(const WordVector & x, unsigned int m)
     }
 
     if (simpleShiftTime <= specialShiftTime) {
-        return this->WordVectorSIMPLESHIFT(x, m);
+        this->WordVectorSIMPLESHIFT_IP(x, m);
+    } else {
+        this->WordVectorSPECIALSHIFT_IP(x, m);
     }
-    return this->WordVectorSPECIALSHIFT(x, m);
 }
 
 /**

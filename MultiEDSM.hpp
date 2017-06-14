@@ -86,17 +86,13 @@ private:
 
     WordVector recAssignOVMem(const cst_node_t & u);
 
-    WordVector WordVectorOR(const WordVector & a, const WordVector & b);
-
     void WordVectorOR_IP(WordVector & a, const WordVector & b);
-
-    WordVector WordVectorAND(const WordVector & a, const WordVector & b);
 
     void WordVectorAND_IP(WordVector & a, const WordVector & b);
 
-    WordVector WordVectorSPECIALSHIFT(const WordVector & x, unsigned int m);
+    void WordVectorSPECIALSHIFT_IP(WordVector & x, unsigned int m);
 
-    WordVector WordVectorSIMPLESHIFT(const WordVector & x, unsigned int m);
+    void WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m);
 
 protected:
     /**
@@ -221,9 +217,9 @@ protected:
 
     WordVector buildBorderPrefixWordVector(const Segment & S);
 
-    WordVector occVector(const std::string & a);
+    unsigned int occVector(const std::string & a);
 
-    WordVector WordVectorLeftShift(const WordVector & x, unsigned int m);
+    void WordVectorLeftShift_IP(WordVector & x, unsigned int m);
 
 public:
 
