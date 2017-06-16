@@ -1,15 +1,19 @@
-Multi-EDSM searching...
+Multi-EDSM started...
 
-Match found. matchIdx 11522, posIdx 1, pattId 1847
-Match found. matchIdx 33391, posIdx 6, pattId 175
-Match found. matchIdx 97063, posIdx 1, pattId 1280
 
 No. determinate bases (f): 90459
 No. degenerate bases (F): 266735
 No. determinate segments (d): 8613
 No. degenerate segments (D): 9541
 No. strings processed shorter than pattern (N'): 59419
-EDSM-BV processing time: 2.48208s.
+Multi-EDSM processing time: 1.98269s.
 
-2.43user 0.07system 0:02.51elapsed 99%CPU (0avgtext+0avgdata 267740maxresident)k
-0inputs+0outputs (0major+67882minor)pagefaults 0swaps
+3 matches found!
+
+Position,PatternId
+------------------
+11522,1847
+33391,175
+97063,1280
+1.97user 0.02system 0:02.02elapsed 99%CPU (0avgtext+0avgdata 263764maxresident)k
+88inputs+0outputs (0major+66886minor)pagefaults 0swaps

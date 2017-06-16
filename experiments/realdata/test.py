@@ -99,7 +99,7 @@ if not os.path.exists(patternsFile):
 #
 # Search for the patterns with Multi-EDSM
 #
-cmd = './../../multiedsm ' + args.eds_file.name + ' ' + patternsFile
+cmd = './../../multiedsm -s ' + args.eds_file.name + ' -p ' + patternsFile
 output = subprocess.Popen(['time ' + cmd], shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
 with open(resultsFile, 'w') as f:
 	f.write(output)

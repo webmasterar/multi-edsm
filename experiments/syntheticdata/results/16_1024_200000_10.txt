@@ -1,13 +1,13 @@
-Multi-EDSM searching...
+Multi-EDSM started...
 
-Match found. matchIdx 13626, posIdx 3, pattId 16
 
 No. determinate bases (f): 180935
 No. degenerate bases (F): 535807
 No. determinate segments (d): 17232
 No. degenerate segments (D): 19065
 No. strings processed shorter than pattern (N'): 119426
-EDSM-BV processing time: 0.766368s.
+Multi-EDSM processing time: 0.572819s.
 
-0.78user 0.00system 0:00.79elapsed 99%CPU (0avgtext+0avgdata 13068maxresident)k
-0inputs+0outputs (0major+2392minor)pagefaults 0swaps
+No matches found.
+0.58user 0.00system 0:00.59elapsed 99%CPU (0avgtext+0avgdata 13184maxresident)k
+0inputs+0outputs (0major+2397minor)pagefaults 0swaps

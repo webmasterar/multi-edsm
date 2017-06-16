@@ -1,4 +1,4 @@
-Multi-EDSM searching...
+Multi-EDSM started...
 
 
 No. determinate bases (f): 57300078
@@ -6,9 +6,9 @@ No. degenerate bases (F): 3914387
 No. determinate segments (d): 1706168
 No. degenerate segments (D): 1828905
 No. strings processed shorter than pattern (N'): 5356447
-EDSM-BV processing time: 196.398s.
+Multi-EDSM processing time: 202.197s.
 
-102 matches found!
+106 matches found!
 
 Position,PatternId
 ------------------
@@ -18,8 +18,11 @@ Position,PatternId
 2331664,43
 3361560,64
 3496989,74
+4484089,75
 4484091,75
 4484092,75
+4484098,75
+4484099,75
 5442261,4
 5456446,22
 5672602,12
@@ -96,6 +99,7 @@ Position,PatternId
 46562524,45
 47380279,71
 47449018,72
+48061464,55
 48061472,55
 48268248,88
 49034833,8
@@ -114,5 +118,5 @@ Position,PatternId
 56451039,90
 57338355,49
 58690621,59
-197.57user 2.06system 6:25.10elapsed 51%CPU (0avgtext+0avgdata 44792maxresident)k
-0inputs+0outputs (0major+12051minor)pagefaults 0swaps
+202.96user 2.18system 4:01.37elapsed 84%CPU (0avgtext+0avgdata 44896maxresident)k
+32inputs+0outputs (0major+12045minor)pagefaults 0swaps

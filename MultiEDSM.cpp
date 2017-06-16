@@ -160,10 +160,6 @@ void MultiEDSM::constructOV()
         this->OVMem.push_back(v);
     }
     this->recAssignOVMem(this->STp.root());
-    unsigned int numWords = 0;
-    for (i = 0; i < numNodes; i++) {
-        numWords += this->OVMem[i].size();
-    }
 }
 
 /**
@@ -179,16 +175,16 @@ WordVector MultiEDSM::recAssignOVMem(const cst_node_t & u)
     if (this->STp.is_leaf(u))
     {
         unsigned int h = this->STp.sn(u);        //h is index in suffix tree string
-        int i = this->STpIdx2BVIdx[h];           //i is index in bitvector
-        unsigned int j = this->OVMem[id].size(); //current size of the OVMem[id] WordVector
 
         //make sure it is not first letter or last letter in a pattern
         if (h > 0 && this->STpIdx2BVIdx[h - 1] != SEPARATOR_DIGIT && \
-           (h + 1) < (this->R - 1) && this->STpIdx2BVIdx[h + 1] != SEPARATOR_DIGIT)
+           (h + 1) < ((int)this->R - 1) && this->STpIdx2BVIdx[h + 1] != SEPARATOR_DIGIT)
         {
             //calculate bit position
-            unsigned int wordIdx = (unsigned int) ((float)(i - 1) / (float)BITSINWORD);
-            unsigned int bitShifts = (i - 1) % BITSINWORD;
+            long long int i = this->STpIdx2BVIdx[h] - 1;    //i is index in bitvector
+            unsigned int j = this->OVMem[id].size();        //current size of the OVMem[id] WordVector
+            unsigned int wordIdx = (unsigned int) ((double)i / (double)BITSINWORD);
+            unsigned int bitShifts = i % BITSINWORD;
 
             //ensure word vector has enough words in it
             while (j <= wordIdx) {
@@ -256,11 +252,14 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
 }
 
 /**
- * occVector tool returns the starting positions of the given substring a if it
- * is present in the pattern encoded as a bitvector. Time taken: O(|a|).
+ * occVector tool returns the index in MultiEDSM::OVMem of the starting positions
+ * of a given substring _a_, if it is present in the pattern, encoded as a bitvector.
+ * If _a_ is not present in any patterns as an infix then 0 will be returned (0
+ * index is the root element but it is not used directly by the algorithm).
+ * Time taken: O(|a|).
  *
  * @param a A substring
- * @return Starting positions of substring a encoded into a bitvector
+ * @return Starting positions of substring _a_ encoded into a bitvector
  */
 unsigned int MultiEDSM::occVector(const string & a)
 {
@@ -284,7 +283,7 @@ unsigned int MultiEDSM::occVector(const string & a)
  * Report match found. The results can be obtained by calling MultiEDSM::getMatches().
  * Note: Although three arguments are taken by this method, we only report two
  * of them: the Position and the PatternId. The posIdx parameter, the relative
- * position inside a segment may be useful for some reasons but we do not
+ * position inside a segment may be useful for some purposes but we do not
  * currently report it.
  *
  * @param matchIdx The index of the ending position in the EDT where the match was found
@@ -293,7 +292,17 @@ unsigned int MultiEDSM::occVector(const string & a)
  */
 void MultiEDSM::report(const unsigned int matchIdx, const unsigned int posIdx, const int pattId)
 {
-    this->matches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+    if (this->matches.size() == 0)
+    {
+        this->matches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+    }
+    else
+    {
+        pair<unsigned int, unsigned int> & last = this->matches.back();
+        if (last.first != matchIdx || last.second != pattId) {
+            this->matches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+        }
+    }
 }
 
 /**
@@ -624,11 +633,14 @@ void MultiEDSM::WordVectorSPECIALSHIFT_IP(WordVector & x, unsigned int m)
             updPattId = this->Pos2PatId[updPos];
             if (currPattId == updPattId)
             {
-                //remove old bit position
-                currWordIdx = (unsigned int) ((float)currPos / (float)BITSINWORD);
-                x[currWordIdx] = x[currWordIdx] ^ (1ul << j);
+                //remove old bit position -- @TODO figure out why removing the old bit is buggy
+                // currWordIdx = (unsigned int) ((float)currPos / (float)BITSINWORD);
+                // x[currWordIdx] = x[currWordIdx] ^ (1ul << j);
                 //set new bit position
                 updWordIdx = (unsigned int) ((float)updPos / (float)BITSINWORD);
+                while (updWordIdx >= n) {
+                    x.push_back(0ul);
+                }
                 x[updWordIdx] = x[updWordIdx] | (1ul << (updPos % BITSINWORD));
             }
             temp = temp ^ (1ul << j);

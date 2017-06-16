@@ -1,30 +1,37 @@
-Multi-EDSM searching...
+Multi-EDSM started...
 
-Match found. matchIdx 4258, posIdx 6, pattId 8181
-Match found. matchIdx 4871, posIdx 4, pattId 8838
-Match found. matchIdx 18711, posIdx 2, pattId 7780
-Match found. matchIdx 22762, posIdx 3, pattId 8246
-Match found. matchIdx 31316, posIdx 3, pattId 3799
-Match found. matchIdx 35295, posIdx 2, pattId 7130
-Match found. matchIdx 41198, posIdx 4, pattId 6284
-Match found. matchIdx 46978, posIdx 6, pattId 2263
-Match found. matchIdx 48206, posIdx 7, pattId 1990
-Match found. matchIdx 51101, posIdx 1, pattId 6623
-Match found. matchIdx 54757, posIdx 0, pattId 1706
-Match found. matchIdx 56490, posIdx 5, pattId 103
-Match found. matchIdx 58696, posIdx 11, pattId 6866
-Match found. matchIdx 65231, posIdx 2, pattId 14326
-Match found. matchIdx 68893, posIdx 1, pattId 4261
-Match found. matchIdx 77780, posIdx 2, pattId 3060
-Match found. matchIdx 84512, posIdx 1, pattId 7844
-Match found. matchIdx 85324, posIdx 4, pattId 7106
+Searched batch 1 containing 9634 patterns.
+Searched batch 2 containing 5366 patterns.
 
-No. determinate bases (f): 90459
-No. degenerate bases (F): 266735
-No. determinate segments (d): 8613
-No. degenerate segments (D): 9541
-No. strings processed shorter than pattern (N'): 59419
-EDSM-BV processing time: 28.3388s.
+Patterns searched in 2 batches.
+No. determinate bases (f): (180918 processed) 90459
+No. degenerate bases (F): (533470 processed) 266735
+No. determinate segments (d): (17226 processed) 8613
+No. degenerate segments (D): (19082 processed) 9541
+No. strings processed shorter than pattern (N'): 118838
+Multi-EDSM processing time: 16.4138s.
 
-26.40user 3.14system 6:26.27elapsed 7%CPU (0avgtext+0avgdata 7342524maxresident)k
-368672inputs+0outputs (37396major+1900157minor)pagefaults 0swaps
+18 matches found!
+
+Position,PatternId
+------------------
+4258,8181
+4871,8838
+18711,7780
+22762,8246
+31316,3799
+35295,7130
+41198,6284
+46978,2263
+48206,1990
+51101,6623
+54757,1706
+56490,103
+58696,6866
+68893,4261
+77780,3060
+84512,7844
+85324,7106
+65231,14326
+15.89user 0.85system 0:16.77elapsed 99%CPU (0avgtext+0avgdata 3319204maxresident)k
+504inputs+0outputs (0major+831524minor)pagefaults 0swaps
