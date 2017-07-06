@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
 #include <sdsl/util.hpp>
 #include <sdsl/suffix_trees.hpp>
 #include "MyUMSA.hpp"
@@ -30,7 +31,7 @@
 #define SIGMA 4
 #define EPSILON "E"
 #define ALPHABET "ACGT"
-#define BUFFERSIZE 1000000
+#define BUFFERSIZE 4194304
 #define SEPARATOR_DIGIT -1
 
 //
@@ -84,7 +85,13 @@ private:
 
     void constructOV();
 
+    void constructOV2();
+
+    void constructOV3();
+
     WordVector recAssignOVMem(const cst_node_t & u);
+
+    WordVector recAssignOVMem2(const cst_node_t & u, const unsigned int currDepth);
 
     void WordVectorOR_IP(WordVector & a, const WordVector & b);
 
@@ -119,6 +126,7 @@ protected:
      * @var OVMem Holds the computer words storing pattern positions for OccVector()
      */
     std::vector<WordVector> OVMem;
+    std::map<unsigned int, WordVector> OVMem2;
 
     /**
      * @var M The total length of the patterns
