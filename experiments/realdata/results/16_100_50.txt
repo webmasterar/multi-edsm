@@ -1,4 +1,4 @@
-Multi-EDSM searching...
+Multi-EDSM started...
 
 
 No. determinate bases (f): 87661229
@@ -6,9 +6,9 @@ No. degenerate bases (F): 5699425
 No. determinate segments (d): 2518908
 No. degenerate segments (D): 2693524
 No. strings processed shorter than pattern (N'): 7459092
-EDSM-BV processing time: 129.093s.
+Multi-EDSM processing time: 110.652s.
 
-111 matches found!
+121 matches found!
 
 Position,PatternId
 ------------------
@@ -20,11 +20,15 @@ Position,PatternId
 2541508,78
 3320049,21
 3802039,18
+5605538,43
 5612419,50
 5966545,62
+6726966,43
 7335757,23
+7557851,43
 8729283,98
 10048580,6
+10054769,43
 10073087,56
 10284202,28
 11182343,71
@@ -71,6 +75,8 @@ Position,PatternId
 56033185,38
 56503627,54
 56792174,12
+56860375,15
+57574105,15
 59194852,5
 59240158,54
 59952903,99
@@ -93,7 +99,9 @@ Position,PatternId
 71961438,37
 73021614,80
 73893889,88
+73902369,15
 74210220,30
+75493081,43
 75549731,54
 76023343,75
 76199556,54
@@ -106,6 +114,7 @@ Position,PatternId
 79375292,87
 79482991,35
 79769533,31
+79928101,43
 80088305,86
 80159079,70
 80281896,92
@@ -115,6 +124,7 @@ Position,PatternId
 82357922,48
 82489284,34
 83123238,84
+83905934,43
 83998003,69
 84227626,22
 84457486,67
@@ -123,5 +133,5 @@ Position,PatternId
 86673970,65
 87254920,20
 88130735,7
-131.02user 2.81system 4:18.89elapsed 51%CPU (0avgtext+0avgdata 13008maxresident)k
-0inputs+0outputs (0major+3909minor)pagefaults 0swaps
+111.76user 2.62system 2:04.55elapsed 91%CPU (0avgtext+0avgdata 13248maxresident)k
+0inputs+0outputs (0major+3914minor)pagefaults 0swaps
