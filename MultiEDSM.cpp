@@ -227,6 +227,7 @@ void MultiEDSM::constructOV3()
     //the bitvector and storing it in OVMem. Wipes memory as it rolls back up
     //towards the root
     int j;
+    unsigned int nodeCreationCounter, leafCreationCounter, totalNodesCounter, totalLeafSize;
     unsigned int parent_id, root_id = this->STp.id(this->STp.root());
     unsigned int i, numNodes = this->STp.nodes();
     // cout << "Initializing OVMem" << endl;
@@ -241,6 +242,11 @@ void MultiEDSM::constructOV3()
     cout << "Tree climbing started" << endl;
     for (j = nodeLevels.size() - 1; j >= 0; j--)
     {
+        nodeCreationCounter = 0;
+        leafCreationCounter = 0;
+        totalNodesCounter = 0;
+        totalLeafSize = 0;
+
         for (unsigned int id : nodeLevels[j])
         {
             currNode = this->STp.inv_id(id);
@@ -275,6 +281,8 @@ void MultiEDSM::constructOV3()
                         //create the parent if not exists or combine a with parent
                         if (this->OVMem2.find(parent_id) == this->OVMem2.end()) {
                             this->OVMem2[parent_id] = a;
+                            leafCreationCounter++;
+                            totalLeafSize += wordIdx + 1;
                         } else {
                             this->WordVectorOR_IP(this->OVMem2[parent_id], a);
                         }
@@ -282,20 +290,30 @@ void MultiEDSM::constructOV3()
                 }
                 else
                 {
-                    if (this->OVMem2.find(parent_id) == this->OVMem2.end()) {
-                        this->OVMem2[parent_id] = this->OVMem2[id];
-                    } else {
-                        this->WordVectorOR_IP(this->OVMem2[parent_id], this->OVMem2[id]);
-                    }
-                    if (this->STp.depth(currNode) > this->maxP) {
-                        // this->OVMem[id].empty();
-                        this->OVMem2.erase(id);
+                    //if node already exists
+                    if (this->OVMem2.find(id) != this->OVMem2.end())
+                    {
+                        if (this->OVMem2.find(parent_id) == this->OVMem2.end()) {
+                            this->OVMem2[parent_id] = this->OVMem2[id];
+                            nodeCreationCounter++;
+                        } else {
+                            this->WordVectorOR_IP(this->OVMem2[parent_id], this->OVMem2[id]);
+                        }
+                        if (this->STp.depth(currNode) > this->maxP) {
+                            // this->OVMem[id].empty();
+                            this->OVMem2.erase(id);
+                        }
                     }
                 }
             }
         }
 
-        cout << "Done with level " << j << " containing " << nodeLevels[j].size() << " items" << endl;
+        totalNodesCounter = nodeLevels[j].size();
+
+        cout << "Level " << j << " contains " << totalNodesCounter << " nodes. " \
+             << leafCreationCounter << " leaves and " << nodeCreationCounter \
+             << " nodes were created. Average leaf size in bytes: " \
+             << (8 * (int)((double)totalLeafSize / (double)leafCreationCounter)) << endl;
 
         nodeLevels[j].empty();
     }
