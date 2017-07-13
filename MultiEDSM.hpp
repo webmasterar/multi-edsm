@@ -89,9 +89,13 @@ private:
 
     void constructOV3();
 
+    void constructOV4();
+
     WordVector recAssignOVMem(const cst_node_t & u);
 
     WordVector recAssignOVMem2(const cst_node_t & u, const unsigned int currDepth);
+
+    WordVector & recAssignOVMem4(const cst_node_t & u);
 
     void WordVectorOR_IP(WordVector & a, const WordVector & b);
 

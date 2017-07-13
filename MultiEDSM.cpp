@@ -142,13 +142,54 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     this->Pos2PatId = this->umsa->getPatternPositions();
 
     //construct occVector datastructure
-    this->constructOV3();
+    this->constructOV4();
 
     //stop timer
     this->duration += clock() - start;
 
     // cout << "Preproccessing " << patterns.size() << " patterns of size M=" \
     //      << this->M << " completed in " << this->getDuration() << "s." << endl;
+}
+
+void MultiEDSM::constructOV4()
+{
+    unsigned int i, numNodes = this->STp.nodes();
+    cout << "NumNodes: " << numNodes << endl;
+    for (i = 0; i < numNodes; i++) {
+        WordVector v(1, 0ul);
+        v.shrink_to_fit();
+        this->OVMem.push_back(v);
+    }
+    this->recAssignOVMem4(this->STp.root());
+}
+
+WordVector & MultiEDSM::recAssignOVMem4(const cst_node_t & u)
+{
+    unsigned int id = this->STp.id(u);
+
+    if (this->STp.is_leaf(u))
+    {
+        unsigned int sn = this->STp.sn(u);
+        long long int us = (long long int)this->STpIdx2BVIdx[sn] - 1;
+        if (us > SEPARATOR_DIGIT)
+        {
+            unsigned int wordIdx = (unsigned int) ((double)us / (double)BITSINWORD);
+            unsigned int bitShifts = (unsigned int) us % BITSINWORD;
+
+            WordVector a(wordIdx + 1, 0ul);
+            a.shrink_to_fit();
+            a[wordIdx] = a[wordIdx] | (1ul << bitShifts);
+            this->OVMem[id] = a;
+        }
+    }
+    else
+    {
+        for (const auto & child : this->STp.children(u)) {
+            this->WordVectorOR_IP(this->OVMem[id], this->recAssignOVMem4(child));
+        }
+    }
+
+    return this->OVMem[id];
 }
 
 /**
@@ -165,7 +206,6 @@ void MultiEDSM::constructOV()
         WordVector v(1, 0ul);
         this->OVMem.push_back(v);
     }
-    this->recAssignOVMem(this->STp.root());
     cout << "RecAssign" << endl;
     this->recAssignOVMem(this->STp.root());
 }
