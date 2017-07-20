@@ -138,7 +138,7 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     construct_im(this->STp, p.c_str(), sizeof(char));
 
     //tool to get pattern id from any given position in the bitvector/p
-    cout << "Pos2Pat" << endl;
+    cout << "Pos2Pat..." << endl;
     this->Pos2PatId = this->umsa->getPatternPositions();
 
     //construct occVector datastructure
@@ -147,8 +147,8 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     //stop timer
     this->duration += clock() - start;
 
-    // cout << "Preproccessing " << patterns.size() << " patterns of size M=" \
-    //      << this->M << " completed in " << this->getDuration() << "s." << endl;
+    cout << "Preproccessing " << patterns.size() << " patterns of size M=" \
+         << this->M << " completed in " << this->getDuration() << "s." << endl;
 }
 
 /**
@@ -544,7 +544,7 @@ void MultiEDSM::constructOV6()
     //
     // Step 1: Traverse the tree level order up to maxP-2 (inclusive) levels.
     //
-    cout << "Creating nodeLevels" << endl;
+    cout << "Creating nodeLevels..." << endl;
     vector<vector<unsigned int>> nodeLevels;
     queue<cst_node_t> q;
     q.push(this->STp.root());
@@ -589,12 +589,13 @@ void MultiEDSM::constructOV6()
         v.shrink_to_fit();
         this->OVMem6.push_back(v);
     }
-    cout << "Leaf searching..." << endl;
     for (unsigned int nodeId : nodeLevels[maxDepth])
     {
         currNode = this->STp.inv_id(nodeId);
         if (!this->STp.is_leaf(currNode)) {
-            this->recEncodeLeavesToNode(currNode, nodeId);
+            cout << "Leaf searching " << nodeId << endl;
+            // this->recEncodeLeavesToNode(currNode, nodeId);
+            this->nonrecEncodeLeavesToNode(currNode, nodeId);
         }
     }
 
@@ -665,6 +666,47 @@ void MultiEDSM::recEncodeLeavesToNode(const cst_node_t & node, const unsigned in
     {
         for (const auto & child : this->STp.children(node)) {
             this->recEncodeLeavesToNode(child, targetNodeId);
+        }
+    }
+}
+void MultiEDSM::nonrecEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId)
+{
+    queue<cst_node_t> q;
+    q.push(node);
+    cst_node_t currNode;
+    while (!q.empty())
+    {
+        currNode = q.front();
+        q.pop();
+        for (const auto & child : this->STp.children(currNode))
+        {
+            if (this->STp.is_leaf(child))
+            {
+                unsigned int h = this->STp.sn(child);  //h is index in suffix tree string
+
+                //make sure it is not first letter or last letter in a pattern or seperator char
+                if (
+                    (h > 0 && ((h + 1) < (this->R - 1))) && \
+                    (this->STpIdx2BVIdx[h-1] != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[h]   != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[h+1] != SEPARATOR_DIGIT)
+                ) {
+                    //calculate bit position
+                    long long int k = this->STpIdx2BVIdx[h] - 1;  //i is index in bitvector
+                    cout << "Leaf k: " << k << endl;
+                    unsigned int wordIdx = (unsigned int) ((double)k / (double)BITSINWORD);
+                    unsigned int bitShifts = k % BITSINWORD;
+
+                    //create word vector with enough words in it and combine it with target node
+                    WordVector a(wordIdx + 1, 0ul);
+                    a[wordIdx] = a[wordIdx] | (1ul << bitShifts);
+                    this->WordVectorOR_IP(this->OVMem6[targetNodeId], a);
+                }
+            }
+            else
+            {
+                q.push(child);
+            }
         }
     }
 }

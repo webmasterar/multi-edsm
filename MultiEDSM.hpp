@@ -106,6 +106,8 @@ private:
 
     void recEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId);
 
+    void nonrecEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId);
+
     void WordVectorOR_IP(WordVector & a, const WordVector & b);
 
     void WordVectorAND_IP(WordVector & a, const WordVector & b);
