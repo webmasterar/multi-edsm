@@ -25,6 +25,7 @@
 #include <memory>
 #include <map>
 #include <sdsl/util.hpp>
+#include <sdsl/rrr_vector.hpp>
 #include <sdsl/suffix_trees.hpp>
 #include "MyUMSA.hpp"
 
@@ -33,6 +34,7 @@
 #define ALPHABET "ACGT"
 #define BUFFERSIZE 4194304
 #define SEPARATOR_DIGIT -1
+#define RRR_SIZE (BITSINWORD - 1)
 
 //
 // Fast implementations of bitvector operations:
@@ -72,6 +74,7 @@ typedef sdsl::cst_sct3<> cst_t;
 typedef cst_t::node_type cst_node_t;
 typedef cst_t::size_type cst_size_t;
 typedef cst_t::char_type cst_char_t;
+typedef sdsl::rrr_vector<RRR_SIZE> RRR;
 typedef std::vector<std::pair<unsigned int, unsigned int>> ResultSet;
 typedef std::vector<WORD> WordVector;
 typedef std::vector<std::string> Segment;
@@ -91,11 +94,17 @@ private:
 
     void constructOV4();
 
+    void constructOV5();
+
+    void constructOV6();
+
     WordVector recAssignOVMem(const cst_node_t & u);
 
     WordVector recAssignOVMem2(const cst_node_t & u, const unsigned int currDepth);
 
     WordVector & recAssignOVMem4(const cst_node_t & u);
+
+    void recEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId);
 
     void WordVectorOR_IP(WordVector & a, const WordVector & b);
 
@@ -131,6 +140,12 @@ protected:
      */
     std::vector<WordVector> OVMem;
     std::map<unsigned int, WordVector> OVMem2;
+    std::map<unsigned int, WordVector> OVMem3;
+    std::vector<WordVector> OVMem4;
+    std::map<unsigned int, WordVector> OVMem5;
+    std::map<unsigned int, RRR> OVMem51;
+    std::map<unsigned int, RRR> OVMemLeaves;
+    std::vector<WordVector> OVMem6;
 
     /**
      * @var M The total length of the patterns
