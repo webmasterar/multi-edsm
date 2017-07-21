@@ -4,5 +4,6 @@ experiments/realdata/datasets/*
 experiments/readmapping/*
 experiments/words/*
 multiedsm
+test
 *.o
 *.exe

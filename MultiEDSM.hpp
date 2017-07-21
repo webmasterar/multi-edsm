@@ -33,6 +33,7 @@
 #define EPSILON "E"
 #define ALPHABET "ACGT"
 #define BUFFERSIZE 4194304
+#define SEPARATOR_CHAR '#'
 #define SEPARATOR_DIGIT -1
 #define RRR_SIZE (BITSINWORD - 1)
 
@@ -96,7 +97,7 @@ private:
 
     void constructOV5();
 
-    void constructOV6();
+    void constructOV6(const std::string & p);
 
     WordVector recAssignOVMem(const cst_node_t & u);
 
@@ -115,6 +116,8 @@ private:
     void WordVectorSPECIALSHIFT_IP(WordVector & x, unsigned int m);
 
     void WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m);
+
+    void WordVectorSet1At(WordVector & x, unsigned int pos);
 
 protected:
     /**

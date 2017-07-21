@@ -91,7 +91,6 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
 
     //add patterns to bitvector and build suffix tree string
     string p = "";
-    char sep = '#';
     unsigned int h, i, j;
     for (i = 0; i < patterns.size(); i++)
     {
@@ -104,9 +103,9 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
         //create bitvector of pattern - for Shift-And
         this->umsa->addPattern(patterns[i]);
 
-        //add pattern to p and append with seperator for building suffix tree of patterns
+        //add pattern to p and append with seperator (#) for building suffix tree of patterns
         p += patterns[i];
-        p += sep;
+        p += SEPARATOR_CHAR;
 
         //update STpIdx2BVIdx datastructures with correct index of STp match for
         //bitvector and pattern id based on bit position in bitvector
@@ -142,7 +141,7 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     this->Pos2PatId = this->umsa->getPatternPositions();
 
     //construct occVector datastructure
-    this->constructOV6();
+    this->constructOV6(p);
 
     //stop timer
     this->duration += clock() - start;
@@ -539,17 +538,19 @@ void MultiEDSM::constructOV5()
     // }
 }
 
-void MultiEDSM::constructOV6()
+void MultiEDSM::constructOV6(const string & p)
 {
     //
-    // Step 1: Traverse the tree level order up to maxP-2 (inclusive) levels.
+    // Step 1: Traverse the tree level order down to maxP-2 (inclusive) levels
+    // making sure not to follow edges beginning with a separator char
     //
     cout << "Creating nodeLevels..." << endl;
     vector<vector<unsigned int>> nodeLevels;
     queue<cst_node_t> q;
     q.push(this->STp.root());
+    unsigned int id, maxId = 0;
     unsigned int maxDepth = (unsigned int) max((int)1, (int)this->maxP - 2); //max level to traverse in level order
-    unsigned int level = 1;     //current level
+    unsigned int level = 1;     //current level -- root is 0, but we are inserting children into q, so level = currNodeLevel+1
     unsigned int dc = 1;        //decrement counter
     unsigned int ic = 0;        //increment counter
     cst_node_t currNode;
@@ -559,14 +560,41 @@ void MultiEDSM::constructOV6()
         q.pop();
         for (const auto & child : this->STp.children(currNode))
         {
-            if (nodeLevels.size() <= level) {
-                vector<unsigned int> v;
-                v.push_back(this->STp.id(child));
-                nodeLevels.push_back(v);
-            } else {
-                nodeLevels[level].push_back(this->STp.id(child));
+            if (!this->STp.is_leaf(child))
+            {
+                unsigned int lb = this->STp.lb(child);
+                unsigned int sn = this->STp.csa[lb];
+                char nextChar = p[sn + level];
+                if (nextChar != SEPARATOR_CHAR) {
+                    id = this->STp.id(child);
+                    if (id > maxId) {
+                        maxId = id;
+                    }
+                    if (nodeLevels.size() <= level) {
+                        vector<unsigned int> v;
+                        v.push_back(id);
+                        nodeLevels.push_back(v);
+                    } else {
+                        nodeLevels[level].push_back(id);
+                    }
+                    q.push(child);
+                }
             }
-            q.push(child);
+            else
+            {
+                if (nodeLevels.size() <= level) {
+                    vector<unsigned int> v;
+                    v.push_back(this->STp.id(child));
+                    nodeLevels.push_back(v);
+                } else {
+                    id = this->STp.id(child);
+                    if (id > maxId) {
+                        maxId = id;
+                    }
+                    nodeLevels[level].push_back(id);
+                }
+                q.push(child);
+            }
             ic++;
         }
         dc--;
@@ -582,7 +610,7 @@ void MultiEDSM::constructOV6()
     // encode the leaves to it in OVMem
     //
     cout << "Initializing OVMem6..." << endl;
-    unsigned int i, numNodes = this->STp.nodes();
+    unsigned int i, numNodes = maxId + 1; //this->STp.nodes();
     for (i = 0; i < numNodes; i++)
     {
         WordVector v(1, 0ul);
@@ -653,13 +681,16 @@ void MultiEDSM::recEncodeLeavesToNode(const cst_node_t & node, const unsigned in
         ) {
             //calculate bit position
             long long int k = this->STpIdx2BVIdx[h] - 1;  //i is index in bitvector
-            unsigned int wordIdx = (unsigned int) ((double)k / (double)BITSINWORD);
-            unsigned int bitShifts = k % BITSINWORD;
 
-            //create word vector with enough words in it and combine it with target node
-            WordVector a(wordIdx + 1, 0ul);
-            a[wordIdx] = a[wordIdx] | (1ul << bitShifts);
-            this->WordVectorOR_IP(this->OVMem6[targetNodeId], a);
+            // unsigned int wordIdx = (unsigned int) ((double)k / (double)BITSINWORD);
+            // unsigned int bitShifts = k % BITSINWORD;
+            //
+            // //create word vector with enough words in it and combine it with target node
+            // WordVector a(wordIdx + 1, 0ul);
+            // a[wordIdx] = a[wordIdx] | (1ul << bitShifts);
+            // this->WordVectorOR_IP(this->OVMem6[targetNodeId], a);
+
+            this->WordVectorSet1At(this->OVMem6[targetNodeId], (unsigned int)k);
         }
     }
     else
@@ -694,13 +725,16 @@ void MultiEDSM::nonrecEncodeLeavesToNode(const cst_node_t & node, const unsigned
                     //calculate bit position
                     long long int k = this->STpIdx2BVIdx[h] - 1;  //i is index in bitvector
                     cout << "Leaf k: " << k << endl;
-                    unsigned int wordIdx = (unsigned int) ((double)k / (double)BITSINWORD);
-                    unsigned int bitShifts = k % BITSINWORD;
 
-                    //create word vector with enough words in it and combine it with target node
-                    WordVector a(wordIdx + 1, 0ul);
-                    a[wordIdx] = a[wordIdx] | (1ul << bitShifts);
-                    this->WordVectorOR_IP(this->OVMem6[targetNodeId], a);
+                    // unsigned int wordIdx = (unsigned int) ((double)k / (double)BITSINWORD);
+                    // unsigned int bitShifts = k % BITSINWORD;
+                    //
+                    // //create word vector with enough words in it and combine it with target node
+                    // WordVector a(wordIdx + 1, 0ul);
+                    // a[wordIdx] = a[wordIdx] | (1ul << bitShifts);
+                    // this->WordVectorOR_IP(this->OVMem6[targetNodeId], a);
+
+                    this->WordVectorSet1At(this->OVMem6[targetNodeId], (unsigned int)k);
                 }
             }
             else
@@ -1224,6 +1258,27 @@ void MultiEDSM::WordVectorLeftShift_IP(WordVector & x, unsigned int m)
     // } else {
     //     this->WordVectorSPECIALSHIFT_IP(x, m);
     // }
+}
+
+/**
+ * Sets the bit at position pos to 1 in WordVector x. 0-based bit index. If x is
+ * too small it will be expanded to accomodate the new bit.
+ *
+ * @param x WordVector
+ * @param pos The position to place the 1 at
+ */
+void MultiEDSM::WordVectorSet1At(WordVector & x, unsigned int pos)
+{
+    unsigned int wordIdx = (unsigned int) ((double)pos / (double)BITSINWORD);
+    unsigned int bitShifts = pos % BITSINWORD;
+    unsigned int j = x.size();
+
+    while (j <= wordIdx) {
+        x.push_back(0ul);
+        j++;
+    }
+
+    x[wordIdx] = x[wordIdx] | (1ul << bitShifts);
 }
 
 /**
