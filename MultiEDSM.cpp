@@ -654,15 +654,14 @@ void MultiEDSM::constructOV6(const string & p)
     //
     // Step 2: For each node at maxDepth, recursively traverse its children and
     // encode the leaves to it in OVMem.
-    // @TODO see if can be done with LB+CSA+LCP
     //
     cout << "Initializing OVMem6 with " << (maxId + 1) << " nodes..." << endl;
     unsigned int i, numNodes = maxId + 1; //this->STp.nodes();
     this->OVMem6.reserve(numNodes);
     for (i = 0; i < numNodes; i++)
     {
-        WordVector v(1, 0ul);
-        v.shrink_to_fit();
+        WordVector v; //(1, 0ul);
+        // v.shrink_to_fit();
         this->OVMem6.push_back(v);
     }
     for (unsigned int nodeId : nodeLevels[maxDepth])
@@ -671,7 +670,8 @@ void MultiEDSM::constructOV6(const string & p)
         if (!this->STp.is_leaf(currNode)) {
             cout << "Leaf searching " << nodeId;
             // this->recEncodeLeavesToNode(currNode, nodeId);
-            this->nonrecEncodeLeavesToNode(currNode, nodeId);
+            // this->nonrecEncodeLeavesToNode(currNode, nodeId);
+            this->csaEncodeLeavesToNode(currNode, nodeId);
             this->OVMem6[nodeId].shrink_to_fit();
             cout << ", size " << (unsigned int) ((double)(this->OVMem6[nodeId].size() * 8) / 1024.0 / 1024.0) << "MB" << endl;
         }
@@ -709,10 +709,15 @@ void MultiEDSM::constructOV6(const string & p)
                     WordVector a(wordIdx + 1, 0ul);
                     a[wordIdx] = a[wordIdx] | (1ul << bitShifts);
                     this->OVMem6[nodeId] = a;
+
+                    //combine with parent
+                    this->WordVectorOR_IP(this->OVMem6[parentId], this->OVMem6[nodeId]);
                 }
             }
-
-            this->WordVectorOR_IP(this->OVMem6[parentId], this->OVMem6[nodeId]);
+            else
+            {
+                this->WordVectorOR_IP(this->OVMem6[parentId], this->OVMem6[nodeId]);
+            }
         }
     }
 }
@@ -782,6 +787,26 @@ void MultiEDSM::nonrecEncodeLeavesToNode(const cst_node_t & node, const unsigned
             {
                 q.push(child);
             }
+        }
+    }
+}
+void MultiEDSM::csaEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId)
+{
+    unsigned int lb = this->STp.lb(node);
+    unsigned int rb = this->STp.rb(node);
+    unsigned int h, i, k;
+    for (i = lb; i < rb + 1; i++)
+    {
+        h = this->STp.csa[i];
+        if (
+            (h > 0 && ((h + 1) < (this->R - 1))) && \
+            (this->STpIdx2BVIdx[h-1] != SEPARATOR_DIGIT) && \
+            (this->STpIdx2BVIdx[h]   != SEPARATOR_DIGIT) && \
+            (this->STpIdx2BVIdx[h+1] != SEPARATOR_DIGIT)
+        ) {
+            //calculate bit position
+            k = this->STpIdx2BVIdx[h] - 1;  //i is index in bitvector
+            this->WordVectorSet1At(this->OVMem6[targetNodeId], k);
         }
     }
 }
