@@ -121,6 +121,8 @@ private:
 
     void WordVectorSet1At(WordVector & x, unsigned int pos);
 
+    unsigned int getMaxRangeInSet(std::vector<unsigned int> s);
+
 protected:
     /**
      * @var matches All matches found as tuple of <ending_position, pattern_id>

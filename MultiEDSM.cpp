@@ -809,6 +809,113 @@ void MultiEDSM::csaEncodeLeavesToNode(const cst_node_t & node, const unsigned in
             this->WordVectorSet1At(this->OVMem6[targetNodeId], k);
         }
     }
+    //
+    // The plan is to use getMaxRangeInSet() and encodeCompressedVector() to
+    // create compressed bitvectors in OVMem6 instead of uncompressed ones.
+    // Uncompressed takes up [M/w] space which is 5MB for my 1/8 data sample,
+    // requiring total of 1.5TB memory! Compressed bitvectors will take up far
+    // less space.
+    //
+}
+/**
+ * Takes a set of integers and returns the largest difference or range between
+ * the numbers. 0 to min(s) is also considered. Uses the linear time and space
+ * Maximal Gap algorithm to achieve this. e.g. s = [9, 19, 27] --> 10 (19 - 9),
+ * or s = [50, 60, 90] --> 50 (50 - 0).
+ *
+ * @param s A set of integers of any size with values ranging from 1..UINT_MAX-1
+ * @return maximum range between the numbers or 0 and the smallest number
+ */
+unsigned int MultiEDSM::getMaxRangeInSet(vector<unsigned int> s)
+{
+    if (s.size() == 1)
+    {
+        return s[0];
+    }
+    else if (s.size() == 2)
+    {
+        unsigned int m = (s[0] > s[1]) ? s[0] - s[1] : s[1] - s[0];
+        return max(m, min(s[0], s[1]));
+    }
+    else if (s.size() == 3)
+    {
+        unsigned int x[] = {s[0], s[1], s[2]};
+        if (s[1] < s[0]) {
+            x[0] = s[1];
+            x[1] = s[0];
+        }
+        if (s[2] < x[1]) {
+            x[2] = x[1];
+            x[1] = s[2];
+            if (x[1] < x[0]) {
+                unsigned int temp = x[0];
+                x[0] = x[1];
+                x[1] = temp;
+            }
+        }
+        unsigned int m = max(x[1] - x[0], x[2] - x[1]);
+        return max(m, x[0]);
+    }
+    else
+    {
+        unsigned int i, n = s.size(), mn = UINT_MAX, mx = 0, MINVAL = 0, MAXVAL = UINT_MAX;
+        for (i = 0; i < n; i++) {
+            if (s[i] < mn) {
+                mn = s[i];
+            }
+            if (s[i] > mx) {
+                mx = s[i];
+            }
+        }
+
+        unsigned int * minima_bins = new unsigned int[n - 1];
+        unsigned int * maxima_bins = new unsigned int[n - 1];
+        for (i = 0; i < n - 1; i++) {
+            minima_bins[i] = MAXVAL;
+            maxima_bins[i] = MINVAL;
+        }
+
+        unsigned int bin_idx;
+        double bin_size = (double)(mx - 1) / (double)(n - 1);
+
+        for (i = 0; i < n; i++)
+        {
+            if (s[i] == mn || s[i] == mx) {
+                continue;
+            }
+            bin_idx = (unsigned int) ((double)(s[i] - mn) / bin_size);
+            if (minima_bins[bin_idx] == MAXVAL || s[i] < minima_bins[bin_idx]) {
+                minima_bins[bin_idx] = s[i];
+            }
+            if (maxima_bins[bin_idx] == MINVAL || s[i] > maxima_bins[bin_idx]) {
+                maxima_bins[bin_idx] = s[i];
+            }
+        }
+
+        unsigned int prev = mn, max_gap = 0;
+        for (i = 0; i < n - 1; i++)
+        {
+            if (minima_bins[i] == MAXVAL) {
+                continue;
+            }
+            if ((minima_bins[i] - prev) > max_gap) {
+                max_gap = minima_bins[i] - prev;
+            }
+            prev = maxima_bins[i];
+        }
+
+        delete [] minima_bins;
+        delete [] maxima_bins;
+
+        if ((mx - prev) > max_gap) {
+            max_gap = mx - prev;
+        }
+        if (mn > max_gap) {
+            max_gap = mn;
+        }
+
+        return max_gap;
+    }
 }
 
 /**
