@@ -99,6 +99,8 @@ private:
 
     void constructOV6(const std::string & p);
 
+    void constructOV7(const std::string & p);
+
     WordVector recAssignOVMem(const cst_node_t & u);
 
     WordVector recAssignOVMem2(const cst_node_t & u, const unsigned int currDepth);
@@ -110,6 +112,8 @@ private:
     void nonrecEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId);
 
     void csaEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId);
+
+    void OV7EncodeNodes(const cst_node_t & currNode, const unsigned int nodeId);
 
     void WordVectorOR_IP(WordVector & a, const WordVector & b);
 
@@ -155,6 +159,8 @@ protected:
     std::map<unsigned int, RRR> OVMem51;
     std::map<unsigned int, RRR> OVMemLeaves;
     std::vector<WordVector> OVMem6;
+    std::map<unsigned int, WordVector> OVMemU7;
+    std::map<unsigned int, std::vector<unsigned int>> OVMem7;
 
     /**
      * @var M The total length of the patterns
@@ -175,6 +181,11 @@ protected:
      * @var maxP The length of the longest pattern in patterns
      */
     unsigned int maxP;
+
+    /**
+     * @var maxK The maximum number of BitVectors to store in memory
+     */
+    unsigned int maxK;
 
     /**
      * @var pos The current position in the input passed in. Degenerate
@@ -217,7 +228,6 @@ protected:
      * @var umsa MyUMSA object used for searching - stores the bitvector of the patterns
      */
     MyUMSA * umsa;
-    //UnrestrictedMultiShiftAnd * umsa;
 
     /**
      * @var f The total length of determinate segments searched
@@ -253,13 +263,14 @@ protected:
 
     WordVector buildBorderPrefixWordVector(const Segment & S);
 
-    unsigned int occVector(const std::string & a);
+    // unsigned int occVector(const std::string & a);
+    WordVector occVector(const std::string & a);
 
     void WordVectorLeftShift_IP(WordVector & x, unsigned int m);
 
 public:
 
-    MultiEDSM(const std::string & alphabet, const std::vector<std::string> & patterns);
+    MultiEDSM(const std::string & alphabet, const std::vector<std::string> & patterns, const unsigned int maxNoBitVectorsStorable);
 
     ~MultiEDSM();
 

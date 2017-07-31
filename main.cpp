@@ -57,13 +57,13 @@ char getNextChar(ifstream & f)
 }
 
 /**
- * Convert raw string like 3.5g (3.5 gigabytes) to 3584 (megabytes)
+ * Convert raw string like 3.5g (3.5 gigabytes) to 3584 (megabytes) -- return 0 indicated error
  */
 unsigned int getMemLimitMB(string rawString)
 {
     int l = rawString.length();
     if (l == 0) {
-        return UINT_MAX;
+        return EXIT_SUCCESS;
     }
     char unit = rawString[l - 1];
     if (unit == 'm' || unit == 'M') {
@@ -71,8 +71,7 @@ unsigned int getMemLimitMB(string rawString)
     } else if (unit == 'g' || unit == 'G') {
         return (unsigned int) ceil(atof(rawString.substr(0, l - 1).c_str()) * 1024);
     } else {
-        cerr << "Invalid memory argument used: \"" << rawString << "\"! Continuing with unlimited memory." << endl;
-        return UINT_MAX;
+        return EXIT_SUCCESS;
     }
 }
 
@@ -338,11 +337,11 @@ Example FASTA+VCF Type Search: ./multiedsm --sequence-file reference.fasta --var
 Standard (Required) Arguments:\n\
   -s\t--sequence-file\t<str>\tThe EDS or reference FASTA file. Use the correct file for the correct search type.\n\
   -v\t--variants-file\t<str>\tThe VCF variants-file. Support for .vcf.gz. Use only with FASTA+VCF search type.\n\
-  -p\t--patterns-file\t<str>\tThe patterns file. Each pattern must be on a different line.\n\n\
-Optional Arguments:\n\
-  -m\t--mem-limit\t<float>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers, e.g. 3.5g\n\n\
+  -p\t--patterns-file\t<str>\tThe patterns file. Each pattern must be on a different line.\n\
+  -m\t--mem-limit\t<str>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers, e.g. 3.5g\n\n\
 Miscellaneous:\n\
   -h\t--help\t\t<void>\tThis help message.\n";
+//\nOptional Arguments:\n \
 
     while ((c = getopt_long(argc, argv, "s:v:p:m:h", long_options, &optind)) != -1)
     {
@@ -362,173 +361,131 @@ Miscellaneous:\n\
                 break;
             case 'm':
                 memL = optarg;
+                x++;
                 break;
             case 'h':
                 cout << help << endl;
-                return 0;
+                return EXIT_SUCCESS;
             default:
                 cerr << "Error: unrecognised argument." << endl << help << endl;
-                return 1;
+                return EXIT_FAILURE;
         }
     }
 
-    if (x == 2)
+    if (x == 3)
     {
-        if (seqF == "" || patF == "") {
+        if (seqF == "" || patF == "" || memL == "") {
             cerr << "Error: Invalid arguments!" << endl << help << endl;
-            return 1;
+            return EXIT_FAILURE;
         }
     }
-    else if (x == 3)
+    else if (x == 4)
     {
-        if (seqF == "" || varF == "" || patF == "") {
+        if (seqF == "" || varF == "" || patF == "" || memL == "") {
             cerr << "Error: Invalid arguments!" << endl << help << endl;
-            return 1;
+            return EXIT_FAILURE;
         }
     }
     else
     {
         cerr << "Error: Invalid number of arguments!" << endl << help << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    //open patterns file and search patterns in batches
-    bool success;
-    unsigned int batchNo = 1, batchCount = 0, memLimit = getMemLimitMB(memL);
-    unsigned int f = 0, F = 0, d = 0, D = 0, Np = 0;
-    double duration = 0.0;
-    unsigned long long int M = 0, k = 0, stpnodes, suffixtree, stp2pos, pos2pat, ovmem, shiftand, total;
-    vector<pair<unsigned int, unsigned int>> foundList;
-    vector<string> patterns;
-    string pattern;
+    unsigned long long int memLimit = 1024 * 1024 * (unsigned long long int)getMemLimitMB(memL); //memLimit in bytes
+    if (memLimit == 0) {
+        cerr << "Error: Invalid memory value given!" << endl << help << endl;
+        return EXIT_FAILURE;
+    }
+
+    //open patterns file and determine total size of patterns in order to calculate memory requirements
+    unsigned long long int M = 0, k = 0, maxP = 0;
     ifstream pf(patF.c_str(), ios::in);
     if (!pf.good()) {
         cerr << "Error: Failed to open pattern file!" << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
-    cout << "Multi-EDSM started..." << endl << endl;
-    MultiEDSM * multiedsm = NULL;
+    vector<string> patterns;
+    string pattern;
     while(getline(pf, pattern))
     {
-        M += pattern.length();                                                              //patterns vector
-        k++;
-        stpnodes = M + k;                                                                   //pattern string for STp
-        suffixtree = WORDSIZE * stpnodes;                                                   //STp
-        stp2pos = sizeof(unsigned int) * stpnodes;                                          //stp2pos
-        pos2pat = sizeof(unsigned int) * M;                                                 //pattern positions vector
-        ovmem = (unsigned long long int) ceil(stpnodes / BITSINWORD) * WORDSIZE * stpnodes * 1.25; //ovmem -- 1.25 is for vector overhead
-        shiftand = (unsigned long long int) ceil(M / BITSINWORD) * (3 + SIGMA) * WORDSIZE;  //shiftand, sigma & Sv, Ev and D
+        if (pattern.length() > maxP) {
+            maxP = pattern.length();
+        }
+        M += pattern.length();
         patterns.push_back(pattern);
-        total = (unsigned long long int) ((M + stpnodes + suffixtree + stp2pos + pos2pat + ovmem + shiftand + BUFFERSIZE) / (1024 * 1000));
-        if (total >= memLimit)
-        {
-            //clear last object
-            if (multiedsm != NULL) {
-                delete multiedsm;
-            }
-            //perform the search
-            multiedsm = new MultiEDSM(ALPHABET, patterns);
-            patterns.clear();
-            if (x == 3) {
-                success = searchVCF(multiedsm, seqF, varF);
-            } else {
-                success = searchEDS(multiedsm, seqF);
-            }
-            if (!success) {
-                return 1;
-            }
-            cout << "Searched batch " << batchNo << " containing " << k << " patterns." << endl;
-            //grab the results and update statistics
-            for (const pair<unsigned int, unsigned int> & match : multiedsm->getMatches()) {
-                foundList.push_back(pair<unsigned int, unsigned int>(match.first, match.second + batchCount));
-            }
-            f += multiedsm->getf();
-            F += multiedsm->getF();
-            d += multiedsm->getd();
-            D += multiedsm->getD();
-            Np += multiedsm->getNp();
-            duration += multiedsm->getDuration();
-            //upadte batch vars
-            batchNo++;
-            batchCount += k;
-            //reset batch searching variables
-            M = 0;
-            k = 0;
+        k++;
+        if (M + k >= memLimit) {
+            pf.close();
+            cerr << "Error: Set of patterns too large -- memory limit exceeded! Try splitting them up into batches." << endl;
+            return EXIT_FAILURE;
         }
     }
     pf.close();
 
-    //search the remaining patterns
-    if (patterns.size() > 0)
-    {
-        //clear last object
-        if (multiedsm != NULL) {
-            delete multiedsm;
-        }
-        multiedsm = new MultiEDSM(ALPHABET, patterns);
-        patterns.clear();
-        //perform the search
-        if (x == 3) {
-            success = searchVCF(multiedsm, seqF, varF);
-        } else {
-            success = searchEDS(multiedsm, seqF);
-        }
-        if (!success) {
-            return 1;
-        }
-        if (batchNo > 1) {
-            cout << "Searched batch " << batchNo << " containing " << k << " patterns." << endl;
-        }
-        //grab the results and update statistics
-        for (const pair<unsigned int, unsigned int> & match : multiedsm->getMatches()) {
-            foundList.push_back(pair<unsigned int, unsigned int>(match.first, match.second + batchCount));
-        }
-        f += multiedsm->getf();
-        F += multiedsm->getF();
-        d += multiedsm->getd();
-        D += multiedsm->getD();
-        Np += multiedsm->getNp();
-        duration += multiedsm->getDuration();
-        //reset batch searching variables
-        M = 0;
-        k = 0;
+    //calculate base memory requirements making sure there is enough memory for at least two levels of the OccVector
+    unsigned long long int i, stpnodes, suffixtree, stp2pos, pos2pat, nodelevels, shiftand, twentytwobitvectors, total;
+    stpnodes = M + k;                                                                    //pattern string for STp
+    suffixtree = stpnodes * 11;                                                          //STp - num nodes < 2n, suffix array 6n, so 2n * 6n = ~12n
+    stp2pos = sizeof(unsigned int) * stpnodes;                                           //stp2pos
+    pos2pat = sizeof(unsigned int) * M;                                                  //pattern positions vector
+    nodelevels = 0;                                                                      //nodelevels
+    for (i = 0; i <= maxP - 2; i++) {
+        nodelevels = nodelevels + pow(SIGMA, i) + 1;
+    }
+    nodelevels = nodelevels * sizeof(unsigned int);
+    shiftand = (unsigned long long int) ceil(M / BITSINWORD) * (3 + SIGMA) * WORDSIZE;   //shiftand, sigma & Sv, Ev and D
+    twentytwobitvectors = (unsigned long long int) ceil(M / BITSINWORD) * WORDSIZE * 22; //level1 = 5 BVs, level2 = 17 BVs, level1 + level2 = 22 BVs
+    total = M + stpnodes + suffixtree + stp2pos + pos2pat + nodelevels + shiftand + twentytwobitvectors + BUFFERSIZE;
+    if (total >= memLimit) {
+        cerr << "Error: Insufficient memory to continue! Try increasing the memory limit." << endl;
+        return EXIT_FAILURE;
     }
 
-    //output results
-    cout << endl;
-    if (batchNo > 1)
-    {
-        cout << "Patterns searched in " << batchNo << " batches." << endl;
-        cout << "No. determinate bases (f): (" << f << " processed) " << multiedsm->getf() << endl;
-        cout << "No. degenerate bases (F): (" << F << " processed) " << multiedsm->getF() << endl;
-        cout << "No. determinate segments (d): (" << d << " processed) " << multiedsm->getd() << endl;
-        cout << "No. degenerate segments (D): (" << D << " processed) " << multiedsm->getD() << endl;
-    }
-    else
-    {
-        cout << "No. determinate bases (f): " << f << endl;
-        cout << "No. degenerate bases (F): " << F << endl;
-        cout << "No. determinate segments (d): " << d << endl;
-        cout << "No. degenerate segments (D): " << D << endl;
-    }
-    if (multiedsm != NULL) {
-        delete multiedsm;
-    }
-    cout << "No. strings processed shorter than pattern (N'): " << Np << endl;
-    cout << "Multi-EDSM processing time: " << duration << "s." << endl << endl;
+    // cout << "total: " << total << endl;
 
-    if (foundList.size() == 0)
+    //calculate left-over memory for use in raw bitvector storage
+    total = total - twentytwobitvectors;
+    unsigned long long int remainingMemory = memLimit - total;
+    unsigned long long int maxNoBitVectorsStorable = floor((double)remainingMemory / (double)(ceil(M / BITSINWORD) * WORDSIZE));
+
+    // cout << "maxNoBitVectorsStorable: " << maxNoBitVectorsStorable << endl << endl;
+
+    //start MultiEDSM search
+    cout << "Multi-EDSM started..." << endl << endl;
+    MultiEDSM * multiedsm = new MultiEDSM(ALPHABET, patterns, maxNoBitVectorsStorable);
+    patterns.clear();
+    bool success;
+    if (x == 4) {
+        success = searchVCF(multiedsm, seqF, varF);
+    } else {
+        success = searchEDS(multiedsm, seqF);
+    }
+    if (!success) {
+        return EXIT_FAILURE;
+    }
+
+    cout << "No. determinate bases (f): " << multiedsm->getf() << endl;
+    cout << "No. degenerate bases (F): " << multiedsm->getF() << endl;
+    cout << "No. determinate segments (d): " << multiedsm->getd() << endl;
+    cout << "No. degenerate segments (D): " << multiedsm->getD() << endl;
+    cout << "No. strings processed shorter than pattern (N'): " << multiedsm->getNp() << endl;
+    cout << "Multi-EDSM processing time: " << multiedsm->getDuration() << "s." << endl << endl;
+
+    if (multiedsm->getMatches().size() == 0)
     {
         cout << "No matches found." << endl;
     }
     else
     {
-        cout << foundList.size() << " matches found!" << endl << endl;
+        cout << multiedsm->getMatches().size() << " matches found!" << endl << endl;
         cout << "Position,PatternId" << endl << "------------------" << endl;
-        for (const pair<unsigned int, unsigned int> & match : foundList) {
+        for (const pair<unsigned int, unsigned int> & match : multiedsm->getMatches()) {
             cout << match.first << "," << match.second << endl;
         }
     }
 
-    return 0;
+    delete multiedsm;
+
+    return EXIT_SUCCESS;
 }
