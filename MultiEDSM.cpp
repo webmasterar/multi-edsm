@@ -134,13 +134,13 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     }
     p.pop_back(); //remove unnecessary separator char as \0 already tagged on end of c_str
 
-    //construct the suffix tree of patterns with seperators
-    cout << "SuffixTree..." << endl;
-    construct_im(this->STp, p.c_str(), sizeof(char));
-
     //tool to get pattern id from any given position in the bitvector/p
     cout << "Pos2Pat..." << endl;
     this->Pos2PatId = this->umsa->getPatternPositions();
+
+    //construct the suffix tree of patterns with seperators
+    cout << "SuffixTree..." << endl;
+    construct_im(this->STp, p.c_str(), sizeof(char));
 
     //construct occVector datastructure
     cout << "OccVector..." << endl;
@@ -150,7 +150,7 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     this->duration += clock() - start;
 
     cout << "Preproccessing " << patterns.size() << " patterns of size M=" \
-         << this->M << " completed in " << this->getDuration() << "s." << endl;
+         << this->M << " completed in " << this->getDuration() << "s." << endl << endl;
 }
 
 /**
@@ -434,7 +434,7 @@ void MultiEDSM::constructOV3()
                             this->WordVectorOR_IP(this->OVMem3[parent_id], this->OVMem2[id]);
                         }
                         if (this->STp.depth(currNode) >= this->maxP) {
-                            // this->OVMem[id].empty();
+                            // this->OVMem[id].clear();
                             this->OVMem3.erase(id);
                         }
                     }
@@ -448,7 +448,7 @@ void MultiEDSM::constructOV3()
              << leafCreationCounter << " leaves and " << nodeCreationCounter \
              << " nodes were created. Total size: " << (totalLeafSize * sizeof(WORD))<< endl;
 
-        nodeLevels[j].empty();
+        nodeLevels[j].clear();
     }
 }
 
@@ -946,7 +946,26 @@ void MultiEDSM::constructOV7(const string & p)
         q.pop();
         for (const auto & child : this->STp.children(currNode))
         {
-            if (!this->STp.is_leaf(child))
+            if (this->STp.is_leaf(child))
+            {
+                id = this->STp.id(child);
+                if (nodeLevels.size() <= level) {
+                    vector<unsigned int> v;
+                    v.push_back(id);
+                    nodeLevels.push_back(v);
+                } else {
+                    nodeLevels[level].push_back(id);
+                }
+                if (this->maxK > 0) {
+                    WordVector w;
+                    this->OVMemU7[id] = w;
+                    this->maxK--;
+                }
+                q.push(child);
+                ic++;
+
+            }
+            else
             {
                 unsigned int lb = this->STp.lb(child);
                 unsigned int sn = this->STp.csa[lb];
@@ -969,24 +988,6 @@ void MultiEDSM::constructOV7(const string & p)
                     ic++;
                 }
             }
-            else
-            {
-                id = this->STp.id(child);
-                if (nodeLevels.size() <= level) {
-                    vector<unsigned int> v;
-                    v.push_back(id);
-                    nodeLevels.push_back(v);
-                } else {
-                    nodeLevels[level].push_back(id);
-                }
-                if (this->maxK > 0) {
-                    WordVector w;
-                    this->OVMemU7[id] = w;
-                    this->maxK--;
-                }
-                q.push(child);
-                ic++;
-            }
         }
         dc--;
         if (dc == 0) {
@@ -998,7 +999,11 @@ void MultiEDSM::constructOV7(const string & p)
 
     // for (unsigned int x = 0; x < nodeLevels.size(); x++)
     // {
-    //     cout << "Level " << x << " contains " << nodeLevels[x].size() << " nodes." << endl;
+    //     cout << "Level " << x << " contains " << nodeLevels[x].size() << " nodes: ";
+    //     for (unsigned int y : nodeLevels[x]) {
+    //         cout << y << " ";
+    //     }
+    //     cout << endl;
     // }
     // With separator char checking:
     // Level 0 contains 1 nodes.
@@ -1028,6 +1033,7 @@ void MultiEDSM::constructOV7(const string & p)
     // Step 2: For each node at maxDepth, encode.
     //
     // cout << "Starting node encoding..." << endl;
+    maxDepth = nodeLevels.size() - 1;
     for (unsigned int nodeId : nodeLevels[maxDepth])
     {
         currNode = this->STp.inv_id(nodeId);
@@ -1040,7 +1046,7 @@ void MultiEDSM::constructOV7(const string & p)
     //
     // cout << "Tree climbing..." << endl;
     bool currNodeIsInOVMemU7, parentIsInOVMemU7;
-    unsigned int parentId, sn, i;
+    unsigned int parentId, sn, i, j;
     for (i = maxDepth; i > 0; i--)
     {
         for (unsigned int nodeId : nodeLevels[i])
@@ -1069,34 +1075,66 @@ void MultiEDSM::constructOV7(const string & p)
                 // cout << "All WordVectors" << endl;
                 this->WordVectorOR_IP(this->OVMemU7[parentId], this->OVMemU7[nodeId]);
             }
+            else if (currNodeIsInOVMemU7 && this->STp.is_leaf(currNode))
+            {
+                //cout << "Leaf in nodeLevels" << endl;
+                sn = this->STp.sn(currNode);
+                if (
+                    (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                    (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+                ) {
+                    //calculate bit position
+                    j = this->STpIdx2BVIdx[sn] - 1;  //i is index in bitvector
+                    this->WordVectorSet1At(this->OVMemU7[nodeId], j);
+                }
+            }
             else
             {
                 //Node not useful so ignored. Or currently at level 1, where
                 //parent is root and children are WordVectors; nothing to do here.
             }
         }
-        nodeLevels[i].empty();
+        nodeLevels[i].clear();
     }
-    nodeLevels.empty();
+    nodeLevels.clear();
+
+    // cout << endl << "idx\tsn\tsuffix" << endl;
+    // for (i = 0; i < p.length() + 1; i++)
+    // {
+    //     cout << i << "\t" \
+    //          << this->STp.csa[i] << "\t" \
+    //          << this->STp.lcp[i] << "\t" \
+    //          << p.substr(this->STp.csa[i]) << endl;
+    // }
+    // cout << endl;
 }
 void MultiEDSM::OV7EncodeNodes(const cst_node_t & currNode, const unsigned int nodeId)
 {
     if (this->STp.is_leaf(currNode))
     {
+        // cout << "Encoding leaf " << nodeId << " ";
         unsigned int sn = this->STp.sn(currNode);
         unsigned int j = this->STpIdx2BVIdx[sn] - 1;
-        if (this->OVMemU7.find(nodeId) != this->OVMemU7.end()) {
+        if (this->OVMemU7.find(nodeId) != this->OVMemU7.end() && sn > 0) {
             this->WordVectorSet1At(this->OVMemU7[nodeId], j);
             this->OVMemU7[nodeId].shrink_to_fit();
+            // cout << "sn" << sn << " pos" << j << " " << this->OVMemU7[nodeId];
         } else {
-            vector<unsigned int> v;
-            v.push_back(j);
-            v.shrink_to_fit();
-            this->OVMem7[nodeId] = v;
+            if (sn > 0) {
+                vector<unsigned int> v;
+                v.push_back(j);
+                v.shrink_to_fit();
+                this->OVMem7[nodeId] = v;
+                // cout << v;
+            }
         }
+        // cout << endl;
     }
     else
     {
+        // cout << "Encoding node " << nodeId << " ";
         unsigned int lb = this->STp.lb(currNode);
         unsigned int rb = this->STp.rb(currNode);
         unsigned int sn, i, j;
@@ -1115,8 +1153,10 @@ void MultiEDSM::OV7EncodeNodes(const cst_node_t & currNode, const unsigned int n
 
                 if (isInOVMemU7) {
                     this->WordVectorSet1At(this->OVMemU7[nodeId], j);
+                    // cout << this->OVMemU7[nodeId] << endl;
                 } else {
                     this->OVMem7[nodeId].push_back(j);
+                    // cout << this->OVMem7[nodeId] << endl;
                 }
             }
         }
@@ -1183,9 +1223,10 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
  * Time taken: O(|a|).
  *
  * @param a A substring
+ * @param B2 A WordVector to AND with
  * @return Starting positions of substring _a_ encoded into a bitvector
  */
-WordVector MultiEDSM::occVector(const string & a)
+void MultiEDSM::occVector(const string & a, WordVector & B2)
 {
     cst_node_t explicitNode = this->STp.root();
     string::const_iterator it;
@@ -1205,7 +1246,7 @@ WordVector MultiEDSM::occVector(const string & a)
         unsigned int nodeId = this->STp.id(explicitNode);
         if (this->OVMemU7.find(nodeId) != this->OVMemU7.end())
         {
-            return this->OVMemU7[nodeId];
+            this->WordVectorAND_IP(B2, this->OVMemU7[nodeId]);
         }
         else if (this->OVMem7.find(nodeId) != this->OVMem7.end())
         {
@@ -1213,12 +1254,17 @@ WordVector MultiEDSM::occVector(const string & a)
             for (unsigned int pos : this->OVMem7[nodeId]) {
                 this->WordVectorSet1At(v, pos);
             }
-            return v;
+            this->WordVectorAND_IP(B2, v);
+        }
+        else
+        {
+            B2.clear();
         }
     }
-
-    WordVector v;
-    return v;
+    else
+    {
+        B2.clear();
+    }
 }
 
 /**
@@ -1345,6 +1391,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
 
         //build equivalent of BorderPrefixTable for next segment to use
         this->B = this->buildBorderPrefixWordVector(S);
+        // cout << "B:" << this->B << endl;
 
         //update position
         if (isDeterminateSegment) {
@@ -1360,7 +1407,9 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     else
     {
         //build equivalent of BorderPrefixTable for current segment
+        // cout << "B:" << this->B << endl;
         B1 = this->buildBorderPrefixWordVector(S);
+        // cout << "B1:" << B1 << endl;
 
         //keep track of f/F counts and if segment is determinate, and if there's an epsilon (deletion)
         if (S.size() == 1)
@@ -1469,9 +1518,11 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                     this->Np++;
                     this->Nm += m;
                     B2 = this->B;
-                    this->WordVectorAND_IP(B2, this->occVector(*stringI));
-                    this->WordVectorLeftShift_IP(B2, m);
-                    this->WordVectorOR_IP(B1, B2);
+                    this->occVector(*stringI, B2);
+                    if (B2.size() > 0) {
+                        this->WordVectorLeftShift_IP(B2, m);
+                        this->WordVectorOR_IP(B1, B2);
+                    }
                 }
             }
         }
@@ -1605,22 +1656,26 @@ void MultiEDSM::WordVectorSPECIALSHIFT_IP(WordVector & x, unsigned int m)
  */
 void MultiEDSM::WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m)
 {
-    const WordVector & ends = this->umsa->getEndingStates();
+    unsigned int k = x.size();
 
-    WORD temp, carry, carryMask = 1ul << (BITSINWORD - 1);
-    unsigned int i, j, k = x.size();
-    for (i = 0; i < m; i++)
+    if (k > 0)
     {
-        carry = 0;
-        for (j = 0; j < k; j++)
+        const WordVector & ends = this->umsa->getEndingStates();
+        unsigned int i, j;
+        WORD temp, carry, carryMask = 1ul << (BITSINWORD - 1);
+        for (i = 0; i < m; i++)
         {
-            temp = x[j];
-            x[j] = (x[j] << 1) | carry; //left shift and apply the carried 1
-            x[j] = x[j] ^ (ends[j] & x[j]); //if 1 passes pattern boundary (end), then remove it because it is an illegal shift
-            carry = (WORD)((carryMask & temp) != 0); //work out if we need to carry a 1 to the next word
-            if (carry && (j == (k - 1))) { //identify if we need to expand x //@TODO maybe this is not required because x will always be the correct size?
-               x.push_back(0ul);
-               k++;
+            carry = 0;
+            for (j = 0; j < k; j++)
+            {
+                temp = x[j];
+                x[j] = (x[j] << 1) | carry; //left shift and apply the carried 1
+                x[j] = x[j] ^ (ends[j] & x[j]); //if 1 passes pattern boundary (end), then remove it because it is an illegal shift
+                carry = (WORD)((carryMask & temp) != 0); //work out if we need to carry a 1 to the next word
+                if (carry && (j == (k - 1))) { //identify if we need to expand x //@TODO maybe this is not required because x will always be the correct size?
+                   x.push_back(0ul);
+                   k++;
+                }
             }
         }
     }

@@ -264,7 +264,7 @@ protected:
     WordVector buildBorderPrefixWordVector(const Segment & S);
 
     // unsigned int occVector(const std::string & a);
-    WordVector occVector(const std::string & a);
+    void occVector(const std::string & a, WordVector & B2);
 
     void WordVectorLeftShift_IP(WordVector & x, unsigned int m);
 

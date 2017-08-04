@@ -447,9 +447,7 @@ Miscellaneous:\n\
     //calculate left-over memory for use in raw bitvector storage
     total = total - twentytwobitvectors;
     unsigned long long int remainingMemory = memLimit - total;
-    unsigned long long int maxNoBitVectorsStorable = floor((double)remainingMemory / (double)(ceil(M / BITSINWORD) * WORDSIZE));
-
-    // cout << "maxNoBitVectorsStorable: " << maxNoBitVectorsStorable << endl << endl;
+    unsigned long long int maxNoBitVectorsStorable = (unsigned long long int) floor((double)remainingMemory / (ceil((double)M / (double)BITSINWORD) * WORDSIZE));
 
     //start MultiEDSM search
     cout << "Multi-EDSM started..." << endl << endl;
