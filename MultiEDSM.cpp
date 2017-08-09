@@ -1058,42 +1058,82 @@ void MultiEDSM::constructOV7(const string & p)
 
             if (!currNodeIsInOVMemU7 && !parentIsInOVMemU7)
             {
-                // cout << "Both not WordVectors" << endl;
+                // cout << "Both not WordVectors ";
                 for (unsigned int x : this->OVMem7[nodeId]) {
                     this->OVMem7[parentId].push_back(x);
                 }
+                // cout << "nodeVal:" << this->OVMemU7[nodeId] << " parentId:" << parentId << endl;
             }
             else if (!currNodeIsInOVMemU7 && parentIsInOVMemU7)
             {
-                // cout << "Only parent is WordVector" << endl;
+                // cout << "Only parent is WordVector ";
                 for (unsigned int x : this->OVMem7[nodeId]) {
                     this->WordVectorSet1At(this->OVMemU7[parentId], x);
                 }
+                // cout << "nodeVal:" << this->OVMemU7[nodeId] << " parentId:" << parentId << endl;
             }
             else if (currNodeIsInOVMemU7 && parentIsInOVMemU7)
             {
-                // cout << "All WordVectors" << endl;
+                if (this->STp.is_leaf(currNode))
+                {
+                    // cout << nodeId << " Leaf in nodeLevels ";
+                    sn = this->STp.sn(currNode);
+                    if (
+                        (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                        (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+                    ) {
+                        //calculate bit position
+                        j = this->STpIdx2BVIdx[sn] - 1;  //i is index in bitvector
+                        this->WordVectorSet1At(this->OVMemU7[nodeId], j);
+                        // cout << "nodeVal:" << this->OVMemU7[nodeId] << " parentId:" << parentId << endl;
+                    }
+                    else
+                    {
+                        // cout << "not encoded, sn:" << sn << endl;
+                    }
+                }
+                else
+                {
+                    // cout << nodeId << " Not leaf ";
+                }
                 this->WordVectorOR_IP(this->OVMemU7[parentId], this->OVMemU7[nodeId]);
+                // cout << "nodeVal:" << this->OVMemU7[nodeId] << " parentId:" << parentId << endl;
             }
-            else if (currNodeIsInOVMemU7 && this->STp.is_leaf(currNode))
+            else if (!parentIsInOVMemU7 && this->STp.is_leaf(currNode))
             {
-                //cout << "Leaf in nodeLevels" << endl;
-                sn = this->STp.sn(currNode);
-                if (
-                    (sn > 0 && ((sn + 1) < (this->R - 1))) && \
-                    (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
-                    (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
-                    (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
-                ) {
-                    //calculate bit position
-                    j = this->STpIdx2BVIdx[sn] - 1;  //i is index in bitvector
-                    this->WordVectorSet1At(this->OVMemU7[nodeId], j);
+                if (this->STp.is_leaf(currNode))
+                {
+                    // cout << nodeId << " Leaf in first level ";
+                    sn = this->STp.sn(currNode);
+                    if (
+                        (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                        (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+                    ) {
+                        //calculate bit position
+                        j = this->STpIdx2BVIdx[sn] - 1;  //i is index in bitvector
+                        this->WordVectorSet1At(this->OVMemU7[nodeId], j);
+                        // cout << "nodeVal:" << this->OVMemU7[nodeId] << " parentId:" << parentId << endl;
+                    }
+                    else
+                    {
+                        // cout << "not encoded, sn:" << sn << endl;
+                    }
+                }
+                else
+                {
+                    // cout << nodeId << " Not leaf ";
                 }
             }
             else
             {
                 //Node not useful so ignored. Or currently at level 1, where
                 //parent is root and children are WordVectors; nothing to do here.
+                // cout << nodeId << " Nope ";
+                // cout << "nodeVal:" << this->OVMemU7[nodeId] << " parentId:" << parentId << endl;
             }
         }
         nodeLevels[i].clear();
@@ -1103,10 +1143,7 @@ void MultiEDSM::constructOV7(const string & p)
     // cout << endl << "idx\tsn\tsuffix" << endl;
     // for (i = 0; i < p.length() + 1; i++)
     // {
-    //     cout << i << "\t" \
-    //          << this->STp.csa[i] << "\t" \
-    //          << this->STp.lcp[i] << "\t" \
-    //          << p.substr(this->STp.csa[i]) << endl;
+    //     cout << i << "\t" << this->STp.csa[i] << "\t" << p.substr(this->STp.csa[i]) << endl;
     // }
     // cout << endl;
 }
@@ -1243,10 +1280,14 @@ void MultiEDSM::occVector(const string & a, WordVector & B2)
 
     if (j == a.length())
     {
+        // cout << a << endl;
         unsigned int nodeId = this->STp.id(explicitNode);
         if (this->OVMemU7.find(nodeId) != this->OVMemU7.end())
         {
+            // cout << "B2 before:" << B2 << " ";
             this->WordVectorAND_IP(B2, this->OVMemU7[nodeId]);
+            // cout << "OVMemU7[" << nodeId << "]:" << this->OVMemU7[nodeId] << " " \
+            //      << "B2 After:" << B2 << endl;
         }
         else if (this->OVMem7.find(nodeId) != this->OVMem7.end())
         {
@@ -1318,6 +1359,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     unsigned int k, m;
     WordVector B1, B2;
     Segment::const_iterator stringI;
+
+    // cout << "Position #" << (this->d + this->D) << endl;
 
     //search first segment, priming B, then search the next segments normally in the else condition down below
     if (!this->primed)
