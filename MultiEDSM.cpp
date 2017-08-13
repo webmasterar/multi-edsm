@@ -963,14 +963,13 @@ void MultiEDSM::constructOV7(const string & p)
                 }
                 q.push(child);
                 ic++;
-
             }
             else
             {
                 unsigned int lb = this->STp.lb(child);
                 unsigned int sn = this->STp.csa[lb];
-                char nextChar = p[sn + level - 1];
-                if (nextChar != SEPARATOR_CHAR) {
+                // char nextChar = p[sn + level - 1];
+                if (p[sn] != SEPARATOR_CHAR) {
                     id = this->STp.id(child);
                     if (nodeLevels.size() <= level) {
                         vector<unsigned int> v;
@@ -1085,7 +1084,7 @@ void MultiEDSM::constructOV7(const string & p)
                         (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
                     ) {
                         //calculate bit position
-                        j = this->STpIdx2BVIdx[sn] - 1;  //i is index in bitvector
+                        j = this->STpIdx2BVIdx[sn] - 1;  //j is index in bitvector
                         this->WordVectorSet1At(this->OVMemU7[nodeId], j);
                         // cout << "nodeVal:" << this->OVMemU7[nodeId] << " parentId:" << parentId << endl;
                     }
@@ -1105,7 +1104,7 @@ void MultiEDSM::constructOV7(const string & p)
             {
                 if (this->STp.is_leaf(currNode))
                 {
-                    // cout << nodeId << " Leaf in first level ";
+                    // cout << nodeId << " Leaf in nodeLevels but not parent ";
                     sn = this->STp.sn(currNode);
                     if (
                         (sn > 0 && ((sn + 1) < (this->R - 1))) && \
@@ -1114,13 +1113,13 @@ void MultiEDSM::constructOV7(const string & p)
                         (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
                     ) {
                         //calculate bit position
-                        j = this->STpIdx2BVIdx[sn] - 1;  //i is index in bitvector
+                        j = this->STpIdx2BVIdx[sn] - 1;  //j is index in bitvector
                         this->WordVectorSet1At(this->OVMemU7[nodeId], j);
                         // cout << "nodeVal:" << this->OVMemU7[nodeId] << " parentId:" << parentId << endl;
                     }
                     else
                     {
-                        // cout << "not encoded, sn:" << sn << endl;
+                        // cout << "not encoded, nodeId:" << nodeId << endl;
                     }
                 }
                 else
@@ -1186,8 +1185,7 @@ void MultiEDSM::OV7EncodeNodes(const cst_node_t & currNode, const unsigned int n
                 (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
             ) {
                 //calculate bit position
-                j = this->STpIdx2BVIdx[sn] - 1;  //i is index in bitvector
-
+                j = this->STpIdx2BVIdx[sn] - 1;  //j is index in bitvector
                 if (isInOVMemU7) {
                     this->WordVectorSet1At(this->OVMemU7[nodeId], j);
                     // cout << this->OVMemU7[nodeId] << endl;
@@ -1284,7 +1282,7 @@ void MultiEDSM::occVector(const string & a, WordVector & B2)
         unsigned int nodeId = this->STp.id(explicitNode);
         if (this->OVMemU7.find(nodeId) != this->OVMemU7.end())
         {
-            // cout << "B2 before:" << B2 << " ";
+            // cout << a << "; B2 before:" << B2 << " ";
             this->WordVectorAND_IP(B2, this->OVMemU7[nodeId]);
             // cout << "OVMemU7[" << nodeId << "]:" << this->OVMemU7[nodeId] << " " \
             //      << "B2 After:" << B2 << endl;
@@ -1450,9 +1448,9 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     else
     {
         //build equivalent of BorderPrefixTable for current segment
-        // cout << "B:" << this->B << endl;
+        // cout << "B: " << this->B << endl;
         B1 = this->buildBorderPrefixWordVector(S);
-        // cout << "B1:" << B1 << endl;
+        // cout << "B1: " << B1 << endl;
 
         //keep track of f/F counts and if segment is determinate, and if there's an epsilon (deletion)
         if (S.size() == 1)
