@@ -24,6 +24,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <unordered_map>
 #include <sdsl/util.hpp>
 #include <sdsl/rrr_vector.hpp>
 #include <sdsl/suffix_trees.hpp>
@@ -159,8 +160,10 @@ protected:
     std::map<unsigned int, RRR> OVMem51;
     std::map<unsigned int, RRR> OVMemLeaves;
     std::vector<WordVector> OVMem6;
-    std::map<unsigned int, WordVector> OVMemU7;
-    std::map<unsigned int, std::vector<unsigned int>> OVMem7;
+    // std::map<unsigned int, WordVector> OVMemU7;
+    // std::map<unsigned int, std::vector<unsigned int>> OVMem7;
+    std::unordered_map<unsigned int, WordVector> OVMemU7;
+    std::unordered_map<unsigned int, std::vector<unsigned int>> OVMem7;
 
     /**
      * @var M The total length of the patterns

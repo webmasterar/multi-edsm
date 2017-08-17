@@ -935,10 +935,17 @@ void MultiEDSM::constructOV7(const string & p)
     queue<cst_node_t> q;
     q.push(this->STp.root());
     unsigned int maxDepth = (unsigned int) max((int)1, (int)this->maxP - 2); //max level to traverse in level order
-    unsigned int level = 1;     //current level -- root is level 0, but we are inserting children into q, so level = currNodeLevel+1
-    unsigned int dc = 1;        //decrement counter
-    unsigned int ic = 0;        //increment counter
-    unsigned int id;            //node id
+    unsigned int cumulativeNodeTotal = 0, i = 0; //CNT is maximum nodes to store in either OVMemU7, OVMem7 or between them
+    for (i = 1; i <= maxDepth; i++) {
+        cumulativeNodeTotal += pow(SIGMA, i) + 1;
+    }
+    this->OVMemU7.reserve(min((unsigned int)this->STp.nodes(), min(this->maxK, cumulativeNodeTotal))); //maximum number of nodes to store in OVMemU7
+    unsigned int numNodesInOVMemU7 = 0; //count of nodes actually stored in OVMemU7
+    unsigned int level = 1;             //current level -- root is level 0, but we are inserting children into q, so level = currNodeLevel+1
+    unsigned int dc = 1;                //decrement counter
+    unsigned int ic = 0;                //increment counter
+    unsigned int nn = 0;                //num nodes in nodeLevels
+    unsigned int id;                    //node id
     cst_node_t currNode;
     while (!q.empty() && level <= maxDepth)
     {
@@ -956,12 +963,13 @@ void MultiEDSM::constructOV7(const string & p)
                 } else {
                     nodeLevels[level].push_back(id);
                 }
-                if (this->maxK > 0) {
+                if (numNodesInOVMemU7 <= this->maxK) {
                     WordVector w;
                     this->OVMemU7[id] = w;
-                    this->maxK--;
+                    numNodesInOVMemU7++;
                 }
                 q.push(child);
+                nn++;
                 ic++;
             }
             else
@@ -969,7 +977,8 @@ void MultiEDSM::constructOV7(const string & p)
                 unsigned int lb = this->STp.lb(child);
                 unsigned int sn = this->STp.csa[lb];
                 // char nextChar = p[sn + level - 1];
-                if (p[sn] != SEPARATOR_CHAR) {
+                char nextChar = p[sn];
+                if (nextChar != SEPARATOR_CHAR) {
                     id = this->STp.id(child);
                     if (nodeLevels.size() <= level) {
                         vector<unsigned int> v;
@@ -978,12 +987,13 @@ void MultiEDSM::constructOV7(const string & p)
                     } else {
                         nodeLevels[level].push_back(id);
                     }
-                    if (this->maxK > 0) {
+                    if (numNodesInOVMemU7 <= this->maxK) {
                         WordVector w;
                         this->OVMemU7[id] = w;
-                        this->maxK--;
+                        numNodesInOVMemU7++;
                     }
                     q.push(child);
+                    nn++;
                     ic++;
                 }
             }
@@ -998,13 +1008,13 @@ void MultiEDSM::constructOV7(const string & p)
 
     // for (unsigned int x = 0; x < nodeLevels.size(); x++)
     // {
-    //     cout << "Level " << x << " contains " << nodeLevels[x].size() << " nodes: ";
+    //     cout << "Level " << x << " contains " << nodeLevels[x].size() << " nodes;" << endl;
     //     for (unsigned int y : nodeLevels[x]) {
     //         cout << y << " ";
     //     }
     //     cout << endl;
     // }
-    // With separator char checking:
+    // With separator char checking (buggy nextChar = p[sn + level - 1]):
     // Level 0 contains 1 nodes.
     // Level 1 contains 5 nodes.
     // Level 2 contains 17 nodes.
@@ -1015,6 +1025,17 @@ void MultiEDSM::constructOV7(const string & p)
     // Level 7 contains 16385 nodes.
     // Level 8 contains 65537 nodes.
     // Level 9 contains 260952 nodes.
+    // With seperator char checking (p[sn]):
+    // Level 0 contains 1 nodes.
+    // Level 1 contains 5 nodes.
+    // Level 2 contains 21 nodes.
+    // Level 3 contains 97 nodes.
+    // Level 4 contains 449 nodes.
+    // Level 5 contains 2049 nodes.
+    // Level 6 contains 9217 nodes.
+    // Level 7 contains 40961 nodes.
+    // Level 8 contains 180225 nodes.
+    // Level 9 contains 784202 nodes.
     // Without separator char checking:
     // Level 0 contains 1 nodes.
     // Level 1 contains 6 nodes.
@@ -1032,6 +1053,7 @@ void MultiEDSM::constructOV7(const string & p)
     // Step 2: For each node at maxDepth, encode.
     //
     // cout << "Starting node encoding..." << endl;
+    this->OVMem7.reserve(max(1, (int)nn - (int)numNodesInOVMemU7));
     maxDepth = nodeLevels.size() - 1;
     for (unsigned int nodeId : nodeLevels[maxDepth])
     {
@@ -1045,7 +1067,7 @@ void MultiEDSM::constructOV7(const string & p)
     //
     // cout << "Tree climbing..." << endl;
     bool currNodeIsInOVMemU7, parentIsInOVMemU7;
-    unsigned int parentId, sn, i, j;
+    unsigned int parentId, sn, j;
     for (i = maxDepth; i > 0; i--)
     {
         for (unsigned int nodeId : nodeLevels[i])

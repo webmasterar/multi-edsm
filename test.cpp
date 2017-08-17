@@ -161,6 +161,7 @@ int main()
 
     //identify which nodes of CA we should follow: 13, 24, 1, 6 but not 23, 9, 3.
 
+    cout << sp << endl;
     cout << "Traversing down CA..." << endl;
     while (!q.empty()) {
         q.pop();
@@ -182,6 +183,7 @@ int main()
                 unsigned int lb = STp.lb(child);
                 unsigned int sn = STp.csa[lb];
                 char nextChar = sp[sn + level];
+                cout << "sn:" << sn << " sp[sn]:" << sp[sn] << " sp[sn + 1]:" << sp[sn + 1] << " sp[sn + level]:" << nextChar << endl;
                 if (nextChar != '#') {
                     q.push(child);
                 }
@@ -203,6 +205,7 @@ int main()
 
     //identify which nodes of A we should follow: 14, 21, 20, 7, 2, 12, 0 but not 10, 4
 
+    cout << sp << endl;
     cout << "Traversing down A..." << endl;
     while (!q.empty()) {
         q.pop();
@@ -220,13 +223,17 @@ int main()
             unsigned int id = STp.id(child);
             if (!STp.is_leaf(child))
             {
-                cout << "Visited node " << id << " on level " << (level + 1) << endl;
+                cout << "Visited node " << id << " on level " << (level + 1) << " ";
                 unsigned int lb = STp.lb(child);
                 unsigned int sn = STp.csa[lb];
                 char nextChar = sp[sn + level];
                 if (nextChar != '#') {
                     q.push(child);
+                    cout << " with char " << nextChar << " ";
+                } else {
+                    cout << "Node " << id << " with sp[sn + level] has char " << nextChar << " " << endl;
                 }
+                cout << "and the value of sp[sn] is:" << sp[sn] << " and sn:" << sn << endl;
             }
             else
             {
