@@ -82,6 +82,18 @@ typedef std::vector<WORD> WordVector;
 typedef std::vector<std::string> Segment;
 typedef std::vector<Segment> ElasticDegenerateSequence;
 
+/**
+ * A LeafRange stores the start and end indexes of leaves in the suffix array (csa)
+ * that branch off from a node stored in the suffix tree (cst). If start == end
+ * then the node is a leaf.
+ * The LeafRange is useful because it means we use O(n) space, two unsigned ints,
+ * for the nodes in the tree which we do not store in OVMemU.
+ */
+struct LeafRange {
+    unsigned int start;
+    unsigned int end;
+};
+
 class MultiEDSM
 {
 private:
@@ -102,6 +114,8 @@ private:
 
     void constructOV7(const std::string & p);
 
+    void constructOV8(const std::string & p);
+
     WordVector recAssignOVMem(const cst_node_t & u);
 
     WordVector recAssignOVMem2(const cst_node_t & u, const unsigned int currDepth);
@@ -115,6 +129,8 @@ private:
     void csaEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId);
 
     void OV7EncodeNodes(const cst_node_t & currNode, const unsigned int nodeId);
+
+    void OV8EncodeNodes(const cst_node_t & currNode, const unsigned int nodeId);
 
     void WordVectorOR_IP(WordVector & a, const WordVector & b);
 
@@ -160,10 +176,10 @@ protected:
     std::map<unsigned int, RRR> OVMem51;
     std::map<unsigned int, RRR> OVMemLeaves;
     std::vector<WordVector> OVMem6;
-    // std::map<unsigned int, WordVector> OVMemU7;
-    // std::map<unsigned int, std::vector<unsigned int>> OVMem7;
     std::unordered_map<unsigned int, WordVector> OVMemU7;
     std::unordered_map<unsigned int, std::vector<unsigned int>> OVMem7;
+    std::unordered_map<unsigned int, WordVector> OVMemU8;
+    std::unordered_map<unsigned int, struct LeafRange> OVMem8;
 
     /**
      * @var M The total length of the patterns

@@ -144,12 +144,12 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
 
     //construct occVector datastructure
     cout << "OccVector..." << endl;
-    this->constructOV7(p);
+    this->constructOV8(p);
 
     //stop timer
     this->duration += clock() - start;
 
-    cout << "Preproccessing " << patterns.size() << " patterns of size M=" \
+    cout << "Preproccessing " << patterns.size() << " patterns of total size M=" \
          << this->M << " completed in " << this->getDuration() << "s." << endl << endl;
 }
 
@@ -1227,6 +1227,326 @@ void MultiEDSM::OV7EncodeNodes(const cst_node_t & currNode, const unsigned int n
 }
 
 
+void MultiEDSM::constructOV8(const string & p)
+{
+    //
+    // Step 1: Traverse the tree level order down to maxP-2 (inclusive) levels
+    // making sure not to follow edges beginning with a separator char
+    //
+    // cout << "Creating nodeLevels..." << endl;
+    vector<vector<unsigned int>> nodeLevels;
+    vector<unsigned int> v;
+    v.push_back(this->STp.id(this->STp.root()));
+    nodeLevels.push_back(v);
+    queue<cst_node_t> q;
+    q.push(this->STp.root());
+    unsigned int maxDepth = (unsigned int) max((int)1, (int)this->maxP - 2); //max level to traverse in level order
+    unsigned int cumulativeNodeTotal = 0, i = 0; //CNT is maximum nodes to store in either OVMemU8, OVMem8 or between them
+    for (i = 1; i <= maxDepth; i++) {
+        cumulativeNodeTotal += pow(SIGMA, i) + 1;
+    }
+    this->OVMemU8.reserve(min((unsigned int)this->STp.nodes(), min(this->maxK, cumulativeNodeTotal))); //maximum number of nodes to store in OVMemU8
+    unsigned int numNodesInOVMemU8 = 0; //count of nodes actually stored in OVMemU8
+    unsigned int level = 1;             //current level -- root is level 0, but we are inserting children into q, so level = currNodeLevel+1
+    unsigned int dc = 1;                //decrement counter
+    unsigned int ic = 0;                //increment counter
+    unsigned int nn = 0;                //num nodes in nodeLevels
+    unsigned int id;                    //node id
+    cst_node_t currNode;
+    while (!q.empty() && level <= maxDepth)
+    {
+        currNode = q.front();
+        q.pop();
+        for (const auto & child : this->STp.children(currNode))
+        {
+            if (this->STp.is_leaf(child))
+            {
+                id = this->STp.id(child);
+                if (nodeLevels.size() <= level) {
+                    vector<unsigned int> v;
+                    v.push_back(id);
+                    nodeLevels.push_back(v);
+                } else {
+                    nodeLevels[level].push_back(id);
+                }
+                if (numNodesInOVMemU8 <= this->maxK) {
+                    WordVector w;
+                    this->OVMemU8[id] = w;
+                    numNodesInOVMemU8++;
+                }
+                q.push(child);
+                nn++;
+                ic++;
+            }
+            else
+            {
+                unsigned int lb = this->STp.lb(child);
+                unsigned int sn = this->STp.csa[lb];
+                // char nextChar = p[sn + level - 1];
+                char nextChar = p[sn];
+                if (nextChar != SEPARATOR_CHAR) {
+                    id = this->STp.id(child);
+                    if (nodeLevels.size() <= level) {
+                        vector<unsigned int> v;
+                        v.push_back(id);
+                        nodeLevels.push_back(v);
+                    } else {
+                        nodeLevels[level].push_back(id);
+                    }
+                    if (numNodesInOVMemU8 <= this->maxK) {
+                        WordVector w;
+                        this->OVMemU8[id] = w;
+                        numNodesInOVMemU8++;
+                    }
+                    q.push(child);
+                    nn++;
+                    ic++;
+                }
+            }
+        }
+        dc--;
+        if (dc == 0) {
+            level++;
+            dc = ic;
+            ic = 0;
+        }
+    }
+
+    // for (unsigned int x = 0; x < nodeLevels.size(); x++)
+    // {
+    //     cout << "Level " << x << " contains " << nodeLevels[x].size() << " nodes;" << endl;
+    //     for (unsigned int y : nodeLevels[x]) {
+    //         cout << y << " ";
+    //     }
+    //     cout << endl;
+    // }
+    // With separator char checking (buggy nextChar = p[sn + level - 1]):
+    // Level 0 contains 1 nodes.
+    // Level 1 contains 5 nodes.
+    // Level 2 contains 17 nodes.
+    // Level 3 contains 65 nodes.
+    // Level 4 contains 257 nodes.
+    // Level 5 contains 1025 nodes.
+    // Level 6 contains 4097 nodes.
+    // Level 7 contains 16385 nodes.
+    // Level 8 contains 65537 nodes.
+    // Level 9 contains 260952 nodes.
+    // With seperator char checking (p[sn]):
+    // Level 0 contains 1 nodes.
+    // Level 1 contains 5 nodes.
+    // Level 2 contains 21 nodes.
+    // Level 3 contains 97 nodes.
+    // Level 4 contains 449 nodes.
+    // Level 5 contains 2049 nodes.
+    // Level 6 contains 9217 nodes.
+    // Level 7 contains 40961 nodes.
+    // Level 8 contains 180225 nodes.
+    // Level 9 contains 784202 nodes.
+    // Without separator char checking:
+    // Level 0 contains 1 nodes.
+    // Level 1 contains 6 nodes.
+    // Level 2 contains 25 nodes.
+    // Level 3 contains 113 nodes.
+    // Level 4 contains 513 nodes.
+    // Level 5 contains 2305 nodes.
+    // Level 6 contains 10241 nodes.
+    // Level 7 contains 45057 nodes.
+    // Level 8 contains 196609 nodes.
+    // Level 9 contains 849631 nodes.
+
+
+    //
+    // Step 2: For each node at maxDepth, encode.
+    //
+    // cout << "Starting node encoding..." << endl;
+    this->OVMem8.reserve(max(1, (int)nn - (int)numNodesInOVMemU8));
+    maxDepth = nodeLevels.size() - 1;
+    for (unsigned int nodeId : nodeLevels[maxDepth])
+    {
+        currNode = this->STp.inv_id(nodeId);
+        this->OV8EncodeNodes(currNode, nodeId);
+    }
+
+    //
+    // Step 3: Traverse the tree in reverse level order to encode children into
+    // their parents from maxDepth down to level 1.
+    //
+    // cout << "Tree climbing..." << endl;
+    bool currNodeIsInOVMemU8, parentIsInOVMemU8;
+    unsigned int parentId, sn, j;
+    for (i = maxDepth; i > 0; i--)
+    {
+        for (unsigned int nodeId : nodeLevels[i])
+        {
+            currNode = this->STp.inv_id(nodeId);
+            currNodeIsInOVMemU8 = (this->OVMemU8.find(nodeId) != this->OVMemU8.end());
+            parentId = this->STp.id(this->STp.parent(currNode));
+            parentIsInOVMemU8 = (this->OVMemU8.find(parentId) != this->OVMemU8.end());
+
+            if (!currNodeIsInOVMemU8 && !parentIsInOVMemU8)
+            {
+                // cout << "Both not WordVectors ";
+                // for (unsigned int x : this->OVMem8[nodeId]) {
+                //     this->OVMem8[parentId].push_back(x);
+                // }
+                // cout << "nodeVal:" << this->OVMemU8[nodeId] << " parentId:" << parentId << endl;
+            }
+            else if (!currNodeIsInOVMemU8 && parentIsInOVMemU8)
+            {
+                // cout << "Only parent is WordVector ";
+                // for (unsigned int x : this->OVMem8[nodeId]) {
+                //     this->WordVectorSet1At(this->OVMemU8[parentId], x);
+                // }
+                unsigned int i, j, sn;
+                for (i = this->OVMem8[nodeId].start; i <= this->OVMem8[nodeId].end; i++)
+                {
+                    sn = this->STp.csa[i];
+                    if (
+                        (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                        (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+                    ) {
+                        //calculate bit position
+                        j = this->STpIdx2BVIdx[sn] - 1;  //j is index in bitvector
+                        this->WordVectorSet1At(this->OVMemU8[parentId], j);
+                    }
+                }
+                this->OVMemU8[parentId].shrink_to_fit();
+                // cout << "nodeVal:" << this->OVMemU8[nodeId] << " parentId:" << parentId << endl;
+            }
+            else if (currNodeIsInOVMemU8 && parentIsInOVMemU8)
+            {
+                if (this->STp.is_leaf(currNode))
+                {
+                    // cout << nodeId << " Leaf in nodeLevels ";
+                    sn = this->STp.sn(currNode);
+                    if (
+                        (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                        (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+                    ) {
+                        //calculate bit position
+                        j = this->STpIdx2BVIdx[sn] - 1;  //j is index in bitvector
+                        this->WordVectorSet1At(this->OVMemU8[nodeId], j);
+                        this->OVMemU8[nodeId].shrink_to_fit();
+                        // cout << "nodeVal:" << this->OVMemU8[nodeId] << " parentId:" << parentId << endl;
+                    }
+                    else
+                    {
+                        // cout << "not encoded, sn:" << sn << endl;
+                    }
+                }
+                else
+                {
+                    // cout << nodeId << " Not leaf ";
+                }
+                this->WordVectorOR_IP(this->OVMemU8[parentId], this->OVMemU8[nodeId]);
+                // cout << "nodeVal:" << this->OVMemU8[nodeId] << " parentId:" << parentId << endl;
+            }
+            else if (!parentIsInOVMemU8 && this->STp.is_leaf(currNode))
+            {
+                // cout << nodeId << " Leaf in nodeLevels but not parent ";
+                sn = this->STp.sn(currNode);
+                if (
+                    (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                    (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+                ) {
+                    //calculate bit position
+                    j = this->STpIdx2BVIdx[sn] - 1;  //j is index in bitvector
+                    this->WordVectorSet1At(this->OVMemU8[nodeId], j);
+                    this->OVMemU8[nodeId].shrink_to_fit();
+                    // cout << "nodeVal:" << this->OVMemU8[nodeId] << " parentId:" << parentId << endl;
+                }
+                else
+                {
+                    // cout << "not encoded, nodeId:" << nodeId << endl;
+                }
+            }
+            else
+            {
+                //Node not useful so ignored. Or currently at level 1, where
+                //parent is root and children are WordVectors; nothing to do here.
+                // cout << nodeId << " Nope ";
+                // cout << "nodeVal:" << this->OVMemU8[nodeId] << " parentId:" << parentId << endl;
+            }
+        }
+        nodeLevels[i].clear();
+    }
+    nodeLevels.clear();
+
+    // cout << endl << "idx\tsn\tsuffix" << endl;
+    // for (i = 0; i < p.length() + 1; i++)
+    // {
+    //     cout << i << "\t" << this->STp.csa[i] << "\t" << p.substr(this->STp.csa[i]) << endl;
+    // }
+    // cout << endl;
+}
+void MultiEDSM::OV8EncodeNodes(const cst_node_t & currNode, const unsigned int nodeId)
+{
+    if (this->STp.is_leaf(currNode))
+    {
+        // cout << "Encoding leaf " << nodeId << " ";
+        unsigned int sn = this->STp.sn(currNode);
+        unsigned int j = this->STpIdx2BVIdx[sn] - 1;
+        if (this->OVMemU8.find(nodeId) != this->OVMemU8.end() && sn > 0) {
+            this->WordVectorSet1At(this->OVMemU8[nodeId], j);
+            this->OVMemU8[nodeId].shrink_to_fit();
+            // cout << "sn" << sn << " pos" << j << " " << this->OVMemU8[nodeId];
+        } else {
+            if (sn > 0) {
+                struct LeafRange lr;
+                lr.start = nodeId;
+                lr.end = nodeId;
+                this->OVMem8[nodeId] = lr;
+                // cout << v;
+            }
+        }
+        // cout << endl;
+    }
+    else
+    {
+        // cout << "Encoding node " << nodeId << " ";
+        unsigned int lb = this->STp.lb(currNode);
+        unsigned int rb = this->STp.rb(currNode);
+        bool isInOVMemU8 = (this->OVMemU8.find(nodeId) != this->OVMemU8.end());
+        if (isInOVMemU8)
+        {
+            unsigned int i, j, sn;
+            for (i = lb; i <= rb; i++)
+            {
+                sn = this->STp.csa[i];
+                if (
+                    (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                    (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+                ) {
+                    //calculate bit position
+                    j = this->STpIdx2BVIdx[sn] - 1;  //j is index in bitvector
+                    if (isInOVMemU8) {
+                        this->WordVectorSet1At(this->OVMemU8[nodeId], j);
+                        // cout << this->OVMemU8[nodeId] << endl;
+                    }
+                }
+            }
+            this->OVMemU8[nodeId].shrink_to_fit();
+        }
+        else
+        {
+            struct LeafRange lr;
+            lr.start = lb;
+            lr.end = rb;
+            this->OVMem8[nodeId] = lr;
+            // cout << this->OVMem8[nodeId] << endl;
+        }
+    }
+}
+
+
 /**
  * The Shift-And algorithm performs the equivalent of creating a BorderPrefixTable
  * and this function just returns a WordVector with the prefixes of patterns
@@ -1302,18 +1622,36 @@ void MultiEDSM::occVector(const string & a, WordVector & B2)
     {
         // cout << a << endl;
         unsigned int nodeId = this->STp.id(explicitNode);
-        if (this->OVMemU7.find(nodeId) != this->OVMemU7.end())
+        if (this->OVMemU8.find(nodeId) != this->OVMemU8.end())
         {
             // cout << a << "; B2 before:" << B2 << " ";
-            this->WordVectorAND_IP(B2, this->OVMemU7[nodeId]);
-            // cout << "OVMemU7[" << nodeId << "]:" << this->OVMemU7[nodeId] << " " \
+            this->WordVectorAND_IP(B2, this->OVMemU8[nodeId]);
+            // cout << "OVMemU8[" << nodeId << "]:" << this->OVMemU8[nodeId] << " " \
             //      << "B2 After:" << B2 << endl;
         }
-        else if (this->OVMem7.find(nodeId) != this->OVMem7.end())
+        else if (this->OVMem8.find(nodeId) != this->OVMem8.end())
         {
+            // WordVector v;
+            // for (unsigned int pos : this->OVMem8[nodeId]) {
+            //     this->WordVectorSet1At(v, pos);
+            // }
+            // this->WordVectorAND_IP(B2, v);
+
             WordVector v;
-            for (unsigned int pos : this->OVMem7[nodeId]) {
-                this->WordVectorSet1At(v, pos);
+            unsigned int i, j, sn;
+            for (i = this->OVMem8[nodeId].start; i <= this->OVMem8[nodeId].end; i++)
+            {
+                sn = this->STp.csa[i];
+                if (
+                    (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                    (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                    (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+                ) {
+                    //calculate bit position
+                    j = this->STpIdx2BVIdx[sn] - 1;  //j is index in bitvector
+                    this->WordVectorSet1At(v, j);
+                }
             }
             this->WordVectorAND_IP(B2, v);
         }
