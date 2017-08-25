@@ -1237,7 +1237,7 @@ void MultiEDSM::constructOV8(const string & p)
     vector<vector<unsigned int>> nodeLevels;
     vector<unsigned int> v;
     v.push_back(this->STp.id(this->STp.root()));
-    nodeLevels.push_back(v);
+    //nodeLevels.push_back(v);
     queue<cst_node_t> q;
     q.push(this->STp.root());
     unsigned int maxDepth = (unsigned int) max((int)1, (int)this->maxP - 2); //max level to traverse in level order
@@ -1247,7 +1247,7 @@ void MultiEDSM::constructOV8(const string & p)
     }
     this->OVMemU8.reserve(min((unsigned int)this->STp.nodes(), min(this->maxK, cumulativeNodeTotal))); //maximum number of nodes to store in OVMemU8
     unsigned int numNodesInOVMemU8 = 0; //count of nodes actually stored in OVMemU8
-    unsigned int level = 1;             //current level -- root is level 0, but we are inserting children into q, so level = currNodeLevel+1
+    unsigned int level = 0;             //current level -- root is level 0, but we are inserting children into q, so level = currNodeLevel+1
     unsigned int dc = 1;                //decrement counter
     unsigned int ic = 0;                //increment counter
     unsigned int nn = 0;                //num nodes in nodeLevels
@@ -1257,53 +1257,56 @@ void MultiEDSM::constructOV8(const string & p)
     {
         currNode = q.front();
         q.pop();
-        for (const auto & child : this->STp.children(currNode))
+
+        id = this->STp.id(currNode);
+        if (nodeLevels.size() <= level) {
+            vector<unsigned int> v;
+            v.push_back(id);
+            nodeLevels.push_back(v);
+        } else {
+            nodeLevels[level].push_back(id);
+        }
+        if (numNodesInOVMemU8 <= this->maxK && nn > 0) {
+            WordVector w;
+            this->OVMemU8[id] = w;
+            numNodesInOVMemU8++;
+        }
+
+        //handle root node special condition -- don't add $ and # starting nodes in first row
+        if (nn == 0)
         {
-            if (this->STp.is_leaf(child))
+            for (const auto & child : this->STp.children(currNode))
             {
-                id = this->STp.id(child);
-                if (nodeLevels.size() <= level) {
-                    vector<unsigned int> v;
-                    v.push_back(id);
-                    nodeLevels.push_back(v);
-                } else {
-                    nodeLevels[level].push_back(id);
+                unsigned int sn, lb;
+                if (this->STp.is_leaf(child))
+                {
+                    sn = this->STp.sn(child);
                 }
-                if (numNodesInOVMemU8 <= this->maxK) {
-                    WordVector w;
-                    this->OVMemU8[id] = w;
-                    numNodesInOVMemU8++;
+                else
+                {
+                    lb = this->STp.lb(child);
+                    sn = this->STp.csa[lb];
                 }
-                q.push(child);
-                nn++;
-                ic++;
-            }
-            else
-            {
-                unsigned int lb = this->STp.lb(child);
-                unsigned int sn = this->STp.csa[lb];
-                // char nextChar = p[sn + level - 1];
-                char nextChar = p[sn];
-                if (nextChar != SEPARATOR_CHAR) {
-                    id = this->STp.id(child);
-                    if (nodeLevels.size() <= level) {
-                        vector<unsigned int> v;
-                        v.push_back(id);
-                        nodeLevels.push_back(v);
-                    } else {
-                        nodeLevels[level].push_back(id);
-                    }
-                    if (numNodesInOVMemU8 <= this->maxK) {
-                        WordVector w;
-                        this->OVMemU8[id] = w;
-                        numNodesInOVMemU8++;
-                    }
+
+                if (!(sn == p.length() || p[sn] == SEPARATOR_CHAR))
+                {
                     q.push(child);
                     nn++;
                     ic++;
                 }
             }
         }
+        //handle rest of nodes from level 2 onwards
+        else if (!this->STp.is_leaf(currNode))
+        {
+            for (const auto & child : this->STp.children(currNode))
+            {
+                q.push(child);
+                nn++;
+                ic++;
+            }
+        }
+
         dc--;
         if (dc == 0) {
             level++;
@@ -1479,9 +1482,11 @@ void MultiEDSM::constructOV8(const string & p)
     nodeLevels.clear();
 
     // cout << endl << "idx\tsn\tsuffix" << endl;
-    // for (i = 0; i < p.length() + 1; i++)
+    // for (; i < this->STp.nodes() - 1; i++)
     // {
-    //     cout << i << "\t" << this->STp.csa[i] << "\t" << p.substr(this->STp.csa[i]) << endl;
+    //     currNode = this->STp.inv_id(i);
+    //     sn = (this->STp.is_leaf(currNode)) ? this->STp.sn(currNode) : this->STp.sn(this->STp.lb(currNode));
+    //     cout << i << "\t" << sn << "\t" << extract(this->STp, currNode) << endl;
     // }
     // cout << endl;
 }
@@ -1512,8 +1517,7 @@ void MultiEDSM::OV8EncodeNodes(const cst_node_t & currNode, const unsigned int n
         // cout << "Encoding node " << nodeId << " ";
         unsigned int lb = this->STp.lb(currNode);
         unsigned int rb = this->STp.rb(currNode);
-        bool isInOVMemU8 = (this->OVMemU8.find(nodeId) != this->OVMemU8.end());
-        if (isInOVMemU8)
+        if (this->OVMemU8.find(nodeId) != this->OVMemU8.end())
         {
             unsigned int i, j, sn;
             for (i = lb; i <= rb; i++)
@@ -1527,10 +1531,8 @@ void MultiEDSM::OV8EncodeNodes(const cst_node_t & currNode, const unsigned int n
                 ) {
                     //calculate bit position
                     j = this->STpIdx2BVIdx[sn] - 1;  //j is index in bitvector
-                    if (isInOVMemU8) {
-                        this->WordVectorSet1At(this->OVMemU8[nodeId], j);
-                        // cout << this->OVMemU8[nodeId] << endl;
-                    }
+                    this->WordVectorSet1At(this->OVMemU8[nodeId], j);
+                    // cout << this->OVMemU8[nodeId] << endl;
                 }
             }
             this->OVMemU8[nodeId].shrink_to_fit();
