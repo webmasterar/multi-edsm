@@ -424,30 +424,30 @@ Miscellaneous:\n\
     pf.close();
 
     //calculate base memory requirements making sure there is enough memory for at least two levels of the OccVector
-    unsigned long long int i, stpnodes, suffixtree, stp2pos, pos2pat, nodelevels, shiftand, twentytwobitvectors, total;
+    unsigned long long int i, stpnodes, suffixtree, stp2pos, pos2pat, nodelevels, shiftand, twentyonebitvectors, total;
     stpnodes = M + k;                                                                    //pattern string for STp
-    suffixtree = stpnodes * 11;                                                          //STp - num nodes < 2n, suffix array 6n, so 2n * 6n = ~12n
+    suffixtree = stpnodes * 12;                                                          //STp - num nodes < 2n, suffix array 6n, so 2n * 6n = ~12n
     stp2pos = sizeof(unsigned int) * stpnodes;                                           //stp2pos
     pos2pat = sizeof(unsigned int) * M;                                                  //pattern positions vector
-    nodelevels = 0;                                                                      //nodelevels
-    for (i = 0; i <= maxP - 2; i++) {
-        nodelevels = nodelevels + pow(SIGMA, i) + 1;
-    }
-    nodelevels = nodelevels * sizeof(unsigned int);
-    shiftand = (unsigned long long int) ceil(M / BITSINWORD) * (3 + SIGMA) * WORDSIZE;   //shiftand, sigma & Sv, Ev and D
-    twentytwobitvectors = (unsigned long long int) ceil(M / BITSINWORD) * WORDSIZE * 22; //level1 = 5 BVs, level2 = 17 BVs, level1 + level2 = 22 BVs
-    total = M + stpnodes + suffixtree + stp2pos + pos2pat + nodelevels + shiftand + twentytwobitvectors + BUFFERSIZE;
+    nodelevels = 0;                                                                      //nodelevels -- can ignore this because it's just a bunch of nodes and calc is not predictable
+    // for (i = 0; i <= maxP - 2; i++) {
+    //     nodelevels = nodelevels + pow(SIGMA, i) + 1;
+    // }
+    // nodelevels = nodelevels * sizeof(unsigned int);
+    shiftand = (unsigned long long int) ceil((double)M / (double)BITSINWORD) * (3 + SIGMA) * WORDSIZE;   //shiftand, sigma & Sv, Ev and D
+    twentyonebitvectors = (unsigned long long int) ceil((double)M / (double)BITSINWORD) * WORDSIZE * 21; //level1 = 4 BVs, level2 = 17 BVs, level1 + level2 = 21 BVs
+    total = M + stpnodes + suffixtree + stp2pos + pos2pat + nodelevels + shiftand + twentyonebitvectors + BUFFERSIZE;
+    cout << "stpnodes:" << stpnodes << " suffixtree:" << suffixtree << " stp2pos:" << stp2pos << " pos2pat:" << pos2pat << " nodelevels:" << nodelevels << " shiftand:" << shiftand << " twentyonebitvectors:" << twentyonebitvectors << " total:" << total << endl;
     if (total >= memLimit) {
         cerr << "Error: Insufficient memory to continue! Try increasing the memory limit." << endl;
         return EXIT_FAILURE;
     }
 
-    // cout << "total: " << total << endl;
-
     //calculate left-over memory for use in raw bitvector storage
-    total = total - twentytwobitvectors;
+    total = total - twentyonebitvectors;
     unsigned long long int remainingMemory = memLimit - total;
-    unsigned long long int maxNoBitVectorsStorable = (unsigned long long int) floor((double)remainingMemory / (ceil((double)M / (double)BITSINWORD) * WORDSIZE));
+    unsigned long long int maxNoBitVectorsStorable = (unsigned long long int) ceil((double)remainingMemory / (ceil((double)M / (double)BITSINWORD) * WORDSIZE));
+    cout << "Memlimit:" << memLimit << " and remainingMemory:" << remainingMemory << " maxNoBitVectorsStorable:" << maxNoBitVectorsStorable << endl;
 
     //start MultiEDSM search
     cout << "Multi-EDSM started..." << endl << endl;
