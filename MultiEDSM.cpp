@@ -84,11 +84,13 @@ MultiEDSM::~MultiEDSM()
  */
 void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
 {
+    cout << "Preprocessing starting..." << endl;
+
     //start timer
     clock_t start = clock();
 
     //initialize Shift-And searching tool
-    cout << "UMSA init..." << endl;
+    cout << "1. Shift-And" << endl;
     this->umsa = new MyUMSA(this->alphabet, this->reportPatterns);
 
     //add patterns to bitvector and build suffix tree string
@@ -135,15 +137,15 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     p.pop_back(); //remove unnecessary separator char as \0 already tagged on end of c_str
 
     //tool to get pattern id from any given position in the bitvector/p
-    cout << "Pos2Pat..." << endl;
+    cout << "2. Pos2Pat" << endl;
     this->Pos2PatId = this->umsa->getPatternPositions();
 
     //construct the suffix tree of patterns with seperators
-    cout << "SuffixTree..." << endl;
+    cout << "3. SuffixTree" << endl;
     construct_im(this->STp, p.c_str(), sizeof(char));
 
     //construct occVector datastructure
-    cout << "OccVector..." << endl;
+    cout << "4. OccVector" << endl;
     this->constructOV8(p);
 
     //stop timer
@@ -1240,12 +1242,9 @@ void MultiEDSM::constructOV8(const string & p)
     queue<cst_node_t> q;
     q.push(this->STp.root());
     unsigned int maxDepth = (unsigned int) max((int)1, (int)this->maxP - 2); //max level to traverse in level order
-    unsigned int cumulativeNodeTotal = 0, i = 0; //CNT is maximum nodes to store in either OVMemU8, OVMem8 or between them
-    for (i = 1; i <= maxDepth; i++) {
-        cumulativeNodeTotal += pow(SIGMA, i) + 1;
-    }
-    //@TODO can I do this->STp.nodes()/2?
-    this->OVMemU8.reserve(min((unsigned int)this->STp.nodes(), min(this->maxK, cumulativeNodeTotal))); //maximum number of nodes to store in OVMemU8
+    //Since OVMemU8 is used to store only internal nodes, we subtract R (no. of leaves) from total nodes, to get the max no. If there is insufficient memory only maxK items will be stored
+    this->OVMemU8.reserve(min((unsigned int)this->STp.nodes() - this->R, this->maxK)); //maximum number of nodes to store in OVMemU8
+    unsigned int maxNoWordsInVector = (unsigned int) ceil((double)this->M / (double)BITSINWORD);
     unsigned int numNodesInOVMemU8 = 0; //count of nodes actually stored in OVMemU8
     unsigned int level = 0;             //current level -- root is level 0
     unsigned int dc = 1;                //decrement counter
@@ -1268,8 +1267,8 @@ void MultiEDSM::constructOV8(const string & p)
         } else {
             nodeLevels[level].push_back(id);
         }
-        if (nn > 0 && numNodesInOVMemU8 <= this->maxK && !currNodeIsLeaf) { //no leaves allowed in OVMemU8
-            WordVector w;
+        if (nn > 0 && numNodesInOVMemU8 < this->maxK && !currNodeIsLeaf) { //no leaves allowed in OVMemU8
+            WordVector w(maxNoWordsInVector, 0ul);
             this->OVMemU8[id] = w;
             numNodesInOVMemU8++;
         }
@@ -1317,17 +1316,15 @@ void MultiEDSM::constructOV8(const string & p)
         }
     }
 
-    unsigned int tot = 0;
-    for (unsigned int x = 0; x < nodeLevels.size(); x++)
-    {
-        cout << "Level " << x << " contains " << nodeLevels[x].size() << " nodes;" << endl;
-        tot += nodeLevels[x].size();
+    // for (unsigned int x = 0; x < nodeLevels.size(); x++)
+    // {
+    //     cout << "Level " << x << " contains " << nodeLevels[x].size() << " nodes;" << endl;
         // for (unsigned int y : nodeLevels[x]) {
         //     cout << y << " ";
         // }
-        cout << endl;
-    }
-    cout << "tot: " << tot << " and memory usage:" << ((unsigned int)ceil((double)this->M / (double)BITSINWORD) * 8 * tot) << endl;
+    //     cout << endl;
+    // }
+    // cout << "total no. nodes in datastructure: " << nn << endl;
     // With separator char checking (buggy nextChar = p[sn + level - 1]):
     // Level 0 contains 1 nodes.
     // Level 1 contains 5 nodes.
@@ -1364,11 +1361,11 @@ void MultiEDSM::constructOV8(const string & p)
 
 
     //
-    // Step 2: For each node at maxDepth, encode.
+    // Step 2: For each node or leaf at level maxDepth, encode.
     //
     // cout << "Starting node encoding..." << endl;
-    cout << "nn:" << nn << " numNodesInOVMemU8:" << numNodesInOVMemU8 << " maxK:" << this->maxK << endl;
-    this->OVMem8.reserve(max(1, (int)nn - (int)numNodesInOVMemU8));
+    // cout << "numNodesInOVMemU8:" << numNodesInOVMemU8 << " maxK:" << this->maxK << endl;
+    this->OVMem8.reserve(this->STp.nodes() - numNodesInOVMemU8);
     maxDepth = nodeLevels.size() - 1;
     for (unsigned int nodeId : nodeLevels[maxDepth])
     {
@@ -1382,7 +1379,7 @@ void MultiEDSM::constructOV8(const string & p)
     //
     // cout << "Tree climbing..." << endl;
     bool currNodeIsInOVMemU8, parentIsInOVMemU8;
-    unsigned int parentId, sn, j, k;
+    unsigned int parentId, sn, i, j, k;
     for (i = maxDepth; i > 0; i--)
     {
         for (unsigned int nodeId : nodeLevels[i])
@@ -1393,7 +1390,7 @@ void MultiEDSM::constructOV8(const string & p)
             parentId = this->STp.id(this->STp.parent(currNode));
             parentIsInOVMemU8 = (this->OVMemU8.find(parentId) != this->OVMemU8.end());
 
-            //leaves need to be defined in OVMem8
+            //leaves need to be assigned in OVMem8
             if (currNodeIsLeaf)
             {
                 struct LeafRange lr;
@@ -1402,7 +1399,7 @@ void MultiEDSM::constructOV8(const string & p)
                 this->OVMem8[nodeId] = lr;
             }
 
-            //neither node is in OVMemU8, so encode currNode to OVMem8
+            //if neither currNode or its parent is in OVMemU8, encode currNode to OVMem8
             if (!currNodeIsInOVMemU8 && !parentIsInOVMemU8 && !currNodeIsLeaf)
             {
                 struct LeafRange lr;
@@ -1410,12 +1407,12 @@ void MultiEDSM::constructOV8(const string & p)
                 lr.end = this->STp.rb(currNode);
                 this->OVMem8[nodeId] = lr;
             }
-            //both nodes in OVMemU8 so just OR child into parent
+            //when both nodes in OVMemU8, just OR child into parent
             else if (currNodeIsInOVMemU8 && parentIsInOVMemU8)
             {
                 this->WordVectorOR_IP(this->OVMemU8[parentId], this->OVMemU8[nodeId]);
             }
-            //only parent in OVMemU8 so encode child leaves into parent
+            //when only the parent is in OVMemU8, encode child leaves into parent
             else if (parentIsInOVMemU8 && !currNodeIsInOVMemU8)
             {
                 for (j = this->OVMem8[nodeId].start; j <= this->OVMem8[nodeId].end; j++)
@@ -1431,7 +1428,6 @@ void MultiEDSM::constructOV8(const string & p)
                         this->WordVectorSet1At(this->OVMemU8[parentId], k);
                     }
                 }
-                this->OVMemU8[parentId].shrink_to_fit();
             }
             //Level 1 node or both parent and currNode are not in OVMemU8 (therefore in OVMem8), so nothing needs to be affected
             else
@@ -1483,7 +1479,6 @@ void MultiEDSM::OV8EncodeNodes(const cst_node_t & currNode, const unsigned int n
                     this->WordVectorSet1At(this->OVMemU8[nodeId], j);
                 }
             }
-            this->OVMemU8[nodeId].shrink_to_fit();
         }
         else
         {

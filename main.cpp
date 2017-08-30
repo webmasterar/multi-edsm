@@ -338,10 +338,9 @@ Standard (Required) Arguments:\n\
   -s\t--sequence-file\t<str>\tThe EDS or reference FASTA file. Use the correct file for the correct search type.\n\
   -v\t--variants-file\t<str>\tThe VCF variants-file. Support for .vcf.gz. Use only with FASTA+VCF search type.\n\
   -p\t--patterns-file\t<str>\tThe patterns file. Each pattern must be on a different line.\n\
-  -m\t--mem-limit\t<str>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers, e.g. 3.5g\n\n\
+  -m\t--mem-limit\t<str>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers for GB or MB, e.g. 3.5g\n\n\
 Miscellaneous:\n\
   -h\t--help\t\t<void>\tThis help message.\n";
-//\nOptional Arguments:\n \
 
     while ((c = getopt_long(argc, argv, "s:v:p:m:h", long_options, &optind)) != -1)
     {
@@ -417,27 +416,22 @@ Miscellaneous:\n\
         k++;
         if (M + k >= memLimit) {
             pf.close();
-            cerr << "Error: Set of patterns too large -- memory limit exceeded! Try splitting them up into batches." << endl;
+            cerr << "Error: Set of patterns too large -- memory limit exceeded! Try splitting patterns up into batches or increasing the memory limit." << endl;
             return EXIT_FAILURE;
         }
     }
     pf.close();
 
     //calculate base memory requirements making sure there is enough memory for at least two levels of the OccVector
-    unsigned long long int i, stpnodes, suffixtree, stp2pos, pos2pat, nodelevels, shiftand, twentyonebitvectors, total;
+    unsigned long long int i, stpnodes, suffixtree, stp2pos, pos2pat, shiftand, twentyonebitvectors, total;
     stpnodes = M + k;                                                                    //pattern string for STp
-    suffixtree = stpnodes * 12;                                                          //STp - num nodes < 2n, suffix array 6n, so 2n * 6n = ~12n
+    suffixtree = stpnodes * 24;                                                          //STp - num nodes < 2n, suffix array 6n, so 2n * 6n = ~12n and same for suffix tree and associated datastructures so ~24n altogether
     stp2pos = sizeof(unsigned int) * stpnodes;                                           //stp2pos
     pos2pat = sizeof(unsigned int) * M;                                                  //pattern positions vector
-    nodelevels = 0;                                                                      //nodelevels -- can ignore this because it's just a bunch of nodes and calc is not predictable
-    // for (i = 0; i <= maxP - 2; i++) {
-    //     nodelevels = nodelevels + pow(SIGMA, i) + 1;
-    // }
-    // nodelevels = nodelevels * sizeof(unsigned int);
     shiftand = (unsigned long long int) ceil((double)M / (double)BITSINWORD) * (3 + SIGMA) * WORDSIZE;   //shiftand, sigma & Sv, Ev and D
     twentyonebitvectors = (unsigned long long int) ceil((double)M / (double)BITSINWORD) * WORDSIZE * 21; //level1 = 4 BVs, level2 = 17 BVs, level1 + level2 = 21 BVs
-    total = M + stpnodes + suffixtree + stp2pos + pos2pat + nodelevels + shiftand + twentyonebitvectors + BUFFERSIZE;
-    cout << "stpnodes:" << stpnodes << " suffixtree:" << suffixtree << " stp2pos:" << stp2pos << " pos2pat:" << pos2pat << " nodelevels:" << nodelevels << " shiftand:" << shiftand << " twentyonebitvectors:" << twentyonebitvectors << " total:" << total << endl;
+    total = M + stpnodes + suffixtree + stp2pos + pos2pat + shiftand + twentyonebitvectors + BUFFERSIZE;
+    // cout << "stpnodes:" << stpnodes << " suffixtree:" << suffixtree << " stp2pos:" << stp2pos << " pos2pat:" << pos2pat << " shiftand:" << shiftand << " twentyonebitvectors:" << twentyonebitvectors << " total:" << total << endl;
     if (total >= memLimit) {
         cerr << "Error: Insufficient memory to continue! Try increasing the memory limit." << endl;
         return EXIT_FAILURE;
@@ -447,10 +441,10 @@ Miscellaneous:\n\
     total = total - twentyonebitvectors;
     unsigned long long int remainingMemory = memLimit - total;
     unsigned long long int maxNoBitVectorsStorable = (unsigned long long int) ceil((double)remainingMemory / (ceil((double)M / (double)BITSINWORD) * WORDSIZE));
-    cout << "Memlimit:" << memLimit << " and remainingMemory:" << remainingMemory << " maxNoBitVectorsStorable:" << maxNoBitVectorsStorable << endl;
+    // cout << "Memlimit:" << memLimit << " and remainingMemory:" << remainingMemory << " maxNoBitVectorsStorable:" << maxNoBitVectorsStorable << endl;
 
     //start MultiEDSM search
-    cout << "Multi-EDSM started..." << endl << endl;
+    cout << "Multi-EDSM starting..." << endl << endl;
     MultiEDSM * multiedsm = new MultiEDSM(ALPHABET, patterns, maxNoBitVectorsStorable);
     patterns.clear();
     bool success;
@@ -460,6 +454,7 @@ Miscellaneous:\n\
         success = searchEDS(multiedsm, seqF);
     }
     if (!success) {
+        cerr << "Error: An unspecified error occured." << endl;
         return EXIT_FAILURE;
     }
 
@@ -468,7 +463,7 @@ Miscellaneous:\n\
     cout << "No. determinate segments (d): " << multiedsm->getd() << endl;
     cout << "No. degenerate segments (D): " << multiedsm->getD() << endl;
     cout << "No. strings processed shorter than pattern (N'): " << multiedsm->getNp() << endl;
-    cout << "Multi-EDSM processing time: " << multiedsm->getDuration() << "s." << endl << endl;
+    cout << "Multi-EDSM total processing time: " << multiedsm->getDuration() << "s." << endl << endl;
 
     if (multiedsm->getMatches().size() == 0)
     {
