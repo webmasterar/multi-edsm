@@ -23,10 +23,8 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <map>
 #include <unordered_map>
 #include <sdsl/util.hpp>
-#include <sdsl/rrr_vector.hpp>
 #include <sdsl/suffix_trees.hpp>
 #include "MyUMSA.hpp"
 
@@ -36,7 +34,6 @@
 #define BUFFERSIZE 4194304
 #define SEPARATOR_CHAR '#'
 #define SEPARATOR_DIGIT -1
-#define RRR_SIZE (BITSINWORD - 1)
 
 //
 // Fast implementations of bitvector operations:
@@ -76,61 +73,37 @@ typedef sdsl::cst_sct3<> cst_t;
 typedef cst_t::node_type cst_node_t;
 typedef cst_t::size_type cst_size_t;
 typedef cst_t::char_type cst_char_t;
-typedef sdsl::rrr_vector<RRR_SIZE> RRR;
 typedef std::vector<std::pair<unsigned int, unsigned int>> ResultSet;
 typedef std::vector<WORD> WordVector;
 typedef std::vector<std::string> Segment;
 typedef std::vector<Segment> ElasticDegenerateSequence;
 
 /**
- * A LeafRange stores the start and end indexes of leaves in the suffix array (csa)
- * that branch off from a node stored in the suffix tree (cst). If start == end
- * then the node is a leaf.
+ * NodeRanges are stored in OVMem8 and hold the start and end indexes of leaves
+ * in the suffix array (csa) that branch off from an explicit node stored in the
+ * suffix tree (cst). If start == end then the node is a leaf. It is also used
+ * for storing explicit nodes of the suffix tree that we could not store in OVMemU8
+ * due to insufficient memory. In that case start < end and the leaves that exist
+ * below this node are in the suffix array in the indices range beginning from
+ * start and finishing at 'end' (inclusive).
  * The LeafRange is useful because it means we use O(n) space, two unsigned ints,
- * for the nodes in the tree which we do not store in OVMemU.
+ * for the nodes in the tree which we do not store in OVMemU8.
  */
-struct LeafRange {
+struct NodeRange {
     unsigned int start;
     unsigned int end;
 };
 
+/**
+ * The MultiEDSM class
+ */
 class MultiEDSM
 {
 private:
 
     void preprocessPatterns(const std::vector<std::string> & patterns);
 
-    void constructOV();
-
-    void constructOV2();
-
-    void constructOV3();
-
-    void constructOV4();
-
-    void constructOV5();
-
-    void constructOV6(const std::string & p);
-
-    void constructOV7(const std::string & p);
-
     void constructOV8(const std::string & p);
-
-    WordVector recAssignOVMem(const cst_node_t & u);
-
-    WordVector recAssignOVMem2(const cst_node_t & u, const unsigned int currDepth);
-
-    WordVector & recAssignOVMem4(const cst_node_t & u);
-
-    void recEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId);
-
-    void nonrecEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId);
-
-    void csaEncodeLeavesToNode(const cst_node_t & node, const unsigned int targetNodeId);
-
-    void OV7EncodeNodes(const cst_node_t & currNode, const unsigned int nodeId);
-
-    void OV8EncodeNodes(const cst_node_t & currNode, const unsigned int nodeId);
 
     void WordVectorOR_IP(WordVector & a, const WordVector & b);
 
@@ -141,8 +114,6 @@ private:
     void WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m);
 
     void WordVectorSet1At(WordVector & x, unsigned int pos);
-
-    unsigned int getMaxRangeInSet(std::vector<unsigned int> s);
 
 protected:
     /**
@@ -166,20 +137,14 @@ protected:
     std::vector<unsigned int> Pos2PatId;
 
     /**
-     * @var OVMem Holds the computer words storing pattern positions for OccVector()
+     * @var OVMemU8 Holds the computer words storing pattern positions for MultiEDSM::OccVector()
      */
-    std::vector<WordVector> OVMem;
-    std::map<unsigned int, WordVector> OVMem2;
-    std::map<unsigned int, WordVector> OVMem3;
-    std::vector<WordVector> OVMem4;
-    std::map<unsigned int, WordVector> OVMem5;
-    std::map<unsigned int, RRR> OVMem51;
-    std::map<unsigned int, RRR> OVMemLeaves;
-    std::vector<WordVector> OVMem6;
-    std::unordered_map<unsigned int, WordVector> OVMemU7;
-    std::unordered_map<unsigned int, std::vector<unsigned int>> OVMem7;
     std::unordered_map<unsigned int, WordVector> OVMemU8;
-    std::unordered_map<unsigned int, struct LeafRange> OVMem8;
+
+    /**
+     * @var OVMem8 Holds NodeRanges storing the position of leaves in the suffix array for MultiEDSM::OccVector()
+     */
+    std::unordered_map<unsigned int, struct NodeRange> OVMem8;
 
     /**
      * @var M The total length of the patterns
@@ -187,7 +152,7 @@ protected:
     unsigned int M;
 
     /**
-     * @var R The total length of the patterns plus the separators
+     * @var R The total length of the patterns plus k separators (R = M + k)
      */
     unsigned int R;
 
@@ -202,14 +167,15 @@ protected:
     unsigned int maxP;
 
     /**
-     * @var maxK The maximum number of BitVectors to store in memory
+     * @var maxK The maximum number of BitVectors to store in memory considering
+     * each bitvector occupies [R/w]*sizeof(w) bytes
      */
     unsigned int maxK;
 
     /**
      * @var pos The current position in the input passed in. Degenerate
      * positions/segments count as 1 position, whereas determinate segments are
-     * counted as N positions (as many characters as there are in the segment).
+     * counted as N positions (as many characters as there are in the segment)
      */
     unsigned int pos;
 
@@ -219,7 +185,8 @@ protected:
     double duration;
 
     /**
-     * @var primed Has the algorithm been primed with an initial segment to search?
+     * @var primed Has the algorithm's state variable (B) been primed with an
+     * initial value to continue searching the next segment from?
      */
     bool primed;
 
@@ -234,7 +201,7 @@ protected:
     bool reportPatterns;
 
     /**
-     * @var STp The suffix tree (array) of P
+     * @var STp The suffix tree (enhanced suffix array) of P
      */
     cst_t STp;
 
@@ -244,7 +211,8 @@ protected:
     WordVector B;
 
     /**
-     * @var umsa MyUMSA object used for searching - stores the bitvector of the patterns
+     * @var umsa MyUMSA object used for searching using Shift-And. MyUMSA stores
+     * the bitvector of the patterns and state of searches (on-line algorithm)
      */
     MyUMSA * umsa;
 
@@ -269,12 +237,12 @@ protected:
     unsigned int D;
 
     /**
-     * @var Np The total number of strings analyzed with length < minP
+     * @var Np The total number of strings analyzed with length < maxP-1
      */
     unsigned int Np;
 
     /**
-     * @var Nm The total length of strings analyzed with length < minP
+     * @var Nm The total length of strings analyzed with length < maxP-1
      */
     unsigned int Nm;
 
@@ -282,7 +250,6 @@ protected:
 
     WordVector buildBorderPrefixWordVector(const Segment & S);
 
-    // unsigned int occVector(const std::string & a);
     void occVector(const std::string & a, WordVector & B2);
 
     void WordVectorLeftShift_IP(WordVector & x, unsigned int m);
