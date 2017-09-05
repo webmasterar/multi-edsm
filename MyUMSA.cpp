@@ -127,60 +127,14 @@ bool MyUMSA::search(const string & text, unsigned int pos)
 }
 
 /**
- * Search a text starting at position i
+ * Search a text starting at position pos for len characters
  *
  * @param text
  * @param pos position in text to start searching from
  * @param len The number of characters to search from position pos
- * @return True if one or more matches found, otherwise False
+ * @return True if one or matches found, otherwise False
  */
 bool MyUMSA::search(const string & text, unsigned int pos, unsigned int len)
-{
-    //initialize vector D to have a fresh state for the new search
-    this->D.assign(this->L, 0ul);
-    return this->search(text, this->D, pos, len);
-}
-
-/**
- * Search a text but supply an initial search state - this is useful for searching
- * text provided intermittently (on-line algorithm).
- *
- * @param text
- * @param startingSearchState A vector<WORD> with L elements
- * @return True if one or more matches found, otherwise False
- */
-bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState)
-{
-    return this->search(text, startingSearchState, 0, text.length());
-}
-
-/**
- * Search a text but supply an initial search state - this is useful for searching
- * text provided intermittently (online algorithm). For simple searches just use
- * MyUMSA::search()
- *
- * @param text
- * @param startingSearchState A vector<WORD> with L elements
- * @param pos position in text to start searching from
- * @return True if one or matches found, otherwise False
- */
-bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, unsigned int pos)
-{
-    return this->search(text, startingSearchState, pos, text.length());
-}
-
-/**
- * Search a text but supply an initial search state - this is useful for searching
- * text provided intermittently (online algorithm). For simple searches just use
- * MyUMSA::search()
- *
- * @param text
- * @param startingSearchState A vector<WORD> with L elements
- * @param pos position in text to start searching from
- * @param len The number of characters to search from position pos
- * @return True if one or matches found, otherwise False
- */
-bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, unsigned int pos, unsigned int len)
 {
     unsigned int i, j, k, n;
 
@@ -189,13 +143,12 @@ bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, uns
         return false;
     }
 
-    //Make sure vector D has sufficient memory for the search
-    this->D = startingSearchState;
-    if (this->D.size() < this->L)
-    {
-        j = this->L - this->D.size();
-        for (i = 0; i < j; i++) {
-            this->D.push_back(0ul);
+    //initialize vector D to have a fresh state for the new search
+    if (this->D.size() != this->L) {
+        this->D.assign(this->L, 0ul);
+    } else {
+        for (i = 0; i < this->L; i++) {
+            this->D[i] = 0ul;
         }
     }
 
@@ -223,7 +176,7 @@ bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, uns
                 //character not in patterns so clear D
                 for (j = 0; j < this->L; j++)
                 {
-                    this->D[j] = 0;
+                    this->D[j] = 0ul;
                 }
                 zeroed = true;
             }
@@ -241,6 +194,95 @@ bool MyUMSA::search(const string & text, vector<WORD> & startingSearchState, uns
                 if (this->reportPatterns)
                 {
                     check = this->D[j] & this->Ev[j];
+                    while (check)
+                    {
+                        matchFound = true;
+                        k = ffs(check) - 1;
+                        this->matches.push_back(pair<int,int>((int)i, this->positions[j * BITSINWORD + k]));
+                        check = check ^ (1ul << k);
+                    }
+                }
+
+                carry = (WORD) ((carryMask & temp) != 0);
+            }
+            zeroed = false;
+        }
+    }
+
+    return matchFound;
+}
+
+/**
+ * Search a text but supply an initial search state - this is useful for searching
+ * text provided intermittently (online algorithm). For simple searches just use
+ * MyUMSA::search()
+ *
+ * @param text
+ * @param startingSearchState A vector<WORD> with L elements
+ * @param pos position in text to start searching from
+ * @param len The number of characters to search from position pos
+ * @return True if one or matches found, otherwise False
+ */
+bool MyUMSA::searchOnState(const string & text, vector<WORD> & startingSearchState, unsigned int pos, unsigned int len)
+{
+    unsigned int i, j, k, n;
+
+    if (this->M == 0) {
+        cerr << "No patterns added to search." << endl;
+        return false;
+    }
+
+    //Make sure vector startingSearchState has sufficient memory for the search
+    if (startingSearchState.size() < this->L)
+    {
+        j = this->L - startingSearchState.size();
+        for (i = 0; i < j; i++) {
+            startingSearchState.push_back(0ul);
+        }
+    }
+
+    //calculate starting and ending positions of search
+    i = min((int)pos, (int)text.length() - 1);
+    n = min(i + len, (unsigned int)text.length());
+
+    //init tracking vars
+    int charIdx;
+    bool zeroed = false;
+    bool matchFound = false;
+    WORD temp, carry, check;
+    WORD carryMask = 1ul << (BITSINWORD - 1);
+
+    //loop through the text
+    for (; i < n; i++)
+    {
+        carry = 0;
+        charIdx = (int) this->Sigma[(int)text[i]] - 1;
+
+        if (charIdx == -1)
+        {
+            if (!zeroed)
+            {
+                //character not in patterns so clear D
+                for (j = 0; j < this->L; j++)
+                {
+                    startingSearchState[j] = 0ul;
+                }
+                zeroed = true;
+            }
+        }
+        else
+        {
+            //loop through the words
+            for (j = 0; j < this->L; j++)
+            {
+                temp = startingSearchState[j];
+
+                startingSearchState[j] = (((startingSearchState[j] << 1) | carry) | this->Sv[j]) & this->Bv[j][charIdx];
+
+                //check if any matches found
+                if (this->reportPatterns)
+                {
+                    check = startingSearchState[j] & this->Ev[j];
                     while (check)
                     {
                         matchFound = true;
@@ -291,6 +333,14 @@ unsigned int MyUMSA::getNumberOfPatterns() const
 unsigned int MyUMSA::getTotalPatternLength() const
 {
     return this->M;
+}
+
+/**
+ * Get the length of the state vector (how many computer words are used)
+ */
+unsigned int MyUMSA::getStateVectorLength() const
+{
+    return this->L;
 }
 
 /**

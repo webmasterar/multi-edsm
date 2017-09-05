@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <sdsl/util.hpp>
 #include <sdsl/suffix_trees.hpp>
+#include <sdsl/csa_bitcompressed.hpp>
 #include "MyUMSA.hpp"
 
 #define SIGMA 4
@@ -69,7 +70,7 @@
     #error "Unsupported architecture - neither 64 nor 32 bit!"
 #endif
 
-typedef sdsl::cst_sct3<> cst_t;
+typedef sdsl::cst_sct3<sdsl::csa_bitcompressed<>> cst_t;
 typedef cst_t::node_type cst_node_t;
 typedef cst_t::size_type cst_size_t;
 typedef cst_t::char_type cst_char_t;
@@ -206,9 +207,19 @@ protected:
     cst_t STp;
 
     /**
-     * @var B The current state of the search
+     * @var B The state of the search, updates with each segments
      */
     WordVector B;
+
+    /**
+     * @var B1 The dynamic state of prefixes
+     */
+    WordVector B1;
+
+    /**
+     * @var B2 The dynamic state of infixes or suffixes
+     */
+    WordVector B2;
 
     /**
      * @var umsa MyUMSA object used for searching using Shift-And. MyUMSA stores
@@ -250,7 +261,9 @@ protected:
 
     WordVector buildBorderPrefixWordVector(const Segment & S);
 
-    void occVector(const std::string & a, WordVector & B2);
+    void buildBorderPrefixWordVector(const Segment & S, WordVector & c);
+
+    bool occVector(const std::string & a, WordVector & B2);
 
     void WordVectorLeftShift_IP(WordVector & x, unsigned int m);
 

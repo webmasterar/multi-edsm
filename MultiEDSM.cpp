@@ -78,7 +78,7 @@ MultiEDSM::~MultiEDSM()
  * Complexity:
  *  - Shift-And time and space O(M + sigma*[M/w]).
  *  - Suffix Tree time and space O(M + k), where k is number of patterns.
- *  - OccVector construction time O(M + k), space O((M + k) * [M/w])
+ *  - OccVector construction time O(M + k), space O((maxK-2) * [(M+k)/w])
  *
  * @param patterns
  */
@@ -107,7 +107,7 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
         //create bitvector of pattern - for Shift-And
         this->umsa->addPattern(patterns[i]);
 
-        //add pattern to p and append with seperator (#) for building suffix tree of patterns
+        //add pattern to p and append with separator (#) for building suffix tree of patterns
         p += patterns[i];
         p += SEPARATOR_CHAR;
 
@@ -134,13 +134,13 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
             this->maxP = h;
         }
     }
-    p.pop_back(); //remove unnecessary separator char as \0 already tagged on end of c_str
+    p.pop_back(); //remove unnecessary terminal separator char as \0 already tagged on end of c_str
 
     //tool to get pattern id from any given position in the bitvector/p
     cout << "2. Pos2Pat" << endl;
     this->Pos2PatId = this->umsa->getPatternPositions();
 
-    //construct the suffix tree of patterns with seperators
+    //construct the suffix tree of patterns with separators
     cout << "3. SuffixTree" << endl;
     construct_im(this->STp, p.c_str(), sizeof(char));
 
@@ -157,7 +157,7 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
 
 /*
 * Construct the occVector datastructure. Requires O(M + k) time (i.e. the number
-* of nodes in a suffix tree is at most 2M, and k is the number of seperators).
+* of nodes in a suffix tree is at most 2M, and k is the number of separators).
 * Requires O([(M + k) / w] * maxK) space, where maxK is the maximum number of
 * bitvectors to use in the datastructure as determined by what is left of the
 * memory specified by the user. It is possible less than maxK explicit nodes
@@ -367,16 +367,14 @@ void MultiEDSM::constructOV8(const string & p)
  * taken is worst case O(N*[jM/w]).
  *
  * @param S A segment
- * @return A WordVector with the prefixes marked
+ * @param c A reference to a WordVector to mark prefixes on
  */
-WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
+void MultiEDSM::buildBorderPrefixWordVector(const Segment & S, WordVector & c)
 {
-    WordVector c;
-    unsigned int m, i = 0;
-    Segment::const_iterator stringI;
-
     this->umsa->disableReporting();
 
+    unsigned int m, h, i = 0;
+    Segment::const_iterator stringI;
     for (stringI = S.begin(); stringI != S.end(); ++stringI)
     {
         if (stringI[0] != EPSILON)
@@ -388,7 +386,14 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
                 this->umsa->search(*stringI, m - this->maxP + 1);
             }
             if (i == 0) {
-                c = this->umsa->getLastSearchState();
+                if (c.size() == 0) {
+                    c = this->umsa->getLastSearchState();
+                } else {
+                    const WordVector & s = this->umsa->getLastSearchState();
+                    for (h = 0; h < s.size(); h++) {
+                        c[h] = s[h];
+                    }
+                }
             } else {
                 this->WordVectorOR_IP(c, this->umsa->getLastSearchState());
             }
@@ -397,8 +402,6 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
     }
 
     this->umsa->enableReporting();
-
-    return c;
 }
 
 /**
@@ -406,13 +409,13 @@ WordVector MultiEDSM::buildBorderPrefixWordVector(const Segment & S)
  * of a given substring _a_, if it is present in the pattern, encoded as a bitvector.
  * If _a_ is not present in any patterns as an infix then 0 will be returned (0
  * index is the root element but it is not used directly by the algorithm).
- * Time taken: O(|a|).
+ * Time taken: O(|a| + [M/w]).
  *
  * @param a A substring
  * @param B2 A WordVector to AND with
- * @return Starting positions of substring _a_ encoded into a bitvector
+ * @return True if a was found in suffix tree and B2 was updated, otherwise false
  */
-void MultiEDSM::occVector(const string & a, WordVector & B2)
+bool MultiEDSM::occVector(const string & a, WordVector & B2)
 {
     cst_node_t explicitNode = this->STp.root();
     string::const_iterator it;
@@ -433,13 +436,14 @@ void MultiEDSM::occVector(const string & a, WordVector & B2)
         if (this->OVMemU8.find(nodeId) != this->OVMemU8.end())
         {
             this->WordVectorAND_IP(B2, this->OVMemU8[nodeId]);
+            return true;
         }
         else if (this->OVMem8.find(nodeId) != this->OVMem8.end())
         {
-            WordVector v;
-            unsigned int i, j, sn;
-            for (i = this->OVMem8[nodeId].start; i <= this->OVMem8[nodeId].end; i++)
+            unsigned int i, k, sn;
+            if (this->STp.is_leaf(explicitNode))
             {
+                i = this->OVMem8[nodeId].start;
                 sn = this->STp.csa[i];
                 if (
                     (sn > 0 && ((sn + 1) < (this->R - 1))) && \
@@ -447,20 +451,54 @@ void MultiEDSM::occVector(const string & a, WordVector & B2)
                     (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
                     (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
                 ) {
-                    j = this->STpIdx2BVIdx[sn] - 1;  //calculate bit position -- j is index in bitvector
-                    this->WordVectorSet1At(v, j);
+                    k = this->STpIdx2BVIdx[sn] - 1;  //calculate bit position -- k is index in bitvector
+                    unsigned int wordIdx = (unsigned int) ((double)k / (double)BITSINWORD);
+                    unsigned int bitShifts = k % BITSINWORD;
+                    WORD h = 1ul << bitShifts;
+                    if (B2[wordIdx] & h)
+                    {
+                        for (i = 0; i < B2.size(); i++) {
+                            B2[i] = 0ul;
+                        }
+                        this->WordVectorSet1At(B2, k);
+                        return true;
+                    }
                 }
+                return false;
             }
-            this->WordVectorAND_IP(B2, v);
+            else
+            {
+                WordVector v;
+                bool oneSet = false;
+                for (i = this->OVMem8[nodeId].start; i <= this->OVMem8[nodeId].end; i++)
+                {
+                    sn = this->STp.csa[i];
+                    if (
+                        (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                        (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                        (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+                    ) {
+                        k = this->STpIdx2BVIdx[sn] - 1;  //calculate bit position -- k is index in bitvector
+                        this->WordVectorSet1At(v, k);
+                        oneSet = true;
+                    }
+                }
+                if (oneSet) {
+                    this->WordVectorAND_IP(B2, v);
+                    return true;
+                }
+                return false;
+            }
         }
         else
         {
-            B2.clear();
+            return false;
         }
     }
     else
     {
-        B2.clear();
+        return false;
     }
 }
 
@@ -497,7 +535,7 @@ void MultiEDSM::report(const unsigned int matchIdx, const unsigned int posIdx, c
  *  - O(N*[M/w]) time for BorderPrefixTable construction
  *  - O([M/w]) time for epsilon
  *  - O(N*[M/w]) worst-case time for suffix matching in step 2
- *  - O([M/w]) worst-case time for step 3 bitwise-OR operation and O(min((M + [M/w]), (M([M/w]))) for LeftShift
+ *  - O([M/w]) worst-case time for step 3 bitwise-OR operation and O(min((m + [M/w]), (m([M/w]))) for LeftShift
  *  - O([M/w]) extra space
  */
 bool MultiEDSM::searchNextSegment(const Segment & S)
@@ -512,8 +550,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     int pattId;
 
     //temp state variables, segment string iterator
-    unsigned int k, m;
-    WordVector B1, B2;
+    unsigned int i, m;
     Segment::const_iterator stringI;
 
     // cout << "Position #" << (this->d + this->D) << endl;
@@ -521,8 +558,6 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     //search first segment, priming B, then search the next segments normally in the else condition down below
     if (!this->primed)
     {
-        cout << "Starting search..." << endl;
-
         //keep track of f/F counts and if segment is determinate
         if (S.size() == 1)
         {
@@ -589,7 +624,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
         }
 
         //build equivalent of BorderPrefixTable for next segment to use
-        this->B = this->buildBorderPrefixWordVector(S);
+        this->buildBorderPrefixWordVector(S, this->B);
 
         //update position
         if (isDeterminateSegment) {
@@ -605,7 +640,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     else
     {
         //build equivalent of BorderPrefixTable for current segment
-        B1 = this->buildBorderPrefixWordVector(S);
+        this->buildBorderPrefixWordVector(S, this->B1);
 
         //keep track of f/F counts and if segment is determinate, and if there's an epsilon (deletion)
         if (S.size() == 1)
@@ -618,7 +653,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             for (stringI = S.begin(); stringI != S.end(); ++stringI)
             {
                 if (stringI[0] == EPSILON) {
-                    this->WordVectorOR_IP(B1, this->B);
+                    this->WordVectorOR_IP(this->B1, this->B);
                 } else {
                     this->F += (*stringI).length();
                 }
@@ -679,8 +714,14 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 //
                 //step 2 - if string is a suffix of a previously determined prefix or infix, then report a match
                 //
-                B2 = this->B;
-                if (this->umsa->search(*stringI, B2, 0, this->maxP - 1))
+                if (this->B2.size() != this->B.size()) {
+                    this->B2 = this->B;
+                } else {
+                    for (i = 0; i < this->B.size(); i++) {
+                        this->B2[i] = this->B[i];
+                    }
+                }
+                if (this->umsa->searchOnState(*stringI, this->B2, 0, this->maxP - 1))
                 {
                     if (this->reportOnce && !matchFound)
                     {
@@ -719,18 +760,22 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 {
                     this->Np++;
                     this->Nm += m;
-                    B2 = this->B;
-                    this->occVector(*stringI, B2);
-                    if (B2.size() > 0) {
-                        this->WordVectorLeftShift_IP(B2, m);
-                        this->WordVectorOR_IP(B1, B2);
+                    for (i = 0; i < this->B.size(); i++) {
+                        this->B2[i] = this->B[i];
+                    }
+                    if (this->occVector(*stringI, this->B2))
+                    {
+                        this->WordVectorLeftShift_IP(this->B2, m);
+                        this->WordVectorOR_IP(this->B1, this->B2);
                     }
                 }
             }
         }
 
         //update the state for the next segment search
-        this->B = B1;
+        for (i = 0; i < this->B1.size(); i++) {
+            this->B[i] = this->B1[i];
+        }
 
         //update position
         if (isDeterminateSegment) {
@@ -799,7 +844,7 @@ void MultiEDSM::WordVectorAND_IP(WordVector & a, const WordVector & b)
         a[i] = a[i] & b[i];
     }
     for (; i < n; i++) {
-        a[i] = 0;
+        a[i] = 0ul;
     }
 }
 
@@ -875,10 +920,6 @@ void MultiEDSM::WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m)
                 x[j] = (x[j] << 1) | carry; //left shift and apply the carried 1
                 x[j] = x[j] ^ (ends[j] & x[j]); //if 1 passes pattern boundary (end), then remove it because it is an illegal shift
                 carry = (WORD)((carryMask & temp) != 0); //work out if we need to carry a 1 to the next word
-                if (carry && (j == (k - 1))) { //identify if we need to expand x //@TODO maybe this is not required because x will always be the correct size?
-                   x.push_back(0ul);
-                   k++;
-                }
             }
         }
     }

@@ -98,15 +98,14 @@ public:
     bool search(const std::string & text);
     bool search(const std::string & text, unsigned int pos);
     bool search(const std::string & text, unsigned int pos, unsigned int len);
-    bool search(const std::string & text, std::vector<WORD> & startingSearchState);
-    bool search(const std::string & text, std::vector<WORD> & startingSearchState, unsigned int pos);
-    bool search(const std::string & text, std::vector<WORD> & startingSearchState, unsigned int pos, unsigned int len);
+    bool searchOnState(const std::string & text, std::vector<WORD> & startingSearchState, unsigned int pos, unsigned int len);
     std::vector<std::pair<int,int>> getMatches() const;
     const std::vector<WORD> & getLastSearchState() const;
     const std::vector<WORD> & getEndingStates() const;
     const std::vector<unsigned int> & getPatternPositions() const;
     unsigned int getNumberOfPatterns() const;
     unsigned int getTotalPatternLength() const;
+    unsigned int getStateVectorLength() const;
     void addPattern(const std::string & pattern);
     void clearMatches();
     void disableReporting();

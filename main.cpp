@@ -431,7 +431,6 @@ Miscellaneous:\n\
     shiftand = (unsigned long long int) ceil((double)M / (double)BITSINWORD) * (3 + SIGMA) * WORDSIZE;   //shiftand, sigma & Sv, Ev and D
     twentyonebitvectors = (unsigned long long int) ceil((double)M / (double)BITSINWORD) * WORDSIZE * 21; //level1 = 4 BVs, level2 = 17 BVs, level1 + level2 = 21 BVs
     total = M + stpnodes + suffixtree + stp2pos + pos2pat + shiftand + twentyonebitvectors + BUFFERSIZE;
-    // cout << "stpnodes:" << stpnodes << " suffixtree:" << suffixtree << " stp2pos:" << stp2pos << " pos2pat:" << pos2pat << " shiftand:" << shiftand << " twentyonebitvectors:" << twentyonebitvectors << " total:" << total << endl;
     if (total >= memLimit) {
         cerr << "Error: Insufficient memory to continue! Try increasing the memory limit." << endl;
         return EXIT_FAILURE;
@@ -441,12 +440,14 @@ Miscellaneous:\n\
     total = total - twentyonebitvectors;
     unsigned long long int remainingMemory = memLimit - total;
     unsigned long long int maxNoBitVectorsStorable = (unsigned long long int) ceil((double)remainingMemory / (ceil((double)M / (double)BITSINWORD) * WORDSIZE));
-    // cout << "Memlimit:" << memLimit << " and remainingMemory:" << remainingMemory << " maxNoBitVectorsStorable:" << maxNoBitVectorsStorable << endl;
 
     //start MultiEDSM search
     cout << "Multi-EDSM starting..." << endl << endl;
     MultiEDSM * multiedsm = new MultiEDSM(ALPHABET, patterns, maxNoBitVectorsStorable);
     patterns.clear();
+
+    cout << "Searching..." << endl;
+
     bool success;
     if (x == 4) {
         success = searchVCF(multiedsm, seqF, varF);
@@ -454,7 +455,7 @@ Miscellaneous:\n\
         success = searchEDS(multiedsm, seqF);
     }
     if (!success) {
-        cerr << "Error: An unspecified error occured." << endl;
+        cerr << "Error: An error occured." << endl;
         return EXIT_FAILURE;
     }
 
