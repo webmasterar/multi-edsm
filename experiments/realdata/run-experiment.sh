@@ -29,21 +29,21 @@
 # python test.py datasets/18.eds 100 --min-size 150 --max-size 150
 #
 # ./../../../edso/edso ./../../../gipm/experiments/realdata/data/Homo_sapiens.GRCh37.75.dna.chromosome.17.fa ./../../../gipm/experiments/realdata/data/ALL.chr17.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz datasets/17.eds
-# python test.py datasets/17.eds 100 --min-size 50 --max-size 50
-# python test.py datasets/17.eds 100 --min-size 100 --max-size 100
-# python test.py datasets/17.eds 100 --min-size 150 --max-size 150
+python test.py datasets/17.eds 100 --min-size 50 --max-size 50
+python test.py datasets/17.eds 100 --min-size 100 --max-size 100
+python test.py datasets/17.eds 100 --min-size 150 --max-size 150
 #
 # ./../../../edso/edso ./../../../gipm/experiments/realdata/data/Homo_sapiens.GRCh37.75.dna.chromosome.16.fa ./../../../gipm/experiments/realdata/data/ALL.chr16.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz datasets/16.eds
-# python test.py datasets/16.eds 100 --min-size 50 --max-size 50
-# python test.py datasets/16.eds 100 --min-size 100 --max-size 100
-# python test.py datasets/16.eds 100 --min-size 150 --max-size 150
+python test.py datasets/16.eds 100 --min-size 50 --max-size 50
+python test.py datasets/16.eds 100 --min-size 100 --max-size 100
+python test.py datasets/16.eds 100 --min-size 150 --max-size 150
 #
 # ./../../../edso/edso ./../../../gipm/experiments/realdata/data/Homo_sapiens.GRCh37.75.dna.chromosome.15.fa ./../../../gipm/experiments/realdata/data/ALL.chr15.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz datasets/15.eds
-# python test.py datasets/15.eds 100 --min-size 50 --max-size 50
-# python test.py datasets/15.eds 100 --min-size 100 --max-size 100
-# python test.py datasets/15.eds 100 --min-size 150 --max-size 150
+python test.py datasets/15.eds 100 --min-size 50 --max-size 50
+python test.py datasets/15.eds 100 --min-size 100 --max-size 100
+python test.py datasets/15.eds 100 --min-size 150 --max-size 150
 #
 # ./../../../edso/edso ./../../../gipm/experiments/realdata/data/Homo_sapiens.GRCh37.75.dna.chromosome.14.fa ./../../../gipm/experiments/realdata/data/ALL.chr14.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz datasets/14.eds
-# python test.py datasets/14.eds 100 --min-size 50 --max-size 50
-# python test.py datasets/14.eds 100 --min-size 100 --max-size 100
-# python test.py datasets/14.eds 100 --min-size 150 --max-size 150
+python test.py datasets/14.eds 100 --min-size 50 --max-size 50
+python test.py datasets/14.eds 100 --min-size 100 --max-size 100
+python test.py datasets/14.eds 100 --min-size 150 --max-size 150

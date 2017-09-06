@@ -26,7 +26,7 @@
 #include <unordered_map>
 #include <sdsl/util.hpp>
 #include <sdsl/suffix_trees.hpp>
-#include <sdsl/csa_bitcompressed.hpp>
+// #include <sdsl/csa_bitcompressed.hpp>
 #include "MyUMSA.hpp"
 
 #define SIGMA 4
@@ -70,7 +70,8 @@
     #error "Unsupported architecture - neither 64 nor 32 bit!"
 #endif
 
-typedef sdsl::cst_sct3<sdsl::csa_bitcompressed<>> cst_t;
+// typedef sdsl::cst_sct3<sdsl::csa_bitcompressed<>> cst_t;
+typedef sdsl::cst_sct3<> cst_t;
 typedef cst_t::node_type cst_node_t;
 typedef cst_t::size_type cst_size_t;
 typedef cst_t::char_type cst_char_t;

@@ -1,0 +1,21 @@
+Megabytes of memory used: 222.859375
+Time taken: 30.88s
+
+Multi-EDSM starting...
+
+Preprocessing starting...
+1. Shift-And
+2. Pos2Pat
+3. SuffixTree
+4. OccVector
+Preproccessing 6400 patterns of total size M=320000 completed in 1.21656s.
+
+Searching...
+No. determinate bases (f): 90459
+No. degenerate bases (F): 266735
+No. determinate segments (d): 8613
+No. degenerate segments (D): 9541
+No. strings processed shorter than pattern (N'): 61454
+Multi-EDSM total processing time: 30.8166s.
+
+No matches found.

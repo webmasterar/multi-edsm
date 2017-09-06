@@ -1,18 +1,19 @@
-Multi-EDSM started...
+Multi-EDSM starting...
 
-UMSA init...
-Pos2Pat...
-SuffixTree...
-OccVector...
-Preproccessing 100 patterns of size M=15000 completed in 0.141947s.
+Preprocessing starting...
+1. Shift-And
+2. Pos2Pat
+3. SuffixTree
+4. OccVector
+Preproccessing 100 patterns of total size M=15000 completed in 0.078389s.
 
-Starting search...
-No. determinate bases (f): 59373492
-No. degenerate bases (F): 151
-No. determinate segments (d): 87
-No. degenerate segments (D): 74
-No. strings processed shorter than pattern (N'): 186
-Multi-EDSM processing time: 16.4402s.
+Searching...
+No. determinate bases (f): 59311682
+No. degenerate bases (F): 126925
+No. determinate segments (d): 61161
+No. degenerate segments (D): 61884
+No. strings processed shorter than pattern (N'): 160299
+Multi-EDSM total processing time: 31.2335s.
 
 106 matches found!
 
@@ -124,5 +125,5 @@ Position,PatternId
 28757549,43
 28767632,55
 28798797,81
-16.80user 0.04system 0:16.84elapsed 99%CPU (0avgtext+0avgdata 57952maxresident)k
-0inputs+0outputs (0major+13731minor)pagefaults 0swaps
+31.90user 0.05system 0:34.11elapsed 93%CPU (0avgtext+0avgdata 39256maxresident)k
+32inputs+0outputs (0major+8717minor)pagefaults 0swaps

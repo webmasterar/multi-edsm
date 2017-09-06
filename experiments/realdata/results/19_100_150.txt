@@ -1,14 +1,21 @@
-Multi-EDSM started...
+Multi-EDSM starting...
 
+Preprocessing starting...
+1. Shift-And
+2. Pos2Pat
+3. SuffixTree
+4. OccVector
+Preproccessing 100 patterns of total size M=15000 completed in 0.127409s.
 
+Searching...
 No. determinate bases (f): 57300078
 No. degenerate bases (F): 3914387
-No. determinate segments (d): 1706168
+No. determinate segments (d): 1706165
 No. degenerate segments (D): 1828905
 No. strings processed shorter than pattern (N'): 5356447
-Multi-EDSM processing time: 202.197s.
+Multi-EDSM total processing time: 196.201s.
 
-106 matches found!
+102 matches found!
 
 Position,PatternId
 ------------------
@@ -18,11 +25,8 @@ Position,PatternId
 2331664,43
 3361560,64
 3496989,74
-4484089,75
 4484091,75
 4484092,75
-4484098,75
-4484099,75
 5442261,4
 5456446,22
 5672602,12
@@ -99,7 +103,6 @@ Position,PatternId
 46562524,45
 47380279,71
 47449018,72
-48061464,55
 48061472,55
 48268248,88
 49034833,8
@@ -118,5 +121,5 @@ Position,PatternId
 56451039,90
 57338355,49
 58690621,59
-202.96user 2.18system 4:01.37elapsed 84%CPU (0avgtext+0avgdata 44896maxresident)k
-32inputs+0outputs (0major+12045minor)pagefaults 0swaps
+196.74user 1.83system 3:43.78elapsed 88%CPU (0avgtext+0avgdata 34784maxresident)k
+32inputs+0outputs (0major+8015minor)pagefaults 0swaps

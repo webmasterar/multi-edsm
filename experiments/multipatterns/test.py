@@ -3,6 +3,7 @@ import os
 import sys
 import random
 import argparse
+import resource
 import subprocess
 
 #
@@ -15,6 +16,7 @@ parser.add_argument('pattern_size', type=int, help='the length of each randomly 
 parser.add_argument('total_number', type=int, help='How many patterns to generate, e.g. 100')
 parser.add_argument('sequence_file', type=argparse.FileType('r'), help='The path to the sequence file to search through')
 parser.add_argument('--recreate-files', action='store_true', help='Delete and recreate the pattern file')
+parser.add_argument('--memory', default=4, type=float, help='Maximum amount of memory to use in GB')
 args = parser.parse_args()
 
 if args.total_number < 1:
@@ -24,7 +26,7 @@ if args.total_number < 1:
 sequenceFileName = os.path.basename(args.sequence_file.name)
 sequenceFileName = ".".join(sequenceFileName.split('.')[0:-1])
 patternsFile = './randomPatterns/' + str(args.pattern_size) + '_' + str(args.total_number) + '.txt'
-resultsFile = './results/' + str(args.pattern_size) + '_' + str(args.total_number) + '_' + sequenceFileName + '.txt'
+resultsFile = './results/' + str(args.pattern_size) + '_' + str(args.total_number) + '_' + sequenceFileName + '_' + str(args.memory) + 'g.txt'
 
 if args.recreate_files:
 	if os.path.isfile(patternsFile):
@@ -50,9 +52,17 @@ if not os.path.exists(patternsFile):
 #
 # Search for the patterns with Multi-EDSM
 #
-cmd = './../../multiedsm -m 4g -s ' + args.sequence_file.name + ' -p ' + patternsFile
-output = subprocess.Popen(['time ' + cmd], shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
+cmd = './../../multiedsm -s ' + args.sequence_file.name + ' -p ' + patternsFile + ' -m ' + str(args.memory) + 'g'
+p = subprocess.Popen([cmd], shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+p.wait()
+memusg = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+runtim = resource.getrusage(resource.RUSAGE_CHILDREN).ru_utime + resource.getrusage(resource.RUSAGE_CHILDREN).ru_stime
+output = p.communicate()[0]
 with open(resultsFile, 'w') as f:
+	f.write("Megabytes of memory used: " + str(memusg/1024.0))
+	f.write("\n")
+	f.write("Time taken: " + str(runtim) + "s")
+	f.write("\n\n")
 	f.write(output)
 
 print output

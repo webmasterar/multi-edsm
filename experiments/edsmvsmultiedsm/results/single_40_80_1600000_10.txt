@@ -5,13 +5,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 446955
-EDSM-BV processing time: 1.31187s.
+EDSM-BV processing time: 1.28244s.
 
 No matches found.
-1.47user 0.11system 0:02.21elapsed 71%CPU (0avgtext+0avgdata 12720maxresident)k
-0inputs+0outputs (0major+2928minor)pagefaults 0swaps
+1.42user 0.12system 0:01.55elapsed 99%CPU (0avgtext+0avgdata 12876maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.21245789528
+EDSM-BV running time: 1.55700588226
 
 EDSM-BV searching...
 
@@ -20,13 +20,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 460202
-EDSM-BV processing time: 1.27652s.
+EDSM-BV processing time: 1.25086s.
 
 No matches found.
-1.42user 0.12system 0:02.20elapsed 70%CPU (0avgtext+0avgdata 12948maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.38user 0.14system 0:01.52elapsed 99%CPU (0avgtext+0avgdata 12804maxresident)k
+0inputs+0outputs (0major+2412minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.21118712425
+EDSM-BV running time: 1.52472615242
 
 EDSM-BV searching...
 
@@ -35,13 +35,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 432425
-EDSM-BV processing time: 1.29449s.
+EDSM-BV processing time: 1.30079s.
 
 No matches found.
-1.37user 0.20system 0:02.26elapsed 69%CPU (0avgtext+0avgdata 12888maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.41user 0.16system 0:01.58elapsed 99%CPU (0avgtext+0avgdata 12536maxresident)k
+0inputs+0outputs (0major+2925minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.27124190331
+EDSM-BV running time: 1.58635282516
 
 EDSM-BV searching...
 
@@ -50,13 +50,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 436852
-EDSM-BV processing time: 1.27072s.
+EDSM-BV processing time: 1.22606s.
 
 No matches found.
-1.41user 0.13system 0:02.48elapsed 62%CPU (0avgtext+0avgdata 12968maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.38user 0.12system 0:01.50elapsed 100%CPU (0avgtext+0avgdata 12904maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.49055290222
+EDSM-BV running time: 1.50347208977
 
 EDSM-BV searching...
 
@@ -65,13 +65,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 460136
-EDSM-BV processing time: 1.30923s.
+EDSM-BV processing time: 1.11673s.
 
 No matches found.
-1.43user 0.14system 0:02.47elapsed 64%CPU (0avgtext+0avgdata 12804maxresident)k
-0inputs+0outputs (0major+2928minor)pagefaults 0swaps
+1.24user 0.11system 0:01.35elapsed 100%CPU (0avgtext+0avgdata 12988maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.47608304024
+EDSM-BV running time: 1.35510897636
 
 EDSM-BV searching...
 
@@ -80,13 +80,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 430362
-EDSM-BV processing time: 1.3219s.
+EDSM-BV processing time: 1.11213s.
 
 No matches found.
-1.38user 0.21system 0:02.39elapsed 67%CPU (0avgtext+0avgdata 12948maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.24user 0.10system 0:01.34elapsed 99%CPU (0avgtext+0avgdata 12704maxresident)k
+0inputs+0outputs (0major+2412minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.39272999763
+EDSM-BV running time: 1.34825706482
 
 EDSM-BV searching...
 
@@ -95,13 +95,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 457597
-EDSM-BV processing time: 1.35511s.
+EDSM-BV processing time: 1.09431s.
 
 No matches found.
-1.50user 0.13system 0:02.34elapsed 69%CPU (0avgtext+0avgdata 12872maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.17user 0.14system 0:01.31elapsed 99%CPU (0avgtext+0avgdata 12916maxresident)k
+0inputs+0outputs (0major+2418minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.34310698509
+EDSM-BV running time: 1.3211081028
 
 EDSM-BV searching...
 
@@ -110,13 +110,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 386462
-EDSM-BV processing time: 1.1841s.
+EDSM-BV processing time: 0.65286s.
 
 No matches found.
-1.34user 0.12system 0:02.08elapsed 69%CPU (0avgtext+0avgdata 12964maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+0.70user 0.09system 0:00.80elapsed 99%CPU (0avgtext+0avgdata 12532maxresident)k
+0inputs+0outputs (0major+2927minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.09003090858
+EDSM-BV running time: 0.804523944855
 
 EDSM-BV searching...
 
@@ -125,13 +125,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 451284
-EDSM-BV processing time: 1.35437s.
+EDSM-BV processing time: 0.763558s.
 
 No matches found.
-1.52user 0.11system 0:02.40elapsed 67%CPU (0avgtext+0avgdata 12920maxresident)k
-0inputs+0outputs (0major+2417minor)pagefaults 0swaps
+0.83user 0.08system 0:00.91elapsed 99%CPU (0avgtext+0avgdata 12476maxresident)k
+0inputs+0outputs (0major+2925minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.40887594223
+EDSM-BV running time: 0.919982910156
 
 EDSM-BV searching...
 
@@ -140,13 +140,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 448680
-EDSM-BV processing time: 1.34122s.
+EDSM-BV processing time: 0.743648s.
 
 No matches found.
-1.45user 0.16system 0:02.44elapsed 66%CPU (0avgtext+0avgdata 12924maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+0.78user 0.11system 0:00.89elapsed 99%CPU (0avgtext+0avgdata 12916maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.44570493698
+EDSM-BV running time: 0.899374961853
 
 EDSM-BV searching...
 
@@ -155,13 +155,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 433079
-EDSM-BV processing time: 1.31966s.
+EDSM-BV processing time: 0.733886s.
 
 No matches found.
-1.46user 0.13system 0:02.29elapsed 69%CPU (0avgtext+0avgdata 12780maxresident)k
+0.79user 0.08system 0:00.88elapsed 100%CPU (0avgtext+0avgdata 12880maxresident)k
 0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.29673218727
+EDSM-BV running time: 0.886343955994
 
 EDSM-BV searching...
 
@@ -170,13 +170,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 458610
-EDSM-BV processing time: 1.35318s.
+EDSM-BV processing time: 0.993297s.
 
 No matches found.
-1.52user 0.11system 0:02.30elapsed 70%CPU (0avgtext+0avgdata 12688maxresident)k
-0inputs+0outputs (0major+2925minor)pagefaults 0swaps
+1.09user 0.10system 0:01.20elapsed 100%CPU (0avgtext+0avgdata 12896maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.30771493912
+EDSM-BV running time: 1.20742416382
 
 EDSM-BV searching...
 
@@ -185,13 +185,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 454834
-EDSM-BV processing time: 1.22548s.
+EDSM-BV processing time: 1.02575s.
 
 No matches found.
-1.36user 0.14system 0:02.14elapsed 70%CPU (0avgtext+0avgdata 12888maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.15user 0.09system 0:01.25elapsed 99%CPU (0avgtext+0avgdata 12728maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.15218496323
+EDSM-BV running time: 1.2580010891
 
 EDSM-BV searching...
 
@@ -200,13 +200,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 445954
-EDSM-BV processing time: 1.24543s.
+EDSM-BV processing time: 1.04564s.
 
 No matches found.
-1.35user 0.17system 0:02.04elapsed 74%CPU (0avgtext+0avgdata 12688maxresident)k
-0inputs+0outputs (0major+2926minor)pagefaults 0swaps
+1.18user 0.09system 0:01.28elapsed 99%CPU (0avgtext+0avgdata 12916maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.04289698601
+EDSM-BV running time: 1.28285503387
 
 EDSM-BV searching...
 
@@ -215,13 +215,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 458550
-EDSM-BV processing time: 1.34063s.
+EDSM-BV processing time: 1.22989s.
 
 No matches found.
-1.48user 0.13system 0:02.04elapsed 78%CPU (0avgtext+0avgdata 12916maxresident)k
-0inputs+0outputs (0major+2418minor)pagefaults 0swaps
+1.36user 0.12system 0:01.48elapsed 99%CPU (0avgtext+0avgdata 12696maxresident)k
+0inputs+0outputs (0major+2927minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.05230903625
+EDSM-BV running time: 1.48870706558
 
 EDSM-BV searching...
 
@@ -230,13 +230,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 389761
-EDSM-BV processing time: 1.28134s.
+EDSM-BV processing time: 1.21664s.
 
 No matches found.
-1.44user 0.10system 0:01.98elapsed 78%CPU (0avgtext+0avgdata 12968maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.33user 0.15system 0:01.48elapsed 99%CPU (0avgtext+0avgdata 12988maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.98254108429
+EDSM-BV running time: 1.48941707611
 
 EDSM-BV searching...
 
@@ -245,13 +245,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 458956
-EDSM-BV processing time: 1.4337s.
+EDSM-BV processing time: 1.22002s.
 
 No matches found.
-1.54user 0.16system 0:02.00elapsed 85%CPU (0avgtext+0avgdata 12888maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.32user 0.13system 0:01.45elapsed 99%CPU (0avgtext+0avgdata 12880maxresident)k
+0inputs+0outputs (0major+2412minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.00524187088
+EDSM-BV running time: 1.4609079361
 
 EDSM-BV searching...
 
@@ -260,13 +260,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 441642
-EDSM-BV processing time: 1.36088s.
+EDSM-BV processing time: 1.28699s.
 
 No matches found.
-1.51user 0.13system 0:01.90elapsed 86%CPU (0avgtext+0avgdata 12704maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.38user 0.16system 0:01.55elapsed 99%CPU (0avgtext+0avgdata 12912maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.90294885635
+EDSM-BV running time: 1.561191082
 
 EDSM-BV searching...
 
@@ -275,13 +275,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 438121
-EDSM-BV processing time: 1.23846s.
+EDSM-BV processing time: 1.23156s.
 
 No matches found.
-1.40user 0.10system 0:01.71elapsed 88%CPU (0avgtext+0avgdata 12700maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.37user 0.12system 0:01.50elapsed 99%CPU (0avgtext+0avgdata 12708maxresident)k
+0inputs+0outputs (0major+2412minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.71303009987
+EDSM-BV running time: 1.50946116447
 
 EDSM-BV searching...
 
@@ -290,13 +290,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 391296
-EDSM-BV processing time: 1.24377s.
+EDSM-BV processing time: 1.23167s.
 
 No matches found.
-1.33user 0.18system 0:01.70elapsed 89%CPU (0avgtext+0avgdata 12920maxresident)k
-0inputs+0outputs (0major+2417minor)pagefaults 0swaps
+1.34user 0.16system 0:01.51elapsed 99%CPU (0avgtext+0avgdata 12796maxresident)k
+0inputs+0outputs (0major+2411minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.7072930336
+EDSM-BV running time: 1.51284790039
 
 EDSM-BV searching...
 
@@ -305,13 +305,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 453748
-EDSM-BV processing time: 1.36531s.
+EDSM-BV processing time: 1.34692s.
 
 No matches found.
-1.52user 0.12system 0:01.77elapsed 92%CPU (0avgtext+0avgdata 12892maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.48user 0.14system 0:01.70elapsed 95%CPU (0avgtext+0avgdata 12904maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.77691292763
+EDSM-BV running time: 1.70357394218
 
 EDSM-BV searching...
 
@@ -320,13 +320,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 456719
-EDSM-BV processing time: 1.40959s.
+EDSM-BV processing time: 1.2937s.
 
 No matches found.
-1.51user 0.18system 0:01.84elapsed 92%CPU (0avgtext+0avgdata 12872maxresident)k
+1.38user 0.16system 0:01.65elapsed 94%CPU (0avgtext+0avgdata 12888maxresident)k
 0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.84431219101
+EDSM-BV running time: 1.65716290474
 
 EDSM-BV searching...
 
@@ -335,13 +335,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 437735
-EDSM-BV processing time: 1.35161s.
+EDSM-BV processing time: 1.35732s.
 
 No matches found.
-1.49user 0.13system 0:01.82elapsed 89%CPU (0avgtext+0avgdata 12892maxresident)k
-0inputs+0outputs (0major+2413minor)pagefaults 0swaps
+1.50user 0.13system 0:01.92elapsed 85%CPU (0avgtext+0avgdata 12804maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.82876992226
+EDSM-BV running time: 1.92524194717
 
 EDSM-BV searching...
 
@@ -350,13 +350,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 390666
-EDSM-BV processing time: 1.24239s.
+EDSM-BV processing time: 1.25282s.
 
 No matches found.
-1.39user 0.12system 0:01.68elapsed 90%CPU (0avgtext+0avgdata 12892maxresident)k
-0inputs+0outputs (0major+2413minor)pagefaults 0swaps
+1.35user 0.17system 0:01.85elapsed 82%CPU (0avgtext+0avgdata 12916maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.68404889107
+EDSM-BV running time: 1.86214995384
 
 EDSM-BV searching...
 
@@ -365,13 +365,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 440428
-EDSM-BV processing time: 1.30944s.
+EDSM-BV processing time: 1.33085s.
 
 No matches found.
-1.44user 0.13system 0:01.99elapsed 79%CPU (0avgtext+0avgdata 13004maxresident)k
-0inputs+0outputs (0major+2417minor)pagefaults 0swaps
+1.47user 0.14system 0:02.15elapsed 74%CPU (0avgtext+0avgdata 12784maxresident)k
+0inputs+0outputs (0major+2416minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.99303984642
+EDSM-BV running time: 2.16166496277
 
 EDSM-BV searching...
 
@@ -380,13 +380,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 438632
-EDSM-BV processing time: 1.28257s.
+EDSM-BV processing time: 1.29783s.
 
 No matches found.
-1.38user 0.18system 0:01.95elapsed 79%CPU (0avgtext+0avgdata 12968maxresident)k
-0inputs+0outputs (0major+2413minor)pagefaults 0swaps
+1.44user 0.13system 0:02.16elapsed 72%CPU (0avgtext+0avgdata 12884maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.96027898788
+EDSM-BV running time: 2.17044305801
 
 EDSM-BV searching...
 
@@ -395,13 +395,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 386622
-EDSM-BV processing time: 1.20406s.
+EDSM-BV processing time: 1.2116s.
 
 No matches found.
-1.31user 0.16system 0:02.08elapsed 70%CPU (0avgtext+0avgdata 12704maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.36user 0.12system 0:02.39elapsed 62%CPU (0avgtext+0avgdata 12884maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.08769702911
+EDSM-BV running time: 2.40119290352
 
 EDSM-BV searching...
 
@@ -410,13 +410,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 368854
-EDSM-BV processing time: 1.16903s.
+EDSM-BV processing time: 1.19225s.
 
 No matches found.
-1.30user 0.13system 0:02.17elapsed 66%CPU (0avgtext+0avgdata 12800maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.35user 0.11system 0:02.44elapsed 60%CPU (0avgtext+0avgdata 12896maxresident)k
+0inputs+0outputs (0major+2416minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.18008589745
+EDSM-BV running time: 2.45011401176
 
 EDSM-BV searching...
 
@@ -425,13 +425,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 394368
-EDSM-BV processing time: 1.21229s.
+EDSM-BV processing time: 1.25906s.
 
 No matches found.
-1.32user 0.16system 0:02.82elapsed 52%CPU (0avgtext+0avgdata 12712maxresident)k
+1.39user 0.14system 0:02.86elapsed 53%CPU (0avgtext+0avgdata 12732maxresident)k
 0inputs+0outputs (0major+2416minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.82723498344
+EDSM-BV running time: 2.86764383316
 
 EDSM-BV searching...
 
@@ -440,13 +440,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 457124
-EDSM-BV processing time: 1.32191s.
+EDSM-BV processing time: 1.36607s.
 
 No matches found.
-1.40user 0.19system 0:03.12elapsed 51%CPU (0avgtext+0avgdata 12928maxresident)k
-0inputs+0outputs (0major+2419minor)pagefaults 0swaps
+1.47user 0.16system 0:02.75elapsed 59%CPU (0avgtext+0avgdata 12892maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 3.12868714333
+EDSM-BV running time: 2.75788903236
 
 EDSM-BV searching...
 
@@ -455,13 +455,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 450541
-EDSM-BV processing time: 1.30851s.
+EDSM-BV processing time: 1.30726s.
 
 No matches found.
-1.41user 0.17system 0:03.01elapsed 52%CPU (0avgtext+0avgdata 12924maxresident)k
-0inputs+0outputs (0major+2419minor)pagefaults 0swaps
+1.46user 0.12system 0:02.54elapsed 62%CPU (0avgtext+0avgdata 12796maxresident)k
+0inputs+0outputs (0major+2413minor)pagefaults 0swaps
 
-EDSM-BV running time: 3.01393604279
+EDSM-BV running time: 2.55179691315
 
 EDSM-BV searching...
 
@@ -470,13 +470,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 391407
-EDSM-BV processing time: 1.27297s.
+EDSM-BV processing time: 1.25899s.
 
 No matches found.
-1.38user 0.17system 0:03.01elapsed 51%CPU (0avgtext+0avgdata 12704maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.40user 0.13system 0:02.41elapsed 63%CPU (0avgtext+0avgdata 12708maxresident)k
+0inputs+0outputs (0major+2413minor)pagefaults 0swaps
 
-EDSM-BV running time: 3.01868605614
+EDSM-BV running time: 2.41805815697
 
 EDSM-BV searching...
 
@@ -485,13 +485,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 437340
-EDSM-BV processing time: 1.28526s.
+EDSM-BV processing time: 1.29333s.
 
 No matches found.
-1.45user 0.10system 0:02.55elapsed 60%CPU (0avgtext+0avgdata 12732maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.41user 0.16system 0:02.42elapsed 64%CPU (0avgtext+0avgdata 12880maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.55962204933
+EDSM-BV running time: 2.43054699898
 
 EDSM-BV searching...
 
@@ -500,13 +500,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 454962
-EDSM-BV processing time: 1.31635s.
+EDSM-BV processing time: 1.3095s.
 
 No matches found.
-1.42user 0.16system 0:02.61elapsed 60%CPU (0avgtext+0avgdata 12728maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.46user 0.13system 0:02.33elapsed 68%CPU (0avgtext+0avgdata 12792maxresident)k
+0inputs+0outputs (0major+2413minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.61854815483
+EDSM-BV running time: 2.33352899551
 
 EDSM-BV searching...
 
@@ -515,13 +515,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 439558
-EDSM-BV processing time: 1.31884s.
+EDSM-BV processing time: 1.34384s.
 
 No matches found.
-1.48user 0.11system 0:02.52elapsed 63%CPU (0avgtext+0avgdata 12892maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.52user 0.09system 0:02.34elapsed 69%CPU (0avgtext+0avgdata 12952maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.5317440033
+EDSM-BV running time: 2.34505987167
 
 EDSM-BV searching...
 
@@ -530,13 +530,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 428633
-EDSM-BV processing time: 1.3809s.
+EDSM-BV processing time: 1.37473s.
 
 No matches found.
-1.48user 0.17system 0:02.55elapsed 64%CPU (0avgtext+0avgdata 12896maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.52user 0.13system 0:02.30elapsed 71%CPU (0avgtext+0avgdata 12892maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.55802583694
+EDSM-BV running time: 2.30741691589
 
 EDSM-BV searching...
 
@@ -545,13 +545,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 428319
-EDSM-BV processing time: 1.30558s.
+EDSM-BV processing time: 1.35769s.
 
 No matches found.
-1.40user 0.17system 0:02.35elapsed 67%CPU (0avgtext+0avgdata 12952maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.48user 0.16system 0:02.32elapsed 70%CPU (0avgtext+0avgdata 12796maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.35949492455
+EDSM-BV running time: 2.33124804497
 
 EDSM-BV searching...
 
@@ -560,13 +560,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 456654
-EDSM-BV processing time: 1.41344s.
+EDSM-BV processing time: 1.40661s.
 
 No matches found.
-1.55user 0.14system 0:02.41elapsed 70%CPU (0avgtext+0avgdata 12780maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.52user 0.16system 0:02.22elapsed 75%CPU (0avgtext+0avgdata 12808maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.41528511047
+EDSM-BV running time: 2.23077106476
 
 EDSM-BV searching...
 
@@ -575,13 +575,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 384563
-EDSM-BV processing time: 1.19821s.
+EDSM-BV processing time: 1.2229s.
 
 No matches found.
-1.36user 0.11system 0:01.98elapsed 74%CPU (0avgtext+0avgdata 12800maxresident)k
-0inputs+0outputs (0major+2413minor)pagefaults 0swaps
+1.32user 0.18system 0:01.99elapsed 75%CPU (0avgtext+0avgdata 12880maxresident)k
+0inputs+0outputs (0major+2412minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.99147605896
+EDSM-BV running time: 1.99341201782
 
 EDSM-BV searching...
 
@@ -590,13 +590,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 440280
-EDSM-BV processing time: 1.37229s.
+EDSM-BV processing time: 1.36431s.
 
 No matches found.
-1.51user 0.14system 0:02.31elapsed 71%CPU (0avgtext+0avgdata 12904maxresident)k
-0inputs+0outputs (0major+2417minor)pagefaults 0swaps
+1.54user 0.10system 0:02.02elapsed 81%CPU (0avgtext+0avgdata 12684maxresident)k
+0inputs+0outputs (0major+2926minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.32032203674
+EDSM-BV running time: 2.02988505363
 
 EDSM-BV searching...
 
@@ -605,13 +605,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 386775
-EDSM-BV processing time: 1.17641s.
+EDSM-BV processing time: 1.18742s.
 
 No matches found.
-1.29user 0.16system 0:01.89elapsed 76%CPU (0avgtext+0avgdata 12896maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.32user 0.14system 0:01.72elapsed 85%CPU (0avgtext+0avgdata 12884maxresident)k
+0inputs+0outputs (0major+2413minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.89569282532
+EDSM-BV running time: 1.7267999649
 
 EDSM-BV searching...
 
@@ -620,13 +620,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 457807
-EDSM-BV processing time: 1.41855s.
+EDSM-BV processing time: 1.41132s.
 
 No matches found.
-1.50user 0.19system 0:02.17elapsed 78%CPU (0avgtext+0avgdata 12788maxresident)k
-0inputs+0outputs (0major+2413minor)pagefaults 0swaps
+1.57user 0.11system 0:01.98elapsed 85%CPU (0avgtext+0avgdata 12892maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.17303705215
+EDSM-BV running time: 1.98816990852
 
 EDSM-BV searching...
 
@@ -635,13 +635,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 455979
-EDSM-BV processing time: 1.36162s.
+EDSM-BV processing time: 1.372s.
 
 No matches found.
-1.51user 0.12system 0:02.02elapsed 81%CPU (0avgtext+0avgdata 12804maxresident)k
-0inputs+0outputs (0major+2928minor)pagefaults 0swaps
+1.53user 0.12system 0:01.86elapsed 89%CPU (0avgtext+0avgdata 12880maxresident)k
+0inputs+0outputs (0major+2416minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.02701401711
+EDSM-BV running time: 1.86306214333
 
 EDSM-BV searching...
 
@@ -650,13 +650,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 430409
-EDSM-BV processing time: 1.33317s.
+EDSM-BV processing time: 1.35881s.
 
 No matches found.
-1.43user 0.18system 0:01.96elapsed 81%CPU (0avgtext+0avgdata 12508maxresident)k
-0inputs+0outputs (0major+2927minor)pagefaults 0swaps
+1.50user 0.13system 0:01.89elapsed 86%CPU (0avgtext+0avgdata 12704maxresident)k
+0inputs+0outputs (0major+2412minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.96972298622
+EDSM-BV running time: 1.89406991005
 
 EDSM-BV searching...
 
@@ -665,13 +665,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 451338
-EDSM-BV processing time: 1.3088s.
+EDSM-BV processing time: 1.34504s.
 
 No matches found.
-1.44user 0.14system 0:01.83elapsed 86%CPU (0avgtext+0avgdata 12904maxresident)k
-0inputs+0outputs (0major+2417minor)pagefaults 0swaps
+1.50user 0.12system 0:01.99elapsed 81%CPU (0avgtext+0avgdata 12792maxresident)k
+0inputs+0outputs (0major+2413minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.83574199677
+EDSM-BV running time: 1.99615812302
 
 EDSM-BV searching...
 
@@ -680,13 +680,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 463625
-EDSM-BV processing time: 1.3656s.
+EDSM-BV processing time: 1.37233s.
 
 No matches found.
-1.52user 0.12system 0:01.84elapsed 89%CPU (0avgtext+0avgdata 12804maxresident)k
-0inputs+0outputs (0major+2928minor)pagefaults 0swaps
+1.51user 0.14system 0:01.95elapsed 84%CPU (0avgtext+0avgdata 12972maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.84721398354
+EDSM-BV running time: 1.9568169117
 
 EDSM-BV searching...
 
@@ -695,13 +695,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 459597
-EDSM-BV processing time: 1.40282s.
+EDSM-BV processing time: 1.41541s.
 
 No matches found.
-1.52user 0.16system 0:01.94elapsed 86%CPU (0avgtext+0avgdata 12876maxresident)k
+1.56user 0.13system 0:01.93elapsed 88%CPU (0avgtext+0avgdata 12892maxresident)k
 0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.94967603683
+EDSM-BV running time: 1.93945884705
 
 EDSM-BV searching...
 
@@ -710,13 +710,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 461676
-EDSM-BV processing time: 1.3379s.
+EDSM-BV processing time: 1.3587s.
 
 No matches found.
-1.49user 0.12system 0:01.92elapsed 84%CPU (0avgtext+0avgdata 12920maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.46user 0.17system 0:01.85elapsed 88%CPU (0avgtext+0avgdata 12732maxresident)k
+0inputs+0outputs (0major+2413minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.93136096001
+EDSM-BV running time: 1.86049818993
 
 EDSM-BV searching...
 
@@ -725,13 +725,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 455227
-EDSM-BV processing time: 1.36972s.
+EDSM-BV processing time: 1.37559s.
 
 No matches found.
-1.54user 0.10system 0:01.94elapsed 84%CPU (0avgtext+0avgdata 12952maxresident)k
-0inputs+0outputs (0major+2417minor)pagefaults 0swaps
+1.54user 0.11system 0:01.78elapsed 92%CPU (0avgtext+0avgdata 12804maxresident)k
+0inputs+0outputs (0major+2413minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.94361114502
+EDSM-BV running time: 1.78470206261
 
 EDSM-BV searching...
 
@@ -740,13 +740,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 454309
-EDSM-BV processing time: 1.36974s.
+EDSM-BV processing time: 1.35842s.
 
 No matches found.
-1.53user 0.11system 0:01.86elapsed 88%CPU (0avgtext+0avgdata 12972maxresident)k
+1.46user 0.17system 0:01.71elapsed 95%CPU (0avgtext+0avgdata 12896maxresident)k
 0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.87243103981
+EDSM-BV running time: 1.71635198593
 
 EDSM-BV searching...
 
@@ -755,13 +755,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 459469
-EDSM-BV processing time: 1.38619s.
+EDSM-BV processing time: 1.39189s.
 
 No matches found.
-1.52user 0.14system 0:01.93elapsed 86%CPU (0avgtext+0avgdata 12892maxresident)k
+1.52user 0.15system 0:01.88elapsed 88%CPU (0avgtext+0avgdata 12900maxresident)k
 0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.94147014618
+EDSM-BV running time: 1.88988494873
 
 EDSM-BV searching...
 
@@ -770,13 +770,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 460056
-EDSM-BV processing time: 1.33178s.
+EDSM-BV processing time: 1.3452s.
 
 No matches found.
-1.47user 0.13system 0:01.97elapsed 81%CPU (0avgtext+0avgdata 12924maxresident)k
-0inputs+0outputs (0major+2418minor)pagefaults 0swaps
+1.46user 0.15system 0:01.81elapsed 89%CPU (0avgtext+0avgdata 12988maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.97709393501
+EDSM-BV running time: 1.815554142
 
 EDSM-BV searching...
 
@@ -785,13 +785,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 459538
-EDSM-BV processing time: 1.44019s.
+EDSM-BV processing time: 1.45825s.
 
 No matches found.
-1.57user 0.14system 0:02.10elapsed 81%CPU (0avgtext+0avgdata 12872maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.58user 0.16system 0:01.88elapsed 92%CPU (0avgtext+0avgdata 12900maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.10580205917
+EDSM-BV running time: 1.89170694351
 
 EDSM-BV searching...
 
@@ -800,13 +800,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 368406
-EDSM-BV processing time: 1.23219s.
+EDSM-BV processing time: 1.21695s.
 
 No matches found.
-1.34user 0.17system 0:02.03elapsed 74%CPU (0avgtext+0avgdata 12872maxresident)k
+1.36user 0.12system 0:01.58elapsed 93%CPU (0avgtext+0avgdata 12732maxresident)k
 0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.03294205666
+EDSM-BV running time: 1.59213209152
 
 EDSM-BV searching...
 
@@ -815,13 +815,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 453447
-EDSM-BV processing time: 1.35237s.
+EDSM-BV processing time: 1.37051s.
 
 No matches found.
-1.48user 0.14system 0:02.15elapsed 75%CPU (0avgtext+0avgdata 12732maxresident)k
-0inputs+0outputs (0major+2929minor)pagefaults 0swaps
+1.53user 0.11system 0:01.79elapsed 91%CPU (0avgtext+0avgdata 12900maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.1559689045
+EDSM-BV running time: 1.8022339344
 
 EDSM-BV searching...
 
@@ -830,13 +830,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 386485
-EDSM-BV processing time: 1.14568s.
+EDSM-BV processing time: 1.17214s.
 
 No matches found.
-1.26user 0.16system 0:01.84elapsed 76%CPU (0avgtext+0avgdata 12892maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.32user 0.13system 0:01.63elapsed 88%CPU (0avgtext+0avgdata 12724maxresident)k
+0inputs+0outputs (0major+2930minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.85129380226
+EDSM-BV running time: 1.63556599617
 
 EDSM-BV searching...
 
@@ -845,13 +845,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 446904
-EDSM-BV processing time: 1.40718s.
+EDSM-BV processing time: 1.35782s.
 
 No matches found.
-1.54user 0.14system 0:02.21elapsed 76%CPU (0avgtext+0avgdata 12652maxresident)k
-0inputs+0outputs (0major+2927minor)pagefaults 0swaps
+1.49user 0.14system 0:01.88elapsed 86%CPU (0avgtext+0avgdata 12876maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.21416306496
+EDSM-BV running time: 1.88883900642
 
 EDSM-BV searching...
 
@@ -860,13 +860,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 431307
-EDSM-BV processing time: 1.30435s.
+EDSM-BV processing time: 1.32492s.
 
 No matches found.
-1.47user 0.10system 0:02.23elapsed 70%CPU (0avgtext+0avgdata 12948maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.47user 0.13system 0:02.11elapsed 75%CPU (0avgtext+0avgdata 12600maxresident)k
+0inputs+0outputs (0major+2925minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.23527479172
+EDSM-BV running time: 2.11485099792
 
 EDSM-BV searching...
 
@@ -875,13 +875,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 458806
-EDSM-BV processing time: 1.29025s.
+EDSM-BV processing time: 1.26777s.
 
 No matches found.
-1.45user 0.12system 0:02.29elapsed 68%CPU (0avgtext+0avgdata 12784maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.42user 0.12system 0:01.96elapsed 78%CPU (0avgtext+0avgdata 12916maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.29520988464
+EDSM-BV running time: 1.96401286125
 
 EDSM-BV searching...
 
@@ -890,13 +890,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 429723
-EDSM-BV processing time: 1.18765s.
+EDSM-BV processing time: 1.23618s.
 
 No matches found.
-1.32user 0.13system 0:02.14elapsed 68%CPU (0avgtext+0avgdata 12872maxresident)k
+1.39user 0.12system 0:01.85elapsed 81%CPU (0avgtext+0avgdata 12904maxresident)k
 0inputs+0outputs (0major+2416minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.16657400131
+EDSM-BV running time: 1.86057209969
 
 EDSM-BV searching...
 
@@ -905,13 +905,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 390896
-EDSM-BV processing time: 1.2285s.
+EDSM-BV processing time: 1.22997s.
 
 No matches found.
-1.38user 0.12system 0:02.18elapsed 69%CPU (0avgtext+0avgdata 12904maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.33user 0.17system 0:01.80elapsed 83%CPU (0avgtext+0avgdata 12916maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.18992209435
+EDSM-BV running time: 1.81610298157
 
 EDSM-BV searching...
 
@@ -920,13 +920,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 440473
-EDSM-BV processing time: 1.36912s.
+EDSM-BV processing time: 1.36072s.
 
 No matches found.
-1.53user 0.12system 0:02.29elapsed 72%CPU (0avgtext+0avgdata 12724maxresident)k
-0inputs+0outputs (0major+2930minor)pagefaults 0swaps
+1.47user 0.17system 0:02.08elapsed 78%CPU (0avgtext+0avgdata 12472maxresident)k
+0inputs+0outputs (0major+2926minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.29317188263
+EDSM-BV running time: 2.09142017365
 
 EDSM-BV searching...
 
@@ -935,13 +935,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 460150
-EDSM-BV processing time: 1.33s.
+EDSM-BV processing time: 1.32704s.
 
 No matches found.
-1.51user 0.09system 0:02.41elapsed 66%CPU (0avgtext+0avgdata 12684maxresident)k
-0inputs+0outputs (0major+2926minor)pagefaults 0swaps
+1.48user 0.12system 0:02.20elapsed 72%CPU (0avgtext+0avgdata 12804maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.42105197906
+EDSM-BV running time: 2.20864295959
 
 EDSM-BV searching...
 
@@ -950,13 +950,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 457928
-EDSM-BV processing time: 1.35036s.
+EDSM-BV processing time: 1.36966s.
 
 No matches found.
-1.46user 0.16system 0:02.40elapsed 67%CPU (0avgtext+0avgdata 12904maxresident)k
+1.49user 0.16system 0:02.37elapsed 69%CPU (0avgtext+0avgdata 12708maxresident)k
 0inputs+0outputs (0major+2416minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.41155600548
+EDSM-BV running time: 2.378937006
 
 EDSM-BV searching...
 
@@ -965,13 +965,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 454671
-EDSM-BV processing time: 1.27975s.
+EDSM-BV processing time: 1.31181s.
 
 No matches found.
-1.42user 0.12system 0:02.24elapsed 69%CPU (0avgtext+0avgdata 12724maxresident)k
-0inputs+0outputs (0major+2927minor)pagefaults 0swaps
+1.46user 0.12system 0:02.26elapsed 70%CPU (0avgtext+0avgdata 12912maxresident)k
+0inputs+0outputs (0major+2417minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.26775383949
+EDSM-BV running time: 2.27160811424
 
 EDSM-BV searching...
 
@@ -980,13 +980,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 462188
-EDSM-BV processing time: 1.39775s.
+EDSM-BV processing time: 1.40331s.
 
 No matches found.
-1.53user 0.14system 0:02.34elapsed 71%CPU (0avgtext+0avgdata 12800maxresident)k
-0inputs+0outputs (0major+2412minor)pagefaults 0swaps
+1.56user 0.12system 0:02.28elapsed 73%CPU (0avgtext+0avgdata 12804maxresident)k
+0inputs+0outputs (0major+2413minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.36593914032
+EDSM-BV running time: 2.282777071
 
 EDSM-BV searching...
 
@@ -995,13 +995,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 431813
-EDSM-BV processing time: 1.34651s.
+EDSM-BV processing time: 1.36638s.
 
 No matches found.
-1.47user 0.14system 0:02.21elapsed 73%CPU (0avgtext+0avgdata 12908maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.52user 0.12system 0:02.08elapsed 78%CPU (0avgtext+0avgdata 12536maxresident)k
+0inputs+0outputs (0major+2923minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.22090601921
+EDSM-BV running time: 2.08892703056
 
 EDSM-BV searching...
 
@@ -1010,13 +1010,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 461767
-EDSM-BV processing time: 1.34943s.
+EDSM-BV processing time: 1.35831s.
 
 No matches found.
-1.49user 0.13system 0:02.12elapsed 76%CPU (0avgtext+0avgdata 12872maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.49user 0.14system 0:02.14elapsed 76%CPU (0avgtext+0avgdata 12896maxresident)k
+0inputs+0outputs (0major+2416minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.12608098984
+EDSM-BV running time: 2.14799499512
 
 EDSM-BV searching...
 
@@ -1025,13 +1025,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 453820
-EDSM-BV processing time: 1.32267s.
+EDSM-BV processing time: 1.34465s.
 
 No matches found.
-1.47user 0.12system 0:02.07elapsed 77%CPU (0avgtext+0avgdata 12896maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.49user 0.13system 0:01.96elapsed 83%CPU (0avgtext+0avgdata 12992maxresident)k
+0inputs+0outputs (0major+2418minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.07620692253
+EDSM-BV running time: 1.96722388268
 
 EDSM-BV searching...
 
@@ -1040,13 +1040,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 459603
-EDSM-BV processing time: 1.32296s.
+EDSM-BV processing time: 1.37043s.
 
 No matches found.
-1.46user 0.13system 0:02.18elapsed 73%CPU (0avgtext+0avgdata 12904maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.54user 0.12system 0:01.98elapsed 83%CPU (0avgtext+0avgdata 12720maxresident)k
+0inputs+0outputs (0major+2928minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.21638083458
+EDSM-BV running time: 1.98877501488
 
 EDSM-BV searching...
 
@@ -1055,13 +1055,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 450534
-EDSM-BV processing time: 1.39158s.
+EDSM-BV processing time: 1.40474s.
 
 No matches found.
-1.52user 0.14system 0:02.23elapsed 74%CPU (0avgtext+0avgdata 13004maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.55user 0.12system 0:01.93elapsed 87%CPU (0avgtext+0avgdata 12968maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.24227309227
+EDSM-BV running time: 1.93460893631
 
 EDSM-BV searching...
 
@@ -1070,13 +1070,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 461774
-EDSM-BV processing time: 1.40379s.
+EDSM-BV processing time: 1.41908s.
 
 No matches found.
-1.53user 0.14system 0:02.11elapsed 79%CPU (0avgtext+0avgdata 12904maxresident)k
-0inputs+0outputs (0major+2415minor)pagefaults 0swaps
+1.56user 0.13system 0:01.89elapsed 89%CPU (0avgtext+0avgdata 12892maxresident)k
+0inputs+0outputs (0major+2416minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.11388516426
+EDSM-BV running time: 1.895840168
 
 EDSM-BV searching...
 
@@ -1085,13 +1085,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 452178
-EDSM-BV processing time: 1.35523s.
+EDSM-BV processing time: 1.34596s.
 
 No matches found.
-1.46user 0.17system 0:02.04elapsed 79%CPU (0avgtext+0avgdata 12876maxresident)k
-0inputs+0outputs (0major+2416minor)pagefaults 0swaps
+1.47user 0.15system 0:01.78elapsed 91%CPU (0avgtext+0avgdata 12896maxresident)k
+0inputs+0outputs (0major+2414minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.0494530201
+EDSM-BV running time: 1.78350996971
 
 EDSM-BV searching...
 
@@ -1100,13 +1100,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 389544
-EDSM-BV processing time: 1.20882s.
+EDSM-BV processing time: 1.21412s.
 
 No matches found.
-1.30user 0.18system 0:01.77elapsed 83%CPU (0avgtext+0avgdata 12892maxresident)k
-0inputs+0outputs (0major+2414minor)pagefaults 0swaps
+1.38user 0.11system 0:01.59elapsed 93%CPU (0avgtext+0avgdata 12900maxresident)k
+0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.77702713013
+EDSM-BV running time: 1.59963583946
 
 EDSM-BV searching...
 
@@ -1115,13 +1115,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 457302
-EDSM-BV processing time: 1.34269s.
+EDSM-BV processing time: 1.35115s.
 
 No matches found.
-1.48user 0.14system 0:01.97elapsed 82%CPU (0avgtext+0avgdata 12732maxresident)k
-0inputs+0outputs (0major+2412minor)pagefaults 0swaps
+1.46user 0.16system 0:01.72elapsed 94%CPU (0avgtext+0avgdata 12516maxresident)k
+0inputs+0outputs (0major+2923minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.97812104225
+EDSM-BV running time: 1.73054885864
 
 EDSM-BV searching...
 
@@ -1130,13 +1130,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 445141
-EDSM-BV processing time: 1.33917s.
+EDSM-BV processing time: 1.37158s.
 
 No matches found.
-1.44user 0.17system 0:02.04elapsed 78%CPU (0avgtext+0avgdata 12920maxresident)k
-0inputs+0outputs (0major+2418minor)pagefaults 0swaps
+1.52user 0.12system 0:01.65elapsed 99%CPU (0avgtext+0avgdata 12612maxresident)k
+0inputs+0outputs (0major+2924minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.05136394501
+EDSM-BV running time: 1.65591287613
 
 EDSM-BV searching...
 
@@ -1145,13 +1145,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 458979
-EDSM-BV processing time: 1.3528s.
+EDSM-BV processing time: 1.3605s.
 
 No matches found.
-1.48user 0.14system 0:02.09elapsed 77%CPU (0avgtext+0avgdata 12880maxresident)k
+1.42user 0.22system 0:01.64elapsed 99%CPU (0avgtext+0avgdata 12968maxresident)k
 0inputs+0outputs (0major+2413minor)pagefaults 0swaps
 
-EDSM-BV running time: 2.09641003609
+EDSM-BV running time: 1.64413189888
 
 EDSM-BV searching...
 
@@ -1160,13 +1160,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 432324
-EDSM-BV processing time: 1.3546s.
+EDSM-BV processing time: 1.34173s.
 
 No matches found.
-1.47user 0.16system 0:01.96elapsed 83%CPU (0avgtext+0avgdata 12924maxresident)k
-0inputs+0outputs (0major+2417minor)pagefaults 0swaps
+1.50user 0.12system 0:01.74elapsed 93%CPU (0avgtext+0avgdata 12688maxresident)k
+0inputs+0outputs (0major+2924minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.9724509716
+EDSM-BV running time: 1.74368691444
 
 EDSM-BV searching...
 
@@ -1175,13 +1175,13 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 449351
-EDSM-BV processing time: 1.35119s.
+EDSM-BV processing time: 1.38031s.
 
 No matches found.
-1.48user 0.14system 0:01.97elapsed 82%CPU (0avgtext+0avgdata 12872maxresident)k
+1.49user 0.16system 0:01.75elapsed 94%CPU (0avgtext+0avgdata 12880maxresident)k
 0inputs+0outputs (0major+2415minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.97591686249
+EDSM-BV running time: 1.76074981689
 
 EDSM-BV searching...
 
@@ -1190,14 +1190,14 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 432772
-EDSM-BV processing time: 1.23489s.
+EDSM-BV processing time: 1.25583s.
 
 No matches found.
-1.34user 0.17system 0:01.92elapsed 78%CPU (0avgtext+0avgdata 12800maxresident)k
-0inputs+0outputs (0major+2413minor)pagefaults 0swaps
+1.35user 0.18system 0:01.59elapsed 96%CPU (0avgtext+0avgdata 12476maxresident)k
+0inputs+0outputs (0major+2923minor)pagefaults 0swaps
 
-EDSM-BV running time: 1.92822790146
+EDSM-BV running time: 1.59859991074
 
 
 
-Total Running Time of EDSM-BV: 173.398466349
+Total Running Time of EDSM-BV: 147.176945448

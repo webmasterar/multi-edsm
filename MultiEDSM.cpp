@@ -852,20 +852,23 @@ void MultiEDSM::WordVectorAND_IP(WordVector & a, const WordVector & b)
  * A special left shifting algorithm for use with OccVector result. It ensures a
  * shift operation is not performed if it overlaps into the next pattern in the
  * bitvector. This method uses the Pos2PatId datastructure to identify if a shift
- * illegally crosses into the next pattern, so takes O(M) space.
+ * illegally crosses into the next pattern, so requires O(M) space and then it
+ * saves the shifted bits temporarily into a WordVector, so the final space usage
+ * is O(M + [M/w]).
  * Time taken is roughly: O(num_set_bits(x) + [M/w])... or really
  * worst-Worst-WORST case, where there is a match at every single position, which
  * is very-Very-VERY unlikely then O(M + [M/w])!
  *
  * @param x
  * @param m The length of the string being checked
- * @TODO figure out why this method is buggy and restore in MultiEDSM::WordVectorLeftShift_IP
  */
 void MultiEDSM::WordVectorSPECIALSHIFT_IP(WordVector & x, unsigned int m)
 {
     WORD temp;
-    unsigned int i, j, currPos, updPos, currPattId, updPattId, currWordIdx, updWordIdx, n = x.size();
-    for (i = 0; i < n; i++)
+    unsigned int j, currPos, updPos, currPattId, updPattId, currWordIdx, updWordIdx, n = x.size();
+    WordVector y(n, 0ul);
+    int i = n - 1;
+    while (i > -1)
     {
         temp = x[i];
         while (temp)
@@ -875,20 +878,17 @@ void MultiEDSM::WordVectorSPECIALSHIFT_IP(WordVector & x, unsigned int m)
             currPattId = this->Pos2PatId[currPos];
             updPos = currPos + m;
             updPattId = this->Pos2PatId[updPos];
-            if (currPattId == updPattId)
+            if (updPos < this->M && currPattId == updPattId)
             {
-                //remove old bit position
-                // currWordIdx = (unsigned int) ((float)currPos / (float)BITSINWORD);
-                // x[currWordIdx] = x[currWordIdx] ^ (1ul << j);
-                //set new bit position
                 updWordIdx = (unsigned int) ((double)updPos / (double)BITSINWORD);
-                while (updWordIdx >= n) {
-                    x.push_back(0ul);
-                }
-                x[updWordIdx] = x[updWordIdx] | (1ul << (updPos % BITSINWORD));
+                y[updWordIdx] = y[updWordIdx] | (1ul << (updPos % BITSINWORD));
             }
             temp = temp ^ (1ul << j);
         }
+        i--;
+    }
+    for (j = 0; j < n; j++) {
+        x[j] = y[j];
     }
 }
 
@@ -941,21 +941,21 @@ void MultiEDSM::WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m)
  */
 void MultiEDSM::WordVectorLeftShift_IP(WordVector & x, unsigned int m)
 {
-    // unsigned int i = 0, p = 0, s = x.size();
-    // unsigned int specialShiftTime = 0, simpleShiftTime = m * s;
-    //
-    // while (i < s && specialShiftTime <= simpleShiftTime)
-    // {
-    //     p += popcount(x[i]);
-    //     specialShiftTime = p + s;
-    //     i++;
-    // }
+    unsigned int i = 0, p = 0, s = x.size();
+    unsigned int specialShiftTime = 0, simpleShiftTime = m * s;
 
-    // if (simpleShiftTime <= specialShiftTime) {
+    while (i < s && specialShiftTime <= simpleShiftTime)
+    {
+        p += popcount(x[i]);
+        specialShiftTime = p + s;
+        i++;
+    }
+
+    if (simpleShiftTime <= specialShiftTime) {
         this->WordVectorSIMPLESHIFT_IP(x, m);
-    // } else {
-    //     this->WordVectorSPECIALSHIFT_IP(x, m);
-    // }
+    } else {
+        this->WordVectorSPECIALSHIFT_IP(x, m);
+    }
 }
 
 /**
