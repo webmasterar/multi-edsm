@@ -4,6 +4,12 @@ experiments/realdata/datasets/*
 experiments/realdata/compare_results/*
 experiments/readmapping/*
 experiments/words/*
+experiments/maw/eds/*
+experiments/maw/em-maw-output/*
+experiments/maw/patterns/*
+experiments/maw/references/*
+experiments/maw/results/*
+experiments/maw/vcf/*
 multiedsm
 test
 *.o
