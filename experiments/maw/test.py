@@ -35,6 +35,15 @@ else:
 	vcfFile = './vcf/ALL.chr%s.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz' % edsFileName
 verificationFile = './results/verification_' + edsFileName + '_' + str(args.pattern_size) + '.txt'
 
+try:
+	subprocess.Popen(['vcftools --help'], shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
+except OSError as e:
+	if e.errno == os.errno.ENOENT:
+		print 'Error: It appears you do not have VCFTools installed!'
+	else:
+		print e
+	sys.exit(1)
+
 if args.recreate_files:
 	if os.path.isfile(emMAWOutput):
 		os.remove(emMAWOutput)
@@ -54,12 +63,16 @@ if not os.path.exists(emMAWOutput):
 	cmd = './../../../maw/em-maw/em-maw -a DNA -i ' + args.ref_file.name + ' -o ' \
 		+ emMAWOutput + ' -k ' + str(args.pattern_size) + ' -K ' + str(args.pattern_size) \
 		+ ' -m ' + str(args.memory)
+	print cmd
 	output = subprocess.Popen([cmd], shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
 	print output
 
 #
 # Step 2: Filter the MAWs file to create a patterns file
 #
+if not os.path.exists(emMAWOutput):
+	print 'Error: could not locate MAW list.'
+	sys.exit(1)
 i = 0
 patterns = []
 with open(emMAWOutput, 'r') as f:
@@ -110,11 +123,15 @@ for line in output.split('\n'):
 		patternId = int(patternId)
 		cmd = 'vcftools --chr ' + edsFileName + ' --from-bp ' + str(position - args.pattern_size) \
 		    + ' --to-bp ' + str(position) + ' --gzvcf ' + vcfFile + ' --out ./vcf/' \
-			+ edsFileName + '_' + str(position) + '_' + str(patternId) + ' --recode'
+		    + edsFileName + '_' + str(position) + '_' + str(patternId) + ' --recode'
 		subprocess.Popen([cmd], shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
 		vcfFiles.append('./vcf/' + edsFileName + '_' + str(position) + '_' + str(patternId) + '.recode.vcf')
 		matchPatterns.append({'pos':position, 'pat':patterns[patternId]})
-print 'Finished creating the VCF files for each MAW discovered in the Pan-Genome'
+if not atMatches:
+	print 'There were no matches found with Multi-EDSM. Quitting.'
+	sys.exit(0)
+else:
+	print 'Finished creating the VCF files for each MAW discovered in the Pan-Genome'
 
 #
 # Step 5: Read the newly created VCF files of each match and extract the sample
@@ -161,15 +178,16 @@ for vcfId in range(len(vcfFiles)):
 				print str(POS), str(matchPosition)
 				for _ in range(9):
 					record.pop(0) #remove the CHROM, POS, ID... cols leaving just the sample alleles
-				# for colId in range(len(record)):
-				# 	if record[colId] != '0':
-				# 		key = sampleIds[colId]
+				#for colId in range(len(record)):
+				#	if record[colId] != '0':
+				#		key = sampleIds[colId]
 				# 		if key not in samples:
-				# 			samples[key] = refPattern
+				#			samples[key] = refPattern
 				# 		temp = list(samples[key])
-				# 		temp[POS - 1] = ALT
-				# 		samples[key] = ''.join(temp)
-				# 		print ALT + ' ' + key + ': ' + samples[key] + ' <= MAW:' + matchPattern + ' ref:' + refPattern
+				#		temp[POS - 1] = ALT
+				#		samples[key] = ''.join(temp)
+				#		print ALT + ' ' + key + ': ' + samples[key] + ' <= MAW:' + matchPattern + ' ref:' + refPattern
+				# OR:
 				# for colId in range(len(record)):
 				# 	if not (record[colId] == '0' or record[colId] == '0|0'):
 				# 		key = sampleIds[colId]
@@ -185,6 +203,7 @@ for vcfId in range(len(vcfFiles)):
 				# 				temp = ''.join(temp)
 				# 				samples[key].append(temp)
 				# 				print altAlleles[altIdx] + ' ' + key + ': ' + temp + ' <= MAW:' + matchPattern + ' ref:' + refPattern
+				# OR:
 				for colId in range(len(record)):
 					if not (record[colId] == '0' or record[colId] == '0|0'):
 						key = sampleIds[colId]
@@ -206,24 +225,25 @@ for vcfId in range(len(vcfFiles)):
 		#
 		# 5b: Verifying MAW pattern doesn't match any sample
 		#
-		# falseMAWcount = 0
-		# for key, val in samples.items():
-		# 	if matchPattern in val:
-		# 		falseMAWcount += 1
-		# 		msg = val + ' false MAW found for sample ' + key + ' at position ' + str(matchPosition)
-		# 		print msg
-		# 		with open(verificationFile, 'a') as v:
-		# 			v.write(msg + '\n')
-		# print '%d false MAWs identified.' % falseMAWcount
+		#falseMAWcount = 0
+		#for key, val in samples.items():
+		#	if matchPattern in val:
+		#		falseMAWcount += 1
+		#		msg = val + ' false MAW found for sample ' + key + ' at position ' + str(matchPosition)
+		#		print msg
+		#		with open(verificationFile, 'a') as v:
+		#			v.write(msg + '\n')
+		#print '%d false MAWs identified.' % falseMAWcount
+		# OR:
 		falseMAWcount = 0
 		for key, motifArr in samples.items():
-			for motif in motifArr:
+			for motif in set(motifArr):
 				if matchPattern in motif:
 					falseMAWcount += 1
 					msg = motif + ' false MAW found for sample ' + key + ' at position ' + str(matchPosition)
 					print msg
 					with open(verificationFile, 'a') as v:
 						v.write(msg + '\n')
-		print '%d false MAWs identified.' % falseMAWcount
+		print '%d false MAWs identified for position:%d, pattern:%d.' % (falseMAWcount, matchPatterns[vcfId]['pos'], matchPatterns[vcfId]['pat'])
 print 'MAW match verification complete.'
 print 'All done!'
