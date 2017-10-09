@@ -39,7 +39,7 @@ using namespace std;
  * @param patterns The patterns to look for
  * @param maxNoBitVectorsStorable The maximum number of patterns to store in memory as uncompressed bitvectors
  */
-MultiEDSM::MultiEDSM(const string & alphabet, const vector<string> & patterns, const unsigned int maxNoBitVectorsStorable)
+MultiEDSM::MultiEDSM(const string & alphabet, const vector<string> & patterns, const unsigned int maxNoBitVectorsStorable, const EDSDEGLENTYPE edsdeglentype)
 {
     this->alphabet = alphabet;
     if (patterns.size() == 0) {
@@ -62,6 +62,7 @@ MultiEDSM::MultiEDSM(const string & alphabet, const vector<string> & patterns, c
     this->duration = 0;
     this->reportOnce = false;
     this->reportPatterns = true;
+    this->edsdeglentype = edsdeglentype;
     this->preprocessPatterns(patterns);
 }
 
@@ -550,7 +551,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     int pattId;
 
     //temp state variables, segment string iterator
-    unsigned int i, m;
+    unsigned int i, j, m, refLen = 0;
     Segment::const_iterator stringI;
 
     // cout << "Position #" << (this->d + this->D) << endl;
@@ -580,6 +581,9 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
         {
             if (stringI[0] != EPSILON)
             {
+                if (refLen == 0) {
+                    refLen = (*stringI).length();
+                }
                 if ((*stringI).length() >= this->minP)
                 {
                     if (this->umsa->search(*stringI))
@@ -632,7 +636,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             this->pos = this->f;
         } else {
             this->D++;
-            this->pos++;
+            this->pos = (this->edsdeglentype == EDSDEGLENTYPE::FIXEDLENGTH) ? 1 : refLen;
+            //this->pos++;
         }
 
         this->primed = true;
@@ -655,6 +660,9 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 if (stringI[0] == EPSILON) {
                     this->WordVectorOR_IP(this->B1, this->B);
                 } else {
+                    if (refLen == 0) {
+                        refLen = (*stringI).length();
+                    }
                     this->F += (*stringI).length();
                 }
             }
@@ -662,6 +670,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
         }
 
         //loop through the strings in the segment
+        j = 0;
         for (stringI = S.begin(); stringI != S.end(); ++stringI)
         {
             if (stringI[0] != EPSILON)
@@ -691,7 +700,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                             {
                                 const pair<int,int> match = *this->umsa->getMatches().begin();
                                 posIdx = match.first;
-                                matchIdx = this->pos;
+                                matchIdx = (j == 0 && this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) ? min(this->pos + refLen, this->pos + posIdx) : this->pos;
                                 pattId = match.second;
                                 this->report(matchIdx, posIdx, pattId);
                                 this->umsa->clearMatches();
@@ -700,7 +709,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                             {
                                 for (const pair<int,int> & match : this->umsa->getMatches()) {
                                     posIdx = match.first;
-                                    matchIdx = this->pos;
+                                    matchIdx = (j == 0 && this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) ? min(this->pos + refLen, this->pos + posIdx) : this->pos;
                                     pattId = match.second;
                                     this->report(matchIdx, posIdx, pattId);
                                 }
@@ -730,7 +739,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                         if (isDeterminateSegment) {
                             matchIdx = this->pos + posIdx;
                         } else {
-                            matchIdx = this->pos;
+                            matchIdx = (j == 0 && this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) ? min(this->pos + refLen, this->pos + posIdx) : this->pos;
                         }
                         pattId = match.second;
                         this->report(matchIdx, posIdx, pattId);
@@ -743,7 +752,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                             if (isDeterminateSegment) {
                                 matchIdx = this->pos + posIdx;
                             } else {
-                                matchIdx = this->pos;
+                                matchIdx = (j == 0 && this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) ? min(this->pos + refLen, this->pos + posIdx) : this->pos;
                             }
                             pattId = match.second;
                             this->report(matchIdx, posIdx, pattId);
@@ -769,6 +778,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                         this->WordVectorOR_IP(this->B1, this->B2);
                     }
                 }
+
+                j++;
             }
         }
 
@@ -783,7 +794,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             this->pos += S[0].length();
         } else {
             this->D++;
-            this->pos++;
+            this->pos += (this->edsdeglentype == EDSDEGLENTYPE::FIXEDLENGTH) ? 1 : refLen;
+            // this->pos++;
         }
     }
 
@@ -913,13 +925,13 @@ void MultiEDSM::WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m)
         WORD temp, carry, carryMask = 1ul << (BITSINWORD - 1);
         for (i = 0; i < m; i++)
         {
-            carry = 0;
+            carry = 0ul;
             for (j = 0; j < k; j++)
             {
                 temp = x[j];
                 x[j] = (x[j] << 1) | carry; //left shift and apply the carried 1
                 x[j] = x[j] ^ (ends[j] & x[j]); //if 1 passes pattern boundary (end), then remove it because it is an illegal shift
-                carry = (WORD)((carryMask & temp) != 0); //work out if we need to carry a 1 to the next word
+                carry = (WORD)((carryMask & temp) != 0ul); //work out if we need to carry a 1 to the next word
             }
         }
     }
@@ -987,6 +999,14 @@ void MultiEDSM::WordVectorSet1At(WordVector & x, unsigned int pos)
 ResultSet MultiEDSM::getMatches() const
 {
     return this->matches;
+}
+
+/**
+ * Set the EDS format degenerate segment length counting strategy
+ */
+void MultiEDSM::setDegSegLenStrategy(EDSDEGLENTYPE edsdeglentype)
+{
+    this->edsdeglentype = edsdeglentype;
 }
 
 /**

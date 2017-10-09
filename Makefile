@@ -1,10 +1,10 @@
 
 CC=     g++
 
-# -O3 -Wall -g 
-CFLAGS= -O3 -D_USE_64 -msse4.2 -funroll-loops -fomit-frame-pointer
+# -O3 -Wall -g
+CFLAGS= -O3 -D_USE_64 -msse4.2 -funroll-loops -fomit-frame-pointer -std=c++11 -DNDEBUG -march=native -falign-loops=64 -falign-functions=64 
 
-LFLAGS= -std=c++11 -DNDEBUG -lz -lm -lpthread -I . \
+LFLAGS= -lz -lm -lpthread -I . \
         -I ./sdsl-lite/include/ \
         -L ./sdsl-lite/lib/ -lsdsl -ldivsufsort -ldivsufsort64 -Wl,-rpath=$(PWD)/sdsl-lite/lib \
         -I ./vcflib/tabixpp/ -I ./vcflib/tabixpp/htslib/ -I ./vcflib/smithwaterman/ -I ./vcflib/multichoose/ -I ./vcflib/filevercmp/ -I ./vcflib/src/ \

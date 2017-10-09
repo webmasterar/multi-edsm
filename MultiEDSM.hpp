@@ -81,6 +81,21 @@ typedef std::vector<std::string> Segment;
 typedef std::vector<Segment> ElasticDegenerateSequence;
 
 /**
+ * The EDS DEG LEN type is used to define if degenerate segments count as one
+ * position or the length of the first string in the degenerate segment.
+ * For example, T = AA{AT,C,CCA}CG and P = AAATCG, using a 1-based index, under
+ * the FIXEDLENGTH scheme, if there is a match ending at G, the reported position
+ * will be 5. Under the FIRSTLENGTH scheme, it will report position 6 because
+ * the degenerate segment's first string has a length of 2. But if P = AACCA,
+ * where a match ends in a degenerate segment and NOT in the first string, both
+ * schemes will report a match at position 3.
+ */
+enum EDSDEGLENTYPE {
+    FIXEDLENGTH,
+    FIRSTLENGTH
+};
+
+/**
  * NodeRanges are stored in OVMem8 and hold the start and end indexes of leaves
  * in the suffix array (csa) that branch off from an explicit node stored in the
  * suffix tree (cst). If start == end then the node is a leaf. It is also used
@@ -258,6 +273,11 @@ protected:
      */
     unsigned int Nm;
 
+    /**
+     * @var edsdeglentype The degenerate segment counting scheme
+     */
+    EDSDEGLENTYPE edsdeglentype;
+
     void report(const unsigned int matchIdx, const unsigned int posIdx, const int pattId);
 
     WordVector buildBorderPrefixWordVector(const Segment & S);
@@ -270,7 +290,7 @@ protected:
 
 public:
 
-    MultiEDSM(const std::string & alphabet, const std::vector<std::string> & patterns, const unsigned int maxNoBitVectorsStorable);
+    MultiEDSM(const std::string & alphabet, const std::vector<std::string> & patterns, const unsigned int maxNoBitVectorsStorable, const EDSDEGLENTYPE edsdeglentype = EDSDEGLENTYPE::FIRSTLENGTH);
 
     ~MultiEDSM();
 
@@ -281,6 +301,8 @@ public:
     void reportOncePerPosition(bool yesorno = true);
 
     void reportPatternIds(bool yesorno = true);
+
+    void setDegSegLenStrategy(EDSDEGLENTYPE edsdeglentype);
 
     void clearMatches();
 

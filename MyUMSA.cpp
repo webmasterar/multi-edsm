@@ -166,7 +166,7 @@ bool MyUMSA::search(const string & text, unsigned int pos, unsigned int len)
     //loop through the text
     for (; i < n; i++)
     {
-        carry = 0;
+        carry = 0ul;
         charIdx = (int) this->Sigma[(int)text[i]] - 1;
 
         if (charIdx == -1)
@@ -203,7 +203,7 @@ bool MyUMSA::search(const string & text, unsigned int pos, unsigned int len)
                     }
                 }
 
-                carry = (WORD) ((carryMask & temp) != 0);
+                carry = (WORD) ((carryMask & temp) != 0ul);
             }
             zeroed = false;
         }
@@ -255,7 +255,7 @@ bool MyUMSA::searchOnState(const string & text, vector<WORD> & startingSearchSta
     //loop through the text
     for (; i < n; i++)
     {
-        carry = 0;
+        carry = 0ul;
         charIdx = (int) this->Sigma[(int)text[i]] - 1;
 
         if (charIdx == -1)
@@ -292,7 +292,7 @@ bool MyUMSA::searchOnState(const string & text, vector<WORD> & startingSearchSta
                     }
                 }
 
-                carry = (WORD) ((carryMask & temp) != 0);
+                carry = (WORD) ((carryMask & temp) != 0ul);
             }
             zeroed = false;
         }

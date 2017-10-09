@@ -30,16 +30,25 @@
 using namespace std;
 using namespace vcflib;
 
+struct VarItem
+{
+    unsigned int pos;
+    unsigned int skip;
+    Segment seg;
+};
+
+typedef vector<struct VarItem> VarItemArray;
+
 char BUFF[BUFFERSIZE];
 int BUFFLIMIT = 0;
 int POS = 0;
 
 /*
-* Buffered file reading char by char
+* Buffered file reading char by char from a plain DNA FASTA file
 *
 * @param f opened file handle
 */
-char getNextChar(ifstream & f)
+char getNextCharFAS(ifstream & f)
 {
     if (BUFFLIMIT == 0) {
         f.read(BUFF, BUFFERSIZE);
@@ -53,26 +62,146 @@ char getNextChar(ifstream & f)
     if (++POS == BUFFLIMIT) {
         BUFFLIMIT = 0;
     }
-    return c;
+
+    if (c == 'A' || c == 'C' || c == 'G' || c == 'T' || c == 'N') {
+        return c;
+    }
+    return getNextCharFAS(f);
+}
+
+/*
+* Buffered file reading char by char from an EDS file
+*
+* @param f opened file handle
+*/
+char getNextCharEDS(ifstream & f)
+{
+    if (BUFFLIMIT == 0) {
+        f.read(BUFF, BUFFERSIZE);
+        BUFFLIMIT = f.gcount();
+        POS = 0;
+        if (BUFFLIMIT == 0) {
+            return '\0';
+        }
+    }
+    char c = BUFF[POS];
+    if (++POS == BUFFLIMIT) {
+        BUFFLIMIT = 0;
+    }
+
+    if (c == 'A' || c == 'C' || c == 'G' || c == 'T' || c == 'N' || c == '{' || c == '}' || c == ',' || c == EPSILON[0]) {
+        return c;
+    }
+    return getNextCharEDS(f);
+}
+
+/*
+* Loops through all the VCF records and generates a master list of all the
+* variants in the VCF file. It combines duplicates and nested variants too.
+*
+* @param vcfName The vcf file to open
+* @param variantItems A reference to the array which will be populated with the
+* variants (VarItems).
+* @return False on error such as VCF file missing
+*/
+bool populateVarItemArray(string vcfName, VarItemArray & variantItems)
+{
+    VariantCallFile vf;
+    vf.open(vcfName);
+    if (!vf.is_open()) {
+        cerr << "Error: Failed to open variants file!" << endl;
+        return false;
+    }
+    Variant v(vf);
+    unsigned int prevPos = 0, prevRefLen = 0;
+    unsigned int currPos, currRefLen;
+
+    while (vf.getNextVariant(v))
+    {
+        currPos = v.position;
+        currRefLen = v.ref.length();
+        //handle duplicates
+        if (currPos == prevPos)
+        {
+            //check duplicate doesn't have a longer ref -- if it does merge new ref into segment
+            if (currRefLen > prevRefLen && !(v.ref[0] == '<' || v.ref[0] == '.'))
+            {
+                Segment updSeg;
+                for (const string & t : variantItems.back().seg)
+                {
+                    string r = t;
+                    if (r.length() < currRefLen) {
+                        r += v.ref.substr(prevRefLen);
+                    }
+                    updSeg.push_back(r);
+                }
+                updSeg[0] = v.ref;
+                variantItems.back().seg = updSeg;
+                variantItems.back().skip = currRefLen;
+            }
+            //add new alts
+            for (const string & t : v.alt)
+            {
+                if (!(v.ref[0] == '<' || v.ref[0] == '.')) {
+                    variantItems.back().seg.push_back(t);
+                }
+            }
+        }
+        //handle nested variants
+        else if (currPos < (prevPos + prevRefLen))
+        {
+            Segment lastSeg;
+            for (const string & s : variantItems.back().seg)
+            {
+                for (const string & t : v.alt)
+                {
+                    if ((prevPos + s.length()) > currPos && !(t[0] == '<' || t[0] == '.')) {
+                        string r;
+                        r = s.substr(0, currPos - prevPos);
+                        r += t;
+                        r += s.substr(currPos - prevPos + 1);
+                        lastSeg.push_back(r);
+                    }
+                }
+            }
+            for (const string & r : lastSeg) {
+                variantItems.back().seg.push_back(r);
+            }
+        }
+        //handle regular variants
+        else
+        {
+            Segment currSeg;
+            for (const string & t : v.alleles) {
+                if (!(t[0] == '<' || t[0] == '.')) {
+                    currSeg.push_back(t);
+                }
+            }
+            struct VarItem varItem = {currPos, currRefLen, currSeg};
+            variantItems.push_back(varItem);
+            prevPos = currPos;
+            prevRefLen = currRefLen;
+        }
+    }
+    return true;
 }
 
 /**
- * Convert raw string like 3.5g (3.5 gigabytes) to 3584 (megabytes) -- return 0 indicated error
+ * Convert raw string like 3.5g (3.5 gigabytes) to 3584 (megabytes) -- return 0 indicates error
  */
 unsigned int getMemLimitMB(string rawString)
 {
     int l = rawString.length();
     if (l == 0) {
-        return EXIT_SUCCESS;
+        return 0;
     }
     char unit = rawString[l - 1];
     if (unit == 'm' || unit == 'M') {
         return (unsigned int) ceil(atof(rawString.substr(0, l - 1).c_str()));
     } else if (unit == 'g' || unit == 'G') {
         return (unsigned int) ceil(atof(rawString.substr(0, l - 1).c_str()) * 1024);
-    } else {
-        return EXIT_SUCCESS;
     }
+    return 0;
 }
 
 /**
@@ -85,75 +214,39 @@ unsigned int getMemLimitMB(string rawString)
  */
 bool searchVCF(MultiEDSM * multiedsm, string & seqFile, string & varFile)
 {
+    //open reference file for reading
     ifstream rf(seqFile.c_str(), ios::in);
     if (!rf.good()) {
         cerr << "Error: Failed to open reference file!" << endl;
         return false;
     }
 
-    VariantCallFile vf;
-    vf.open(varFile);
-    if (!vf.is_open()) {
-        cerr << "Error: Failed to open variants file!" << endl;
+    //create variables for reading through vcf records and looking for duplicates
+    VarItemArray variantItems;
+    bool parsedVCF = populateVarItemArray(varFile, variantItems);
+    if (!parsedVCF) {
         return false;
     }
+    VarItemArray::iterator vit = variantItems.begin();
+    unsigned int vPos = vit->pos;
+    unsigned int vSkip = vit->skip;
+    Segment vSeg = vit->seg;
 
     //initialize fasta file reading and segment creation helper variables
     string tBuff = "";
     tBuff.reserve(BUFFERSIZE);
     char c;
-    unsigned int rfIdx = 1, vfIdx = 0, i = 0;
+    unsigned int rfIdx = 1, i = 0;
     Segment segment;
 
     //skip first line of fasta file
     getline(rf, tBuff);
     tBuff = "";
 
-    //create variables for reading through vcf records and looking for duplicates
-    Variant var(vf), vBuffer(vf), var2(vf);
-    bool hasMoreVariants = true;
-    Segment vAlleles;
-
-    //read first variant and possibly successive duplicates for the same position, removing duplicate alleles
-    hasMoreVariants = vf.getNextVariant(var);
-    if (hasMoreVariants)
-    {
-        vfIdx = (unsigned int) var.position;
-        for (const auto & a : var.alleles) {
-            if (a[0] != '<') {
-                vAlleles.push_back(a);
-            }
-        }
-        while (true) {
-            hasMoreVariants = vf.getNextVariant(var2);
-            if (hasMoreVariants)
-            {
-                if (var2.position == var.position) {
-                    for (const auto & a : var2.alt) {
-                        if (a[0] != '<') {
-                            vAlleles.push_back(a);
-                        }
-                    }
-                } else {
-                    vBuffer = var2;
-                    break;
-                }
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
-
     //go through the reference sequence
-    while ((c = getNextChar(rf)) != '\0')
+    while ((c = getNextCharFAS(rf)) != '\0')
     {
-        if (!(c == 'A' || c == 'C' || c == 'G' || c == 'T' || c == 'N')) {
-            continue;
-        }
-
-        if (rfIdx != vfIdx)
+        if (rfIdx != vPos)
         {
             tBuff += c;
             i++;
@@ -164,9 +257,11 @@ bool searchVCF(MultiEDSM * multiedsm, string & seqFile, string & varFile)
                 tBuff = "";
                 i = 0;
             }
+            rfIdx++;
         }
-        else
+        else  //rfIdx == vPos
         {
+            //search buffered text
             segment.clear();
             if (tBuff.length() > 0) {
                 segment.push_back(tBuff);
@@ -174,48 +269,25 @@ bool searchVCF(MultiEDSM * multiedsm, string & seqFile, string & varFile)
                 tBuff = "";
             }
 
-            //then search current variant
-            if (vAlleles.size() > 0) {
-                multiedsm->searchNextSegment(vAlleles);
-                vAlleles.clear();
+            //then search current variant segment and skip required number of characters
+            multiedsm->searchNextSegment(vSeg);
+            unsigned int j;
+            for (j = 1; j < vSkip; j++) {
+                getNextCharFAS(rf);
             }
+            rfIdx += vSkip;
 
-            //fetch the next variant to be searched for when its position comes up
-            if (vBuffer.alleles.size() > 0)
-            {
-                vfIdx = (unsigned int) vBuffer.position;
-                for (const auto & a : vBuffer.alleles) {
-                    if (a[0] != '<') {
-                        vAlleles.push_back(a);
-                    }
+            //get the next variant position, skipping repeats or nested variants
+            do {
+                if (++vit == variantItems.end()) {
+                    break;
                 }
-
-                vBuffer.alleles.clear();
-
-                while (true) {
-                    hasMoreVariants = vf.getNextVariant(var2);
-                    if (hasMoreVariants)
-                    {
-                        if (vfIdx == (unsigned int) var2.position) {
-                            for (const auto & a : var2.alt) {
-                                if (a[0] != '<') {
-                                    vAlleles.push_back(a);
-                                }
-                            }
-                        } else {
-                            vBuffer = var2;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
+                vPos = vit->pos;
+                vSkip = vit->skip;
+                vSeg = vit->seg;
             }
+            while (vPos < rfIdx);
         }
-
-        rfIdx++;
     }
     if (tBuff.length() > 0)
     {
@@ -255,7 +327,7 @@ int searchEDS(MultiEDSM * multiedsm, string & seqFile)
     unsigned int i = 0, j = 0;
 
     //go through the sequence file
-    while ((c = getNextChar(eds)) != '\0')
+    while ((c = getNextCharEDS(eds)) != '\0')
     {
         if (i == 0 && c == '{')
         {
@@ -280,24 +352,15 @@ int searchEDS(MultiEDSM * multiedsm, string & seqFile)
         }
         else if (c != '{')
         {
-            switch (c) {
-                case 'A':
-                case 'C':
-                case 'G':
-                case 'T':
-                case 'N':
-                case EPSILON[0]:
-                    x += c;
-                    j++;
-                    if (!inDegSeg && j == BUFFERSIZE)
-                    {
-                        tempSeg.push_back(x);
-                        x = "";
-                        j = 0;
-                        multiedsm->searchNextSegment(tempSeg);
-                        tempSeg.clear();
-                    }
-                    break;
+            x += c;
+            j++;
+            if (!inDegSeg && j == BUFFERSIZE)
+            {
+                tempSeg.push_back(x);
+                x = "";
+                j = 0;
+                multiedsm->searchNextSegment(tempSeg);
+                tempSeg.clear();
             }
         }
         i++;
@@ -321,12 +384,14 @@ int main(int argc, char * argv[])
 {
     //parse command-line options
     int c, x = 0, optind = 1;
-    string seqF, varF, patF, memL;
+    EDSDEGLENTYPE countingType;
+    string seqF, varF, patF, memL, cntL;
     static struct option long_options[] = {
         {"sequence-file", required_argument, 0, 's'},
         {"variants-file", required_argument, 0, 'v'},
         {"patterns-file", required_argument, 0, 'p'},
         {"mem-limit",     required_argument, 0, 'm'},
+        {"counting-type", required_argument, 0, 'c'},
         {"help",          no_argument,       0, 'h'},
         {0,               0,                 0, 0}
     };
@@ -339,10 +404,12 @@ Standard (Required) Arguments:\n\
   -v\t--variants-file\t<str>\tThe VCF variants-file. Support for .vcf.gz. Use only with FASTA+VCF search type.\n\
   -p\t--patterns-file\t<str>\tThe patterns file. Each pattern must be on a different line.\n\
   -m\t--mem-limit\t<str>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers for GB or MB, e.g. 3.5g\n\n\
+Optional Arguments:\n\
+  -c\t--counting-type\t<str>\tCount degenerate segments as one position (FIXEDLENGTH) or the length of the first string (FIRSTLENGTH = default)?\n\n\
 Miscellaneous:\n\
   -h\t--help\t\t<void>\tThis help message.\n";
 
-    while ((c = getopt_long(argc, argv, "s:v:p:m:h", long_options, &optind)) != -1)
+    while ((c = getopt_long(argc, argv, "s:v:p:m:c:h", long_options, &optind)) != -1)
     {
         switch (c)
         {
@@ -361,6 +428,9 @@ Miscellaneous:\n\
             case 'm':
                 memL = optarg;
                 x++;
+                break;
+            case 'c':
+                cntL = optarg;
                 break;
             case 'h':
                 cout << help << endl;
@@ -389,6 +459,12 @@ Miscellaneous:\n\
     {
         cerr << "Error: Invalid number of arguments!" << endl << help << endl;
         return EXIT_FAILURE;
+    }
+
+    if (cntL == "FIXEDLENGTH") {
+        countingType = EDSDEGLENTYPE::FIXEDLENGTH;
+    } else {
+        countingType = EDSDEGLENTYPE::FIRSTLENGTH;
     }
 
     unsigned long long int memLimit = 1024 * 1024 * (unsigned long long int)getMemLimitMB(memL); //memLimit in bytes
@@ -443,7 +519,7 @@ Miscellaneous:\n\
 
     //start MultiEDSM search
     cout << "Multi-EDSM starting..." << endl << endl;
-    MultiEDSM * multiedsm = new MultiEDSM(ALPHABET, patterns, maxNoBitVectorsStorable);
+    MultiEDSM * multiedsm = new MultiEDSM(ALPHABET, patterns, maxNoBitVectorsStorable, countingType);
     patterns.clear();
 
     cout << "Searching..." << endl;
