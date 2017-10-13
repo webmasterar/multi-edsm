@@ -38,8 +38,12 @@ using namespace std;
  * @param alphabet Alphabet used by the patterns
  * @param patterns The patterns to look for
  * @param maxNoBitVectorsStorable The maximum number of patterns to store in memory as uncompressed bitvectors
+ * @param edsdeglentype The strategy for counting degenerate segments, default is EDSDEGLENTYPE::FIRSTLENGTH
  */
-MultiEDSM::MultiEDSM(const string & alphabet, const vector<string> & patterns, const unsigned int maxNoBitVectorsStorable, const EDSDEGLENTYPE edsdeglentype)
+MultiEDSM::MultiEDSM(const string & alphabet, \
+                     const vector<string> & patterns, \
+                     const unsigned int maxNoBitVectorsStorable, \
+                     const EDSDEGLENTYPE edsdeglentype)
 {
     this->alphabet = alphabet;
     if (patterns.size() == 0) {
@@ -700,7 +704,13 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                             {
                                 const pair<int,int> match = *this->umsa->getMatches().begin();
                                 posIdx = match.first;
-                                matchIdx = (j == 0 && this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) ? min(this->pos + refLen, this->pos + posIdx) : this->pos;
+                                if (this->edsdeglentype == EDSDEGLENTYPE::FIXEDLENGTH) {
+                                    matchIdx = this->pos;
+                                } else if (this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) {
+                                    matchIdx = (j == 0) ? this->pos + refLen - 1 : this->pos;
+                                } else if (this->edsdeglentype == EDSDEGLENTYPE::UPTOFIRSTLENGTH) {
+                                    matchIdx = min(this->pos + refLen - 1, this->pos + posIdx);
+                                }
                                 pattId = match.second;
                                 this->report(matchIdx, posIdx, pattId);
                                 this->umsa->clearMatches();
@@ -709,7 +719,13 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                             {
                                 for (const pair<int,int> & match : this->umsa->getMatches()) {
                                     posIdx = match.first;
-                                    matchIdx = (j == 0 && this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) ? min(this->pos + refLen, this->pos + posIdx) : this->pos;
+                                    if (this->edsdeglentype == EDSDEGLENTYPE::FIXEDLENGTH) {
+                                        matchIdx = this->pos;
+                                    } else if (this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) {
+                                        matchIdx = (j == 0) ? this->pos + refLen - 1 : this->pos;
+                                    } else if (this->edsdeglentype == EDSDEGLENTYPE::UPTOFIRSTLENGTH) {
+                                        matchIdx = min(this->pos + refLen - 1, this->pos + posIdx);
+                                    }
                                     pattId = match.second;
                                     this->report(matchIdx, posIdx, pattId);
                                 }
@@ -739,7 +755,13 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                         if (isDeterminateSegment) {
                             matchIdx = this->pos + posIdx;
                         } else {
-                            matchIdx = (j == 0 && this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) ? min(this->pos + refLen, this->pos + posIdx) : this->pos;
+                            if (this->edsdeglentype == EDSDEGLENTYPE::FIXEDLENGTH) {
+                                matchIdx = this->pos;
+                            } else if (this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) {
+                                matchIdx = (j == 0) ? this->pos + refLen - 1 : this->pos;
+                            } else if (this->edsdeglentype == EDSDEGLENTYPE::UPTOFIRSTLENGTH) {
+                                matchIdx = min(this->pos + refLen - 1, this->pos + posIdx);
+                            }
                         }
                         pattId = match.second;
                         this->report(matchIdx, posIdx, pattId);
@@ -752,7 +774,13 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                             if (isDeterminateSegment) {
                                 matchIdx = this->pos + posIdx;
                             } else {
-                                matchIdx = (j == 0 && this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) ? min(this->pos + refLen, this->pos + posIdx) : this->pos;
+                                if (this->edsdeglentype == EDSDEGLENTYPE::FIXEDLENGTH) {
+                                    matchIdx = this->pos;
+                                } else if (this->edsdeglentype == EDSDEGLENTYPE::FIRSTLENGTH) {
+                                    matchIdx = (j == 0) ? this->pos + refLen - 1 : this->pos;
+                                } else if (this->edsdeglentype == EDSDEGLENTYPE::UPTOFIRSTLENGTH) {
+                                    matchIdx = min(this->pos + refLen - 1, this->pos + posIdx);
+                                }
                             }
                             pattId = match.second;
                             this->report(matchIdx, posIdx, pattId);
@@ -866,7 +894,7 @@ void MultiEDSM::WordVectorAND_IP(WordVector & a, const WordVector & b)
  * bitvector. This method uses the Pos2PatId datastructure to identify if a shift
  * illegally crosses into the next pattern, so requires O(M) space and then it
  * saves the shifted bits temporarily into a WordVector, so the final space usage
- * is O(M + [M/w]).
+ * is O(M + [M/w]). This is why it's IPMW - In Place memory + extra [M/w].
  * Time taken is roughly: O(num_set_bits(x) + [M/w])... or really
  * worst-Worst-WORST case, where there is a match at every single position, which
  * is very-Very-VERY unlikely then O(M + [M/w])!
@@ -874,7 +902,7 @@ void MultiEDSM::WordVectorAND_IP(WordVector & a, const WordVector & b)
  * @param x
  * @param m The length of the string being checked
  */
-void MultiEDSM::WordVectorSPECIALSHIFT_IP(WordVector & x, unsigned int m)
+void MultiEDSM::WordVectorSPECIALSHIFT_IPMW(WordVector & x, unsigned int m)
 {
     WORD temp;
     unsigned int j, currPos, updPos, currPattId, updPattId, currWordIdx, updWordIdx, n = x.size();
@@ -941,7 +969,7 @@ void MultiEDSM::WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m)
  * Performs the left-shift operation for the WordVector returned after running the
  * OccVector tool. This operation is potentially expensive so there are two
  * different ways to do it:
- *  - MultiEDSM::WordVectorSPECIALSHIFT_IP() has a worst case time of O(num_set_bits(x) + [M/w])
+ *  - MultiEDSM::WordVectorSPECIALSHIFT_IPM() has a worst case time of O(num_set_bits(x) + [M/w])
  *    or O(M + [M/w]) if there is a huge number of set bits in x.
  *  - MultiEDSM::WordVectorSIMPLESHIFT_IP() has a worst case time of O(m[M/w])
  *    because it does m shift operations over [M/w] words.
@@ -966,7 +994,7 @@ void MultiEDSM::WordVectorLeftShift_IP(WordVector & x, unsigned int m)
     if (simpleShiftTime <= specialShiftTime) {
         this->WordVectorSIMPLESHIFT_IP(x, m);
     } else {
-        this->WordVectorSPECIALSHIFT_IP(x, m);
+        this->WordVectorSPECIALSHIFT_IPMW(x, m);
     }
 }
 

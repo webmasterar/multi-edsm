@@ -88,15 +88,19 @@ typedef std::vector<Segment> ElasticDegenerateSequence;
  * will be 5. Under the FIRSTLENGTH scheme, it will report position 6 because
  * the degenerate segment's first string has a length of 2. But if P = AACCA,
  * where a match ends in a degenerate segment and NOT in the first string, both
- * schemes will report a match at position 3.
+ * FIXEDLENGTH and FIRSTLENGTH schemes will report a match at position 3. But
+ * the UPTOFIRSTLENGTH scheme will say the match ends at position 4 because it
+ * only counts up to the length of the first degenerate string length for any
+ * string in the degenerate segment.
  */
 enum EDSDEGLENTYPE {
     FIXEDLENGTH,
-    FIRSTLENGTH
+    FIRSTLENGTH,
+    UPTOFIRSTLENGTH
 };
 
 /**
- * NodeRanges are stored in OVMem8 and hold the start and end indexes of leaves
+ * NodeRanges are stored in OVMem8 and hold the start and end indexes of branches
  * in the suffix array (csa) that branch off from an explicit node stored in the
  * suffix tree (cst). If start == end then the node is a leaf. It is also used
  * for storing explicit nodes of the suffix tree that we could not store in OVMemU8
@@ -126,7 +130,7 @@ private:
 
     void WordVectorAND_IP(WordVector & a, const WordVector & b);
 
-    void WordVectorSPECIALSHIFT_IP(WordVector & x, unsigned int m);
+    void WordVectorSPECIALSHIFT_IPMW(WordVector & x, unsigned int m);
 
     void WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m);
 
@@ -290,7 +294,10 @@ protected:
 
 public:
 
-    MultiEDSM(const std::string & alphabet, const std::vector<std::string> & patterns, const unsigned int maxNoBitVectorsStorable, const EDSDEGLENTYPE edsdeglentype = EDSDEGLENTYPE::FIRSTLENGTH);
+    MultiEDSM(const std::string & alphabet, \
+              const std::vector<std::string> & patterns, \
+              const unsigned int maxNoBitVectorsStorable, \
+              const EDSDEGLENTYPE edsdeglentype = EDSDEGLENTYPE::UPTOFIRSTLENGTH);
 
     ~MultiEDSM();
 

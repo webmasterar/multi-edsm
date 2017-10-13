@@ -53,17 +53,21 @@ if args.recreate_files:
 		os.remove(resultsFile)
 	if os.path.isfile(verificationFile):
 		os.remove(verificationFile)
+	for fileName in os.listdir('./references'):
+		if fileName.startswith(refFileName) and (fileName.endswith('.bwt5') or fileName.endswith('.lcp5') or fileName.endswith('.sa5')):
+			os.remove('./references/' + fileName)
 
 #
 # Step 1: Search for MAWs in the reference sequence
 #
 if not os.path.exists(emMAWOutput):
-	absRefFile = os.path.abspath(args.ref_file.name)
-	absEmOut = os.path.abspath(emMAWOutput)
 	cmd = './../../../maw/em-maw/em-maw -a DNA -i ' + args.ref_file.name + ' -o ' \
 		+ emMAWOutput + ' -k ' + str(args.pattern_size) + ' -K ' + str(args.pattern_size) \
 		+ ' -m ' + str(args.memory)
-	print cmd
+	for fileName in os.listdir('./references'):
+		if refFileName + '_' in fileName:
+			cmd += ' -c 0'
+			break
 	output = subprocess.Popen([cmd], shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
 	print output
 
@@ -168,16 +172,16 @@ for vcfId in range(len(vcfFiles)):
 				continue
 			elif line.startswith('#'):
 				sampleIds = [x.strip() for x in line.split('\t')]
-				for _ in range(9):
-					sampleIds.pop(0) #remove the CHROM, POS, ID... cols leaving just the sample IDs
+				sampleIds = sampleIds[9:] #remove the CHROM, POS, ID... cols leaving just the sample IDs
 				atRecord = True
 			elif atRecord:
 				record = [x.strip() for x in line.split('\t')]
 				(CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT) = record[0:9]
 				POS = int(POS) - (matchPosition - args.pattern_size)
+				if '.' in REF + ALT or '<' in REF + ALT:
+					continue
 				print str(POS), str(matchPosition)
-				for _ in range(9):
-					record.pop(0) #remove the CHROM, POS, ID... cols leaving just the sample alleles
+				record = record[9:] #remove the CHROM, POS, ID... cols leaving just the sample alleles
 				#for colId in range(len(record)):
 				#	if record[colId] != '0':
 				#		key = sampleIds[colId]
@@ -205,7 +209,7 @@ for vcfId in range(len(vcfFiles)):
 				# 				print altAlleles[altIdx] + ' ' + key + ': ' + temp + ' <= MAW:' + matchPattern + ' ref:' + refPattern
 				# OR:
 				for colId in range(len(record)):
-					if not (record[colId] == '0' or record[colId] == '0|0'):
+					if not (record[colId] == '0' or record[colId] == '0|0' or record[colId] == '.'):
 						key = sampleIds[colId]
 						altAlleles = ALT.split(',')
 						altAlleleIndices = [int(x) for x in record[colId].split('|')]
@@ -244,6 +248,6 @@ for vcfId in range(len(vcfFiles)):
 					print msg
 					with open(verificationFile, 'a') as v:
 						v.write(msg + '\n')
-		print '%d false MAWs identified for position:%d, pattern:%d.' % (falseMAWcount, matchPatterns[vcfId]['pos'], matchPatterns[vcfId]['pat'])
+		print '%d false MAWs identified for position:%d, pattern:%s.' % (falseMAWcount, matchPatterns[vcfId]['pos'], matchPatterns[vcfId]['pat'])
 print 'MAW match verification complete.'
 print 'All done!'

@@ -397,15 +397,17 @@ int main(int argc, char * argv[])
     };
 
     string help = "Multiple Elastic Degenerate String Matching (Multi-EDSM) ---\n\n\
-Example EDS Type Search: ./multiedsm --sequence-file seq.eds --patterns-file patterns.txt\n\
-Example FASTA+VCF Type Search: ./multiedsm --sequence-file reference.fasta --variants-file variants.vcf --patterns-file patterns.txt\n\n\
+Example EDS Type Search: ./multiedsm -s seq.eds -p patterns.txt -m 4g\n\
+Example FASTA+VCF Type Search: ./multiedsm -s reference.fasta -v variants.vcf -p patterns.txt -m 4g\n\n\
 Standard (Required) Arguments:\n\
   -s\t--sequence-file\t<str>\tThe EDS or reference FASTA file. Use the correct file for the correct search type.\n\
   -v\t--variants-file\t<str>\tThe VCF variants-file. Support for .vcf.gz. Use only with FASTA+VCF search type.\n\
   -p\t--patterns-file\t<str>\tThe patterns file. Each pattern must be on a different line.\n\
   -m\t--mem-limit\t<str>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers for GB or MB, e.g. 3.5g\n\n\
 Optional Arguments:\n\
-  -c\t--counting-type\t<str>\tCount degenerate segments as one position (FIXEDLENGTH) or the length of the first string (FIRSTLENGTH = default)?\n\n\
+  -c\t--counting-type\t<str>\tCount degenerate segments as one position (FIXEDLENGTH),\n\
+    \t               \t     \tthe length of the first string (FIRSTLENGTH), or\n\
+    \t               \t     \tup to the length of the first string (UPTOFIRSTLENGTH)(=default)?\n\n\
 Miscellaneous:\n\
   -h\t--help\t\t<void>\tThis help message.\n";
 
@@ -463,8 +465,13 @@ Miscellaneous:\n\
 
     if (cntL == "FIXEDLENGTH") {
         countingType = EDSDEGLENTYPE::FIXEDLENGTH;
-    } else {
+    } else if (cntL == "FIRSTLENGTH") {
         countingType = EDSDEGLENTYPE::FIRSTLENGTH;
+    } else if (cntL == "UPTOFIRSTLENGTH" || cntL == "") {
+        countingType = EDSDEGLENTYPE::UPTOFIRSTLENGTH;
+    } else {
+        cerr << "Error: Invalid counting type given!" << endl << help << endl;
+        return EXIT_FAILURE;
     }
 
     unsigned long long int memLimit = 1024 * 1024 * (unsigned long long int)getMemLimitMB(memL); //memLimit in bytes
