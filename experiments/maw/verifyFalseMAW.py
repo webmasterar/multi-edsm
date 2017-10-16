@@ -8,7 +8,7 @@ expected postion along with the associated VCF and Reference genome files, this 
 program verifies the MAW is present (i.e. it\'s not really a MAW) and returns \
 the sampleIds of the genomes the MAW exists in.')
 	parser.add_argument('maw', help='The MAW to be verified')
-	parser.add_argument('position', type=int, help='The position where the MAW was found')
+	parser.add_argument('position', type=int, help='The position where the MAW was found (0-based index)')
 	parser.add_argument('ref_file', type=argparse.FileType('r'), help='The Reference Chromosome file to look for MAWs in')
 	parser.add_argument('vcf_file', type=argparse.FileType('r'), help='The VCF file to search in')
 	args = parser.parse_args()
@@ -31,7 +31,7 @@ the sampleIds of the genomes the MAW exists in.')
 		i += len(line)
 		if i > pos:
 			break
-	ref = seq[pos - maw_size: pos]
+	ref = seq[pos-maw_size : pos]
 	seq = None
 
 	##
@@ -48,10 +48,14 @@ the sampleIds of the genomes the MAW exists in.')
 		else:
 			record = [x.strip() for x in line.split('\t')]
 			(CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT) = record[0:9]
-			record = record[9:]       #remove the CHROM, POS, ID... cols leaving just the sample IDs
-			POS = int(POS) - (pos - maw_size)
+			POS = int(POS)
+			if POS < (pos - maw_size) or POS > pos:
+				print 'skipped ' + ID + ' at position: ' + str(POS)
+				continue
 			if '.' in REF + ALT or '<' in REF + ALT:
 				continue
+			record = record[9:] #remove the CHROM, POS, ID... cols leaving just the sample IDs
+			POS = POS - (pos - maw_size)
 			reflen = len(REF)
 			if maw[POS-1 : POS-1+reflen] == ref[POS-1 : POS-1+reflen]:
 				continue
@@ -77,7 +81,7 @@ the sampleIds of the genomes the MAW exists in.')
 	if len(guiltySamples) == 0:
 		print 'MAW ' + maw + ' is valid'
 	else:
-		print 'False MAW ' + maw + ' found at position ' + str(pos) + ' was ' \
+		print 'False MAW ' + maw + ' found at position ' + str(pos + 1) + ' was ' \
 			+ 'discovered for samples: ' + ', '.join(guiltySamples)
 
 if __name__ == '__main__':
