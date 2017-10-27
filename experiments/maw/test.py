@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description='Find the Minimum Absent Words (MAW
 the reference Human Genome sequence then confirm these using 1000 Human Genomes data.')
 parser.add_argument('chromosome', help='The chromosome number (1..22, X, Y)')
 parser.add_argument('--min-size', type=int, default=3, help='The minimum size of a MAW (default = 3)')
-parser.add_argument('--max-size', type=int, default=13, help='The maximum size of a MAW (default = 13)')
+parser.add_argument('--max-size', type=int, default=12, help='The maximum size of a MAW (default = 12)')
 parser.add_argument('--memory', type=int, default=4096, help='How much RAM to use in MB, default=4096')
 args = parser.parse_args()
 
@@ -28,6 +28,7 @@ if args.chromosome not in ([str(x) for x in range(1, 23)] + ['X', 'Y']):
 
 humanGenome   = './references/hg37.fa'
 emMAWOutput   = './em-maw-output/hg37.maws'
+edsFile       = './eds/%s.eds' % args.chromosome
 patternsFile  = './patterns/filtered_hg37.maws'
 refFile       = './references/Homo_sapiens.GRCh37.75.dna.chromosome.%s.fa' % args.chromosome
 resultsFile   = './results/%s_multiedsm.txt' % args.chromosome
@@ -44,7 +45,6 @@ else:
 # Step 1: Run em-MAW on human genome
 #
 
-print 'Step 1'
 if not os.path.exists(emMAWOutput):
 	cmd = './../../../maw/em-maw/em-maw -a DNA -i %s -o %s -k %d -K %d -m %d' % (humanGenome, emMAWOutput, args.min_size, args.max_size, args.memory)
 	print subprocess.Popen([cmd], shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
@@ -53,7 +53,6 @@ if not os.path.exists(emMAWOutput):
 # Step 2: Filter the MAWs file (remove MAWS containing Ns) to create a searchable patterns file
 #
 
-print 'Step 2'
 if not os.path.exists(emMAWOutput):
 	print 'Error: could not locate MAW list.'
 	sys.exit(1)
@@ -76,14 +75,13 @@ print '%d MAWs of total length %d extracted for searching.' % (numMawsExtracted,
 # Step 3: Search for the patterns with Multi-EDSM
 #
 
-print 'Step 3'
 output = ''
 if numMawsExtracted == 0:
 	print 'Not running Multi-EDSM on empty patterns file.'
 	sys.exit(0)
 if not os.path.exists(resultsFile):
 	print 'Running Multi-EDSM...'
-	cmd = './../../multiedsm -m %dm -s %s -v %s -p %s' % (args.memory, refFile, vcfgzFile, patternsFile)
+	cmd = './../../multiedsm -m %dm -s %s -p %s' % (args.memory, edsFile, patternsFile)
 	output = subprocess.Popen(['time ' + cmd], shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
 	with open(resultsFile, 'w') as f:
 		f.write(output)
@@ -96,7 +94,6 @@ print output
 # Step 4: extract patterns found
 #
 
-print 'Step 4'
 atMatches = False
 positions = []
 patternIds = []
@@ -109,7 +106,7 @@ with open(patternsFile, 'r') as f:
 		elif line.startswith('----'):
 			atMatches = True
 		elif atMatches and ',' in line:
-			(pos, patId) = line.split(',')
+			(pos, patId) = [int(x) for x in line.split(',')]
 			positions.append(int(pos))
 			patternIds.append(int(patId))
 			if patId not in patterns:
@@ -120,14 +117,12 @@ with open(patternsFile, 'r') as f:
 					i += 1
 				patterns[patId] = f.readline().strip()
 
-print 'Verification of up to %d false positive MAWs starting.' % len(set(patternIds))
-sys.exit(0)
+print 'Verification of up to %d false positive MAWs starting.' % len(patterns.keys())
 
 #
 # Step 5: validate each match to see if it really exists and isn't a false positive
 #
 
-print 'Step 5'
 confirmedPatternMatchIds = []
 vcf_reader = vcf.Reader(filename=vcfgzFile)
 for i in range(len(positions)):
@@ -166,7 +161,7 @@ for i in range(len(positions)):
 	#		apply the alt allele
 	#
 	vcfRecords = vcf_reader.fetch(args.chromosome, position - len(pattern), position)
-	if len(vcfRecords) > 0:
+	if vcfRecords:
 		samples = {}
 		for record in vcfRecords:
 			if record.REF[0] == '.' or record.REF[0] == '<':
@@ -175,13 +170,17 @@ for i in range(len(positions)):
 				continue
 			POS = record.POS - (position - len(pattern))
 			for sample in record.samples:
+				if sample.data.GT == None:
+					continue
 				sampleName = sample.sample
 				for altIndex in sample.data.GT.split('|'):
 					if altIndex == '0' or altIndex == '.' or '/' in altIndex:
 						continue
 					if sampleName not in samples:
 						samples[sampleName] = [ref]
-					sampleALT = record.ALT[int(altIndex) - 1]
+					sampleALT = str(record.ALT[int(altIndex) - 1])
+					if sampleALT.startswith('<'):
+						continue
 					currMotifs = samples[sampleName][:]
 					for motif in currMotifs:
 						temp = list(motif)
@@ -213,7 +212,14 @@ for i in range(len(positions)):
 # used later to reduce the size of the original MAWs list -- see summary.py
 #
 
-print 'Step 6'
+if len(confirmedPatternMatchIds) == 0:
+	print 'Verified all MAWs are valid and matches found by MultiEDSM belong to multiple independent samples'
 with open(falseMAWsFile, 'w') as f:
-	f.write('\n'.join(confirmedPatternMatchIds))
+	i = 0
+	for patternId in confirmedPatternMatchIds:
+		print 'False MAW #%s (%s) identified.' % (str(patternId), patterns[patternId])
+		if i != 0:
+			f.write('\n')
+		f.write(str(patternId))
+		i += 1
 print 'All done!'

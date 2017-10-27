@@ -6,10 +6,11 @@ experiments/readmapping/*
 experiments/words/*
 experiments/maw/eds/*
 experiments/maw/em-maw-output/*
-experiments/maw/patterns/*
+experiments/maw/patterns/old/*
 experiments/maw/references/*
-experiments/maw/results/*
+experiments/maw/results/old/*
 experiments/maw/vcf/*
+experiments/maw/old/*
 multiedsm
 test
 *.o
