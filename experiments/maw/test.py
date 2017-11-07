@@ -58,17 +58,24 @@ if not os.path.exists(emMAWOutput):
 	sys.exit(1)
 numMawsExtracted = 0
 M = 0
-with open(patternsFile, 'w') as pf:
-	with open(emMAWOutput, 'r') as ef:
-		ef.readline() # skip the > header
-		for line in ef:
+if os.path.exists(patternsFile):
+	with open(patternsFile, 'r') as pf:
+		for line in pf:
 			line = line.strip()
-			if not (len(line) == 0 or 'N' in line):
-				if numMawsExtracted != 0:
-					pf.write('\n')
-				pf.write(line)
-				numMawsExtracted += 1
-				M += len(line)
+			numMawsExtracted += 1
+			M += len(line)
+else:
+	with open(patternsFile, 'w') as pf:
+		with open(emMAWOutput, 'r') as ef:
+			ef.readline() # skip the > header
+			for line in ef:
+				line = line.strip()
+				if not (len(line) == 0 or 'N' in line):
+					if numMawsExtracted != 0:
+						pf.write('\n')
+					pf.write(line)
+					numMawsExtracted += 1
+					M += len(line)
 print '%d MAWs of total length %d extracted for searching.' % (numMawsExtracted, M)
 
 #
@@ -87,7 +94,7 @@ if not os.path.exists(resultsFile):
 		f.write(output)
 else:
 	with open(resultsFile, 'r') as f:
-		output = '\n'.join(f.readlines())
+		output = ''.join(f.readlines())
 print output
 
 #
@@ -123,12 +130,131 @@ print 'Verification of up to %d false positive MAWs starting.' % len(patterns.ke
 # Step 5: validate each match to see if it really exists and isn't a false positive
 #
 
+def processSample(POS, REF, ALTs, refPattern, sample, sampleStore, record, position, pattern):
+	if sample.data.GT != None:
+		for altIdx in sample.data.GT.split('|'):
+			if altIdx == '0' or altIdx == '.' or '/' in altIdx:
+				continue
+			sampleALT = ALTs[int(altIdx)-1]
+			if sampleALT.startswith('<') or sampleALT.startswith('.'):
+				continue
+			sampleName = sample.sample
+			print record.POS, sampleALT, record.REF, position, refPattern, pattern
+			break
+			# if sampleName not in sampleStore:
+			# 	sampleStore[sampleName] = [refPattern]
+			# currMotifs = sampleStore[sampleName][:]
+			# for motif in currMotifs:
+			# 	temp = []
+			# 	if POS < 1:
+			# 		temp = list(REF)
+			# 		superfluousPrefixLen = POS + len(REF)
+			# 		for _ in range(superfluousPrefixLen):
+			# 			try:
+			# 				del temp[0]
+			# 			except IndexError as e:
+			# 				print _, POS, REF, sampleALT, superfluousPrefixLen, position, refPattern, pattern
+			# 		temp = [sampleALT] + temp
+			# 	else:
+			# 		temp = list(motif)
+			# 		try:
+			# 			temp[POS] = sampleALT
+			# 		except IndexError as e:
+			# 			print POS, temp, motif, REF
+			# 		for _ in range(0, min(len(REF)-1, len(refPattern)-POS)): # handle indels (reflen>1)
+			# 			print 'Deleting at ' + position, len(REF)-1, len(refPattern), POS
+			# 			del temp[POS+1]
+			# 	temp = ''.join(temp)
+			# 	sampleStore[sampleName].append(temp)
+
+# confirmedPatternMatchIds = []
+# vcf_reader = vcf.Reader(filename=vcfgzFile)
+# for i in range(len(positions)):
+# 	position = positions[i] + 1 # genome position starts at 1
+# 	patternId = patternIds[i]
+# 	pattern = patterns[patternId]
+#
+# 	# avoid repeat checking
+# 	if patternId in confirmedPatternMatchIds:
+# 		continue
+#
+# 	##
+# 	# Open the reference genome and grab the ref pattern
+# 	#
+# 	refPattern = ''
+# 	seq = ''
+# 	with open(refFile, 'r') as rf:
+# 		j = 0
+# 		for line in rf:
+# 			line = line.strip()
+# 			if line == '' or line.startswith('>'):
+# 				continue
+# 			seq += line
+# 			j += len(line)
+# 			if j >= position:
+# 				break
+# 	refPattern = seq[position-len(pattern) : position]
+# 	seq = ''
+#
+# 	##
+# 	# Apply all the variants to the reference sequence at this position for any
+# 	# individuals (sample) which have variants in this range
+# 	#
+# 	# for each variant in this range
+# 	#	for each individual with an alternate allele
+# 	#		apply the alt allele
+# 	# Check if any of the sample's alleles match the MAW pattern.
+# 	#
+# 	vcfRecords = vcf_reader.fetch(args.chromosome, position - len(pattern) + 1, position)
+# 	if vcfRecords:
+# 		sampleStore = {}
+# 		for record in vcfRecords:
+# 			REF = str(record.REF)
+# 			if REF[0] == '.' or REF[0] == '<':
+# 				continue
+# 			ALTs = [str(x) for x in record.ALT]
+# 			POS = record.POS - (position - len(pattern) + 1)
+# 			for sample in record.samples:
+# 				processSample(POS, REF, ALTs, refPattern, sample, sampleStore, record, position, pattern)
+# 				break
+#
+# 		matchFound = False
+# 		for sampleId, alleles in sampleStore.items():
+# 			for allele in alleles:
+# 				if pattern in allele:
+# 					matchFound = True
+# 					confirmedPatternMatchIds.append(patternId)
+# 					break
+# 			if matchFound:
+# 				break
+#
+# 	else:
+# 		print 'Unexpected match for pattern #%d %s with %s' % (patternId, pattern, refPattern)
+# 		if pattern == refPattern:
+# 			confirmedPatternMatchIds.append(patternId)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 confirmedPatternMatchIds = []
 vcf_reader = vcf.Reader(filename=vcfgzFile)
 for i in range(len(positions)):
-	position = positions[i] + 1 # genome position starts at 1
+	matchEndPosition = positions[i] + 1 # genome position starts at 1
 	patternId = patternIds[i]
-	pattern = patterns[patternId]
+	mawPattern = patterns[patternId]
+	matchStartPosition = matchEndPosition - len(mawPattern) + 1
 
 	# avoid repeat checking
 	if patternId in confirmedPatternMatchIds:
@@ -137,7 +263,7 @@ for i in range(len(positions)):
 	##
 	# Open the reference genome and grab the ref pattern
 	#
-	ref = ''
+	refPattern = ''
 	seq = ''
 	with open(refFile, 'r') as rf:
 		j = 0
@@ -147,65 +273,72 @@ for i in range(len(positions)):
 				continue
 			seq += line
 			j += len(line)
-			if j >= position:
+			if j >= matchEndPosition:
 				break
-	ref = seq[position-len(pattern) : position]
+	refPattern = seq[matchEndPosition-len(mawPattern) : matchEndPosition]
 	seq = ''
 
 	##
 	# Apply all the variants to the reference sequence at this position for any
-	# individuals (samples) which have variants in this range
+	# individuals (sample) which have variants in this range
 	#
-	# for each variant in this range
-	#	for each individual with an alternate allele
-	#		apply the alt allele
-	#
-	vcfRecords = vcf_reader.fetch(args.chromosome, position - len(pattern), position)
-	if vcfRecords:
-		samples = {}
-		for record in vcfRecords:
-			if record.REF[0] == '.' or record.REF[0] == '<':
-				continue
-			if '.' in record.ALT or '<' in record.ALT:
-				continue
-			POS = record.POS - (position - len(pattern))
-			for sample in record.samples:
-				if sample.data.GT == None:
-					continue
-				sampleName = sample.sample
-				for altIndex in sample.data.GT.split('|'):
-					if altIndex == '0' or altIndex == '.' or '/' in altIndex:
+	sampleStore = {}
+	for record in vcf_reader.fetch(args.chromosome, matchStartPosition, matchEndPosition):
+		POSstart = record.POS
+		REF = str(record.REF)
+		REFlen = len(REF)
+		POSend = POSstart + REFlen - 1
+		if POSend != 47771698:
+			continue
+		if REF[0] == '.' or REF[0] == '<':
+			continue
+		ALTs = [str(x) for x in record.ALT]
+		for sample in record.samples:
+			if sample.data.GT != None:
+				for altIdx in sample.data.GT.split('|'):
+					if '/' in altIdx or altIdx == '0' or altIdx == '.':
 						continue
-					if sampleName not in samples:
-						samples[sampleName] = [ref]
-					sampleALT = str(record.ALT[int(altIndex) - 1])
-					if sampleALT.startswith('<'):
+					sampleALT = ALTs[int(altIdx)-1]
+					if sampleALT.startswith('<') or sampleALT.startswith('.'):
 						continue
-					currMotifs = samples[sampleName][:]
+					sampleName = sample.sample
+					if sampleName not in sampleStore:
+						sampleStore[sampleName] = [refPattern]
+					currMotifs = sampleStore[sampleName][:]
+					indexToSubstitute = POSstart - matchStartPosition
+
 					for motif in currMotifs:
 						temp = list(motif)
-						temp[POS-1] = sampleALT
+						if indexToSubstitute < 0:
+							delTimes = POSend - matchStartPosition
+							print 'underflow:', delTimes, POSend, matchStartPosition, motif, sampleALT, mawPattern, refPattern
+							for _ in range(min(delTimes, len(motif) - 1)):
+								del temp[0]
+							temp = [sampleALT] + temp
+							print temp
+						elif REFlen > 1 and POSend > matchEndPosition:
+							delTimes = matchEndPosition - POSstart
+							print 'overflow:', delTimes, POSend, matchStartPosition, motif, sampleALT, mawPattern, refPattern, REFlen
+							for _ in range(delTimes - 1):
+								del temp[indexToSubstitute]
+							temp = temp + [sampleALT]
+						else:
+							print 'simpleSub:', mawPattern, indexToSubstitute, sampleALT, refPattern #, temp
+							temp[indexToSubstitute] = sampleALT
+							for _ in range(REFlen - 1):
+								del temp[indexToSubstitute + 1]
 						temp = ''.join(temp)
-						samples[sampleName].append(temp)
+						sampleStore[sampleName].append(temp)
 
-		##
-		# Check if any of the sample's alleles match the MAW pattern
-		#
-		matchFound = False
-		for sampleId, alleles in samples.items():
-			for allele in alleles:
-				if pattern in allele:
-					matchFound = True
-					confirmedPatternMatchIds.append(patternId)
-					break
-			if matchFound:
+	matchFound = False
+	for sampleId, alleles in sampleStore.items():
+		for allele in alleles:
+			if mawPattern in allele:
+				matchFound = True
+				confirmedPatternMatchIds.append(patternId)
 				break
-
-	else:
-		print 'Unexpected match for pattern %d %s with %s' % (patternId, pattern, ref)
-		if pattern == ref:
-			confirmedPatternMatchIds.append(patternId)
-
+		if matchFound:
+			break
 
 #
 # Step 6: Output the confirmedPatternMatchIds (false MAWs) list - this will be
