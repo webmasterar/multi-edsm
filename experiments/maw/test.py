@@ -13,7 +13,7 @@ the reference Human Genome sequence then confirm these using 1000 Human Genomes 
 parser.add_argument('chromosome', help='The chromosome number (1..22, X, Y)')
 parser.add_argument('--min-size', type=int, default=3, help='The minimum size of a MAW (default = 3)')
 parser.add_argument('--max-size', type=int, default=12, help='The maximum size of a MAW (default = 12)')
-parser.add_argument('--memory', type=int, default=4096, help='How much RAM to use in MB, default=4096')
+parser.add_argument('--memory', type=int, default=4096, help='How much RAM to use in MB (default = 4096)')
 args = parser.parse_args()
 
 if args.min_size > args.max_size:
@@ -61,9 +61,8 @@ M = 0
 if os.path.exists(patternsFile):
 	with open(patternsFile, 'r') as pf:
 		for line in pf:
-			line = line.strip()
+			M += len(line.strip())
 			numMawsExtracted += 1
-			M += len(line)
 else:
 	with open(patternsFile, 'w') as pf:
 		with open(emMAWOutput, 'r') as ef:
@@ -124,10 +123,11 @@ with open(patternsFile, 'r') as f:
 					i += 1
 				patterns[patId] = f.readline().strip()
 
-print 'Verification of up to %d false positive MAWs starting.' % len(patterns.keys())
+print 'Verification of up to %d potential false positive MAWs starting.' % len(patterns)
 
 #
-# Step 5: validate each match to see if it really exists and isn't a false positive
+# Step 5: validate each match to see if the MAW really exists and therefore isn't
+# really a MAW
 #
 
 ##
@@ -138,6 +138,8 @@ print 'Verification of up to %d false positive MAWs starting.' % len(patterns.ke
 def getRef(begin, end):
 	if begin > end:
 		begin, end = end, begin
+	elif begin == end or begin < 1 or end < 1:
+		return ''
 	seq = ''
 	with open(refFile, 'r') as rf:
 		j = 1
@@ -161,14 +163,10 @@ def getRef(begin, end):
 				j += lineLen
 	return seq
 
-##
-# Validate the existence of the MAWs - if the MAW exists in the chromosome then
-# it is disqualified from being a real MAW
-#
 disqualifiedMAWIds = []
 vcf_reader = vcf.Reader(filename=vcfgzFile)
 for i in range(len(positions)):
-	matchEndPosition = positions[i] + 1 # genome position starts at 1
+	matchEndPosition = positions[i] + 1 # genome position starts at 1 (1-based index)
 	patternId = patternIds[i]
 	mawPattern = patterns[patternId]
 	matchStartPosition = matchEndPosition - len(mawPattern) + 1
@@ -178,7 +176,8 @@ for i in range(len(positions)):
 		continue
 
 	##
-	# Grab the variants (alleles) in this range
+	# Grab the variants (alleles) in this range (matchStartPosition - matchEndPosition)
+	# from the VCF file
 	#
 	requiredAdditionalPrefix = 0
 	reffetchbegin = matchStartPosition
@@ -212,12 +211,13 @@ for i in range(len(positions)):
 		alleles.append({'ref':REF, 'startPos':POSstart, 'alt':ALTs, 'samples':samples})
 
 	##
-	# Open the reference genome and grab the ref pattern for the range
+	# Open the reference chromosome and grab the ref sequence for the range
 	#
-	refPattern = getRef(reffetchbegin - requiredAdditionalPrefix, reffetchend)
+	refSequence = getRef(reffetchbegin - requiredAdditionalPrefix, reffetchend)
 
 	##
-	# Simulate the sequence for every person that has an alternate allele in this range
+	# Recreate the sequence for every sample (person) that has an alternate allele
+	# in this range
 	#
 	sampleStore = {}
 	for allele in alleles:
@@ -229,18 +229,21 @@ for i in range(len(positions)):
 				if sampleALT.startswith('<') or sampleALT.startswith('.'):
 					continue
 				if sampleId not in sampleStore:
-					sampleStore[sampleId] = [refPattern]
+					sampleStore[sampleId] = [refSequence]
 				currMotifs = sampleStore[sampleId][:]
 				indexToSubstitute = -(matchEndPosition - allele['startPos']) - 1
-
 				for motif in currMotifs:
 					temp = list(motif)
 					temp[indexToSubstitute] = sampleALT
-					for j in range(1, min(len(allele['ref']), len(refPattern) - abs(indexToSubstitute))):
+					for j in range(1, min(len(allele['ref']), len(refSequence) - abs(indexToSubstitute))):
 						del temp[indexToSubstitute + j] # wierd but correct!
 					temp = ''.join(temp)
 					sampleStore[sampleId].append(temp)
 
+	##
+	# Check if the recreated sequences of any sample match the MAW and add it to
+	# the disqualified list if it does
+	#
 	matchFound = False
 	for sampleId in sampleStore.keys():
 		for altPattern in sampleStore[sampleId]:
