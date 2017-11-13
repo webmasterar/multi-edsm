@@ -58,23 +58,23 @@ if not os.path.exists(emMAWOutput):
 	sys.exit(1)
 numMawsExtracted = 0
 M = 0
-if os.path.exists(patternsFile):
-	with open(patternsFile, 'r') as pf:
-		for line in pf:
-			M += len(line.strip())
-			numMawsExtracted += 1
-else:
-	with open(patternsFile, 'w') as pf:
-		with open(emMAWOutput, 'r') as ef:
-			ef.readline() # skip the > header
-			for line in ef:
-				line = line.strip()
-				if not (len(line) == 0 or 'N' in line):
-					if numMawsExtracted != 0:
-						pf.write('\n')
-					pf.write(line)
-					numMawsExtracted += 1
-					M += len(line)
+# if os.path.exists(patternsFile):
+# 	with open(patternsFile, 'r') as pf:
+# 		for line in pf:
+# 			M += len(line.strip())
+# 			numMawsExtracted += 1
+# else:
+with open(patternsFile, 'w') as pf:
+	with open(emMAWOutput, 'r') as ef:
+		ef.readline() # skip the > header
+		for line in ef:
+			line = line.strip()
+			if not (len(line) == 0 or 'N' in line):
+				if numMawsExtracted != 0:
+					pf.write('\n')
+				pf.write(line)
+				numMawsExtracted += 1
+				M += len(line)
 print '%d MAWs of total length %d extracted for searching.' % (numMawsExtracted, M)
 
 #
@@ -206,14 +206,15 @@ for i in range(len(positions)):
 		for sample in record.samples:
 			if sample.data.GT != None:
 				samples[sample.sample] = list(set([str(x) for x in sample.data.GT.split('|')]))
+		alleles.append({'ref':REF, 'startPos':POSstart, 'alt':ALTs, 'samples':samples})
 		if POSstart < reffetchbegin:
 			reffetchbegin = POSstart
-		alleles.append({'ref':REF, 'startPos':POSstart, 'alt':ALTs, 'samples':samples})
 
 	##
 	# Open the reference chromosome and grab the ref sequence for the range
 	#
-	refSequence = getRef(reffetchbegin - requiredAdditionalPrefix, reffetchend)
+	reffetchbegin = reffetchbegin - requiredAdditionalPrefix
+	refSequence = getRef(reffetchbegin, reffetchend)
 
 	##
 	# Recreate the sequence for every sample (person) that has an alternate allele
@@ -231,12 +232,14 @@ for i in range(len(positions)):
 				if sampleId not in sampleStore:
 					sampleStore[sampleId] = [refSequence]
 				currMotifs = sampleStore[sampleId][:]
-				indexToSubstitute = -(matchEndPosition - allele['startPos']) - 1
+				indexToSubstitute = allele['startPos'] - reffetchbegin
 				for motif in currMotifs:
+					if indexToSubstitute >= len(motif):
+						continue
 					temp = list(motif)
 					temp[indexToSubstitute] = sampleALT
-					for j in range(1, min(len(allele['ref']), len(refSequence) - abs(indexToSubstitute))):
-						del temp[indexToSubstitute + j] # wierd but correct!
+					for j in range(1, min(len(allele['ref']), len(motif) - indexToSubstitute)):
+						del temp[indexToSubstitute+1]
 					temp = ''.join(temp)
 					sampleStore[sampleId].append(temp)
 
