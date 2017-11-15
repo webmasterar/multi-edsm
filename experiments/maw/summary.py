@@ -9,7 +9,7 @@ with open(MAWFile, 'r') as f:
 
 print 'No. MAWs originally extracted: ' + str(len(originalMAWs))
 
-chromosomes = range(1,22) + ['X', 'Y']
+chromosomes = [str(x) for x in range(1,22)] + ['X', 'Y']
 falseMAWsFile = './results/falseMAWs_%s.txt'
 for chromosome in chromosomes:
     chrFile = falseMAWsFile % chromosome

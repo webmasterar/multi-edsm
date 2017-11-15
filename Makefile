@@ -1,8 +1,8 @@
 
 CC=     g++
 
-# -O3 -Wall -g
-CFLAGS= -O3 -D_USE_64 -msse4.2 -funroll-loops -fomit-frame-pointer -std=c++11 -DNDEBUG -march=native -falign-loops=64 -falign-functions=64 
+# -O3 -Wall -g -march=native
+CFLAGS= -O3 -D_USE_64 -msse4.2 -funroll-loops -fomit-frame-pointer -std=c++11 -DNDEBUG -falign-loops=64 -falign-functions=64
 
 LFLAGS= -lz -lm -lpthread -I . \
         -I ./sdsl-lite/include/ \

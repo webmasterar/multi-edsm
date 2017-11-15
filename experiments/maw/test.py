@@ -58,23 +58,23 @@ if not os.path.exists(emMAWOutput):
 	sys.exit(1)
 numMawsExtracted = 0
 M = 0
-# if os.path.exists(patternsFile):
-# 	with open(patternsFile, 'r') as pf:
-# 		for line in pf:
-# 			M += len(line.strip())
-# 			numMawsExtracted += 1
-# else:
-with open(patternsFile, 'w') as pf:
-	with open(emMAWOutput, 'r') as ef:
-		ef.readline() # skip the > header
-		for line in ef:
-			line = line.strip()
-			if not (len(line) == 0 or 'N' in line):
-				if numMawsExtracted != 0:
-					pf.write('\n')
-				pf.write(line)
-				numMawsExtracted += 1
-				M += len(line)
+if os.path.exists(patternsFile):
+ 	with open(patternsFile, 'r') as pf:
+ 		for line in pf:
+ 			M += len(line.strip())
+ 			numMawsExtracted += 1
+else:
+	with open(patternsFile, 'w') as pf:
+		with open(emMAWOutput, 'r') as ef:
+			ef.readline() # skip the > header
+			for line in ef:
+				line = line.strip()
+				if not (len(line) == 0 or 'N' in line):
+					if numMawsExtracted != 0:
+						pf.write('\n')
+					pf.write(line)
+					numMawsExtracted += 1
+					M += len(line)
 print '%d MAWs of total length %d extracted for searching.' % (numMawsExtracted, M)
 
 #

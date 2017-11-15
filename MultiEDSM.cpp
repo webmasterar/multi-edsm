@@ -520,17 +520,7 @@ bool MultiEDSM::occVector(const string & a, WordVector & B2)
  */
 void MultiEDSM::report(const unsigned int matchIdx, const unsigned int posIdx, const int pattId)
 {
-    if (this->matches.size() == 0)
-    {
-        this->matches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
-    }
-    else
-    {
-        pair<unsigned int, unsigned int> & last = this->matches.back();
-        if (last.first != matchIdx || last.second != pattId) {
-            this->matches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
-        }
-    }
+    this->matches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
 }
 
 /**
@@ -549,6 +539,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
     clock_t start = clock();
 
     //match variables
+    ResultSet tempMatches;
     bool matchFound = false;
     bool isDeterminateSegment = false;
     unsigned int matchIdx, posIdx;
@@ -610,7 +601,17 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                 posIdx = match.first;
                                 matchIdx = this->pos;
                                 pattId = match.second;
-                                this->report(matchIdx, posIdx, pattId);
+                                //this->report(matchIdx, posIdx, pattId);
+                                bool matchAlreadyExists = false;
+                                for (pair<unsigned int, unsigned int> & tempMatch : tempMatches) {
+                                    if (tempMatch.first == matchIdx && tempMatch.second == pattId) {
+                                        matchAlreadyExists = true;
+                                        break;
+                                    }
+                                }
+                                if (!matchAlreadyExists) {
+                                    tempMatches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+                                }
                                 this->umsa->clearMatches();
                                 break;
                             }
@@ -620,7 +621,17 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                     posIdx = match.first;
                                     matchIdx = this->pos;
                                     pattId = match.second;
-                                    this->report(matchIdx, posIdx, pattId);
+                                    // this->report(matchIdx, posIdx, pattId);
+                                    bool matchAlreadyExists = false;
+                                    for (pair<unsigned int, unsigned int> & tempMatch : tempMatches) {
+                                        if (tempMatch.first == matchIdx && tempMatch.second == pattId) {
+                                            matchAlreadyExists = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!matchAlreadyExists) {
+                                        tempMatches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+                                    }
                                 }
                                 this->umsa->clearMatches();
                             }
@@ -694,7 +705,17 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                 posIdx = match.first;
                                 matchIdx = this->pos + posIdx;
                                 pattId = match.second;
-                                this->report(matchIdx, posIdx, pattId);
+                                // this->report(matchIdx, posIdx, pattId);
+                                bool matchAlreadyExists = false;
+                                for (pair<unsigned int, unsigned int> & tempMatch : tempMatches) {
+                                    if (tempMatch.first == matchIdx && tempMatch.second == pattId) {
+                                        matchAlreadyExists = true;
+                                        break;
+                                    }
+                                }
+                                if (!matchAlreadyExists) {
+                                    tempMatches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+                                }
                             }
                             this->umsa->clearMatches();
                         }
@@ -712,7 +733,17 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                     matchIdx = min(this->pos + refLen - 1, this->pos + posIdx);
                                 }
                                 pattId = match.second;
-                                this->report(matchIdx, posIdx, pattId);
+                                // this->report(matchIdx, posIdx, pattId);
+                                bool matchAlreadyExists = false;
+                                for (pair<unsigned int, unsigned int> & tempMatch : tempMatches) {
+                                    if (tempMatch.first == matchIdx && tempMatch.second == pattId) {
+                                        matchAlreadyExists = true;
+                                        break;
+                                    }
+                                }
+                                if (!matchAlreadyExists) {
+                                    tempMatches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+                                }
                                 this->umsa->clearMatches();
                             }
                             else if (!this->reportOnce)
@@ -727,7 +758,17 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                         matchIdx = min(this->pos + refLen - 1, this->pos + posIdx);
                                     }
                                     pattId = match.second;
-                                    this->report(matchIdx, posIdx, pattId);
+                                    // this->report(matchIdx, posIdx, pattId);
+                                    bool matchAlreadyExists = false;
+                                    for (pair<unsigned int, unsigned int> & tempMatch : tempMatches) {
+                                        if (tempMatch.first == matchIdx && tempMatch.second == pattId) {
+                                            matchAlreadyExists = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!matchAlreadyExists) {
+                                        tempMatches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+                                    }
                                 }
                                 this->umsa->clearMatches();
                             }
@@ -764,7 +805,17 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                             }
                         }
                         pattId = match.second;
-                        this->report(matchIdx, posIdx, pattId);
+                        // this->report(matchIdx, posIdx, pattId);
+                        bool matchAlreadyExists = false;
+                        for (pair<unsigned int, unsigned int> & tempMatch : tempMatches) {
+                            if (tempMatch.first == matchIdx && tempMatch.second == pattId) {
+                                matchAlreadyExists = true;
+                                break;
+                            }
+                        }
+                        if (!matchAlreadyExists) {
+                            tempMatches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+                        }
                         this->umsa->clearMatches();
                     }
                     else if (!this->reportOnce)
@@ -783,7 +834,17 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                                 }
                             }
                             pattId = match.second;
-                            this->report(matchIdx, posIdx, pattId);
+                            // this->report(matchIdx, posIdx, pattId);
+                            bool matchAlreadyExists = false;
+                            for (pair<unsigned int, unsigned int> & tempMatch : tempMatches) {
+                                if (tempMatch.first == matchIdx && tempMatch.second == pattId) {
+                                    matchAlreadyExists = true;
+                                    break;
+                                }
+                            }
+                            if (!matchAlreadyExists) {
+                                tempMatches.push_back(pair<unsigned int, unsigned int>(matchIdx, pattId));
+                            }
                         }
                         this->umsa->clearMatches();
                     }
@@ -825,6 +886,11 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
             this->pos += (this->edsdeglentype == EDSDEGLENTYPE::FIXEDLENGTH) ? 1 : refLen;
             // this->pos++;
         }
+    }
+
+    //report matches found
+    for (pair<unsigned int, unsigned int> & tempMatch : tempMatches) {
+        this->report(tempMatch.first, 0, tempMatch.second);
     }
 
     //stop timer
