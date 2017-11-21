@@ -385,12 +385,14 @@ int main(int argc, char * argv[])
     //parse command-line options
     int c, x = 0, optind = 1;
     EDSDEGLENTYPE countingType;
+    unsigned int stfL = 0;
     string seqF, varF, patF, memL, cntL;
     static struct option long_options[] = {
         {"sequence-file", required_argument, 0, 's'},
         {"variants-file", required_argument, 0, 'v'},
         {"patterns-file", required_argument, 0, 'p'},
         {"mem-limit",     required_argument, 0, 'm'},
+        {"stf-limit",     required_argument, 0, 't'},
         {"counting-type", required_argument, 0, 'c'},
         {"help",          no_argument,       0, 'h'},
         {0,               0,                 0, 0}
@@ -405,13 +407,14 @@ Standard (Required) Arguments:\n\
   -p\t--patterns-file\t<str>\tThe patterns file. Each pattern must be on a different line.\n\
   -m\t--mem-limit\t<str>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers for GB or MB, e.g. 3.5g\n\n\
 Optional Arguments:\n\
+  -t\t--stf-limit\t<uint>\tManually set the Suffix Tree-based data structure memory usage-limiting factor\n\
   -c\t--counting-type\t<str>\tCount degenerate segments as one position (FIXEDLENGTH),\n\
     \t               \t     \tthe length of the first string (FIRSTLENGTH), or\n\
-    \t               \t     \tup to the length of the first string (UPTOFIRSTLENGTH)(=default)?\n\n\
+    \t               \t     \tup to the length of the first string (default=UPTOFIRSTLENGTH)?\n\n\
 Miscellaneous:\n\
   -h\t--help\t\t<void>\tThis help message.\n";
 
-    while ((c = getopt_long(argc, argv, "s:v:p:m:c:h", long_options, &optind)) != -1)
+    while ((c = getopt_long(argc, argv, "s:v:p:m:t:c:h", long_options, &optind)) != -1)
     {
         switch (c)
         {
@@ -430,6 +433,9 @@ Miscellaneous:\n\
             case 'm':
                 memL = optarg;
                 x++;
+                break;
+            case 't':
+                stfL = (unsigned int) atoi(optarg);
                 break;
             case 'c':
                 cntL = optarg;
@@ -526,7 +532,7 @@ Miscellaneous:\n\
 
     //start MultiEDSM search
     cout << "Multi-EDSM starting..." << endl << endl;
-    MultiEDSM * multiedsm = new MultiEDSM(ALPHABET, patterns, maxNoBitVectorsStorable, countingType);
+    MultiEDSM * multiedsm = new MultiEDSM(ALPHABET, patterns, maxNoBitVectorsStorable, stfL, countingType);
     patterns.clear();
 
     cout << "Searching..." << endl;

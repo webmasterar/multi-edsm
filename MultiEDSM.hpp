@@ -168,6 +168,11 @@ protected:
     std::unordered_map<unsigned int, struct NodeRange> OVMem8;
 
     /**
+     * @var suffixTreeFactorLimit A factor limiting the memory consumption of the suffix tree-based datastructure
+     */
+    unsigned int suffixTreeFactorLimit;
+
+    /**
      * @var M The total length of the patterns
      */
     unsigned int M;
@@ -242,6 +247,16 @@ protected:
     WordVector B2;
 
     /**
+     * @var OccVectorWordVector Stored in heap for performance and cleared smartly on every call
+     */
+    WordVector OccVectorWordVector;
+
+    /**
+     * @var OccVectorPositionSetVector Stores the positions set in OccVector call
+     */
+    std::vector<unsigned int> OccVectorPositionSetVector;
+
+    /**
      * @var umsa MyUMSA object used for searching using Shift-And. MyUMSA stores
      * the bitvector of the patterns and state of searches (on-line algorithm)
      */
@@ -297,6 +312,7 @@ public:
     MultiEDSM(const std::string & alphabet, \
               const std::vector<std::string> & patterns, \
               const unsigned int maxNoBitVectorsStorable, \
+              const unsigned int suffixTreeFactorLimit = 0, \
               const EDSDEGLENTYPE edsdeglentype = EDSDEGLENTYPE::UPTOFIRSTLENGTH);
 
     ~MultiEDSM();

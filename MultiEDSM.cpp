@@ -25,7 +25,6 @@
 #include <map>
 #include <divsufsort64.h>
 #include <sdsl/util.hpp>
-#include <sdsl/bit_vectors.hpp>
 #include <sdsl/suffix_trees.hpp>
 #include "MyUMSA.hpp"
 #include "MultiEDSM.hpp"
@@ -43,6 +42,7 @@ using namespace std;
 MultiEDSM::MultiEDSM(const string & alphabet, \
                      const vector<string> & patterns, \
                      const unsigned int maxNoBitVectorsStorable, \
+                     const unsigned int suffixTreeFactorLimit, \
                      const EDSDEGLENTYPE edsdeglentype)
 {
     this->alphabet = alphabet;
@@ -67,6 +67,7 @@ MultiEDSM::MultiEDSM(const string & alphabet, \
     this->reportOnce = false;
     this->reportPatterns = true;
     this->edsdeglentype = edsdeglentype;
+    this->suffixTreeFactorLimit = suffixTreeFactorLimit;
     this->preprocessPatterns(patterns);
 }
 
@@ -141,7 +142,17 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     }
     p.pop_back(); //remove unnecessary terminal separator char as \0 already tagged on end of c_str
 
-    //tool to get pattern id from any given position in the bitvector/p
+    //automatically calculate suffixTreeFactorLimit based on size of input. By
+    //setting l=[R/w], we obtain a datastructure of size O(R) with O(m+l)
+    //lookup time in OccVector.
+    if (this->suffixTreeFactorLimit == 0) {
+        this->suffixTreeFactorLimit = (unsigned int) ceil((double)this->R / (double)BITSINWORD);
+    } else {
+        this->suffixTreeFactorLimit = min(this->suffixTreeFactorLimit, (unsigned int) ceil((double)this->R / (double)BITSINWORD));
+    }
+    //cout << "suffixTreeFactorLimit: " << this->suffixTreeFactorLimit << endl;
+
+    //tool (array) to get pattern id from any given position in the bitvector/p
     cout << "2. Pos2Pat" << endl;
     this->Pos2PatId = this->umsa->getPatternPositions();
 
@@ -182,7 +193,8 @@ void MultiEDSM::constructOV8(const string & p)
     queue<cst_node_t> q;
     q.push(this->STp.root());
     unsigned int maxDepth = (unsigned int) max((int)1, (int)this->maxP - 2); //max level to traverse in level order
-    //Since OVMemU8 is used to store only internal nodes, we subtract R (no. of leaves) from total nodes, to get the max no. If there is insufficient memory only maxK items will be stored
+    //Since OVMemU8 is used to store only internal nodes, we subtract R (no. of leaves) from total
+    //nodes, to get the max no. But if there is insufficient memory only maxK items will be stored
     this->OVMemU8.reserve(min((unsigned int)this->STp.nodes() - this->R, this->maxK)); //maximum number of nodes to store in OVMemU8
     unsigned int maxNoWordsInVector = (unsigned int) ceil((double)this->M / (double)BITSINWORD);
     unsigned int numNodesInOVMemU8 = 0; //count of nodes actually stored in OVMemU8
@@ -206,11 +218,6 @@ void MultiEDSM::constructOV8(const string & p)
             nodeLevels.push_back(v);
         } else {
             nodeLevels[level].push_back(id);
-        }
-        if (nn > 0 && numNodesInOVMemU8 < this->maxK && !currNodeIsLeaf) { //no leaves allowed in OVMemU8
-            WordVector w(maxNoWordsInVector, 0ul);
-            this->OVMemU8[id] = w;
-            numNodesInOVMemU8++;
         }
 
         //handle root node special condition -- don't add $ and # starting nodes in first row
@@ -237,9 +244,24 @@ void MultiEDSM::constructOV8(const string & p)
                 }
             }
         }
-        //handle rest of nodes from level 2 onwards
+        //handle rest of nodes from level 1 onwards
         else if (!currNodeIsLeaf)
         {
+            //see if we can and should create the node in OVMemU8
+            if (numNodesInOVMemU8 < this->maxK)
+            {
+                unsigned int lb = this->STp.lb(currNode);
+                unsigned int rb = this->STp.rb(currNode);
+                unsigned int childLeafCount = rb + 1 - lb;
+
+                //if steps 1 and 2 resolve to false we create bitvector (1. when childLeafCount <= depth (i) or 2. childLeafCount <= \ell)
+                if (!(childLeafCount <= level || childLeafCount <= this->suffixTreeFactorLimit)) {
+                    WordVector w(maxNoWordsInVector, 0ul);
+                    this->OVMemU8[id] = w;
+                    numNodesInOVMemU8++;
+                }
+            }
+
             for (const auto & child : this->STp.children(currNode))
             {
                 q.push(child);
@@ -282,7 +304,7 @@ void MultiEDSM::constructOV8(const string & p)
                         (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
                         (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
                     ) {
-                        j = this->STpIdx2BVIdx[sn] - 1;  ///calculate bit position -- j is index in bitvector
+                        j = this->STpIdx2BVIdx[sn] - 1;  //calculate bit position -- j is index in bitvector
                         this->WordVectorSet1At(this->OVMemU8[nodeId], j);
                     }
                 }
@@ -316,7 +338,7 @@ void MultiEDSM::constructOV8(const string & p)
             parentId = this->STp.id(this->STp.parent(currNode));
             parentIsInOVMemU8 = (this->OVMemU8.find(parentId) != this->OVMemU8.end());
 
-            //leaves are assigned in OVMem8
+            //put node in OVMem8 if it is a leaf or a node not in OVMemU8
             if (currNodeIsLeaf)
             {
                 struct NodeRange nr;
@@ -324,21 +346,20 @@ void MultiEDSM::constructOV8(const string & p)
                 nr.end = nodeId;
                 this->OVMem8[nodeId] = nr;
             }
-
-            //if neither currNode or its parent is in OVMemU8, assign currNode in OVMem8
-            if (!currNodeIsInOVMemU8 && !parentIsInOVMemU8 && !currNodeIsLeaf)
+            else if (!currNodeIsInOVMemU8)
             {
                 struct NodeRange nr;
                 nr.start = this->STp.lb(currNode);
                 nr.end = this->STp.rb(currNode);
                 this->OVMem8[nodeId] = nr;
             }
-            //when both nodes in OVMemU8, just bitwize OR child into parent
-            else if (currNodeIsInOVMemU8 && parentIsInOVMemU8)
+
+            //when both child and parent nodes are in OVMemU8, just bitwize OR child into parent
+            if (currNodeIsInOVMemU8 && parentIsInOVMemU8)
             {
                 this->WordVectorOR_IP(this->OVMemU8[parentId], this->OVMemU8[nodeId]);
             }
-            //when only the parent is in OVMemU8, encode child leaves or non-OVMemU8 nodes into parent
+            //when only the parent is in OVMemU8, encode child leaves/nodes into parent
             else if (parentIsInOVMemU8 && !currNodeIsInOVMemU8)
             {
                 for (j = this->OVMem8[nodeId].start; j <= this->OVMem8[nodeId].end; j++)
@@ -359,6 +380,11 @@ void MultiEDSM::constructOV8(const string & p)
         nodeLevels[i].clear();
     }
     nodeLevels.clear();
+
+    //finally, initialize the WordVector for the OccVector function
+    this->OccVectorWordVector.assign(maxNoWordsInVector, 0ul);
+
+    //cout << "OVMemU8 size: " << this->OVMemU8.size() << " OVMem8 size: " << this->OVMem8.size() << endl;
 }
 
 /**
@@ -435,20 +461,59 @@ bool MultiEDSM::occVector(const string & a, WordVector & B2)
         }
     }
 
-    if (j == a.length())
+    //a does not exist in the suffix tree
+    if (j != a.length()) {
+        return false;
+    }
+
+    //a exists in the suffix tree so we need to keep the starting positions marked in B2
+    unsigned int nodeId = this->STp.id(explicitNode);
+    if (this->OVMemU8.find(nodeId) != this->OVMemU8.end())
     {
-        unsigned int nodeId = this->STp.id(explicitNode);
-        if (this->OVMemU8.find(nodeId) != this->OVMemU8.end())
+        this->WordVectorAND_IP(B2, this->OVMemU8[nodeId]);
+        return true;
+    }
+    else if (this->OVMem8.find(nodeId) != this->OVMem8.end())
+    {
+        unsigned int i, k, sn;
+        if (this->STp.is_leaf(explicitNode))
         {
-            this->WordVectorAND_IP(B2, this->OVMemU8[nodeId]);
-            return true;
+            i = this->OVMem8[nodeId].start;
+            sn = this->STp.csa[i];
+            if (
+                (sn > 0 && ((sn + 1) < (this->R - 1))) && \
+                (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
+                (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
+                (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
+            ) {
+                k = this->STpIdx2BVIdx[sn] - 1;  //calculate bit position -- k is index in bitvector
+                unsigned int wordIdx = (unsigned int) ((double)k / (double)BITSINWORD);
+                unsigned int bitShifts = k % BITSINWORD;
+                WORD h = 1ul << bitShifts;
+                //if there is a match then clear B2 and set the bitvector with the leaf position
+                if (B2[wordIdx] & h)
+                {
+                    for (i = 0; i < B2.size(); i++) {
+                        B2[i] = 0ul;
+                    }
+                    this->WordVectorSet1At(B2, k);
+                    return true;
+                }
+            }
+            return false;
         }
-        else if (this->OVMem8.find(nodeId) != this->OVMem8.end())
+        else
         {
-            unsigned int i, k, sn;
-            if (this->STp.is_leaf(explicitNode))
+            //clear OVWV
+            for (const unsigned int pos : this->OccVectorPositionSetVector) {
+                unsigned int wordIdx = (unsigned int) ((double)pos / (double)BITSINWORD);
+                this->OccVectorWordVector[wordIdx] = 0ul; //faster than calculating bit positions and clearing them one by one
+            }
+            this->OccVectorPositionSetVector.clear();
+
+            //set the bits in OVWV
+            for (i = this->OVMem8[nodeId].start; i <= this->OVMem8[nodeId].end; i++)
             {
-                i = this->OVMem8[nodeId].start;
                 sn = this->STp.csa[i];
                 if (
                     (sn > 0 && ((sn + 1) < (this->R - 1))) && \
@@ -457,54 +522,20 @@ bool MultiEDSM::occVector(const string & a, WordVector & B2)
                     (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
                 ) {
                     k = this->STpIdx2BVIdx[sn] - 1;  //calculate bit position -- k is index in bitvector
-                    unsigned int wordIdx = (unsigned int) ((double)k / (double)BITSINWORD);
-                    unsigned int bitShifts = k % BITSINWORD;
-                    WORD h = 1ul << bitShifts;
-                    if (B2[wordIdx] & h)
-                    {
-                        for (i = 0; i < B2.size(); i++) {
-                            B2[i] = 0ul;
-                        }
-                        this->WordVectorSet1At(B2, k);
-                        return true;
-                    }
+                    this->WordVectorSet1At(this->OccVectorWordVector, k);
+                    this->OccVectorPositionSetVector.push_back(k);
                 }
-                return false;
             }
-            else
-            {
-                WordVector v;
-                bool oneSet = false;
-                for (i = this->OVMem8[nodeId].start; i <= this->OVMem8[nodeId].end; i++)
-                {
-                    sn = this->STp.csa[i];
-                    if (
-                        (sn > 0 && ((sn + 1) < (this->R - 1))) && \
-                        (this->STpIdx2BVIdx[sn-1] != SEPARATOR_DIGIT) && \
-                        (this->STpIdx2BVIdx[sn]   != SEPARATOR_DIGIT) && \
-                        (this->STpIdx2BVIdx[sn+1] != SEPARATOR_DIGIT)
-                    ) {
-                        k = this->STpIdx2BVIdx[sn] - 1;  //calculate bit position -- k is index in bitvector
-                        this->WordVectorSet1At(v, k);
-                        oneSet = true;
-                    }
-                }
-                if (oneSet) {
-                    this->WordVectorAND_IP(B2, v);
-                    return true;
-                }
-                return false;
+            //keep the positions matching with B2
+            if (this->OccVectorPositionSetVector.size() > 0) {
+                this->WordVectorAND_IP(B2, this->OccVectorWordVector);
+                return true;
             }
-        }
-        else
-        {
             return false;
         }
     }
-    else
-    {
-        return false;
-    }
+
+    return false;
 }
 
 /**
