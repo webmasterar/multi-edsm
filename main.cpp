@@ -385,7 +385,7 @@ int main(int argc, char * argv[])
     //parse command-line options
     int c, x = 0, optind = 1;
     EDSDEGLENTYPE countingType;
-    unsigned int stfL = 0;
+    unsigned int stfL = 1;
     string seqF, varF, patF, memL, cntL;
     static struct option long_options[] = {
         {"sequence-file", required_argument, 0, 's'},
@@ -407,10 +407,12 @@ Standard (Required) Arguments:\n\
   -p\t--patterns-file\t<str>\tThe patterns file. Each pattern must be on a different line.\n\
   -m\t--mem-limit\t<str>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers for GB or MB, e.g. 3.5g\n\n\
 Optional Arguments:\n\
-  -t\t--stf-limit\t<uint>\tManually set the Suffix Tree-based data structure memory usage-limiting factor\n\
+  -t\t--stf-limit\t<uint>\tManually set the Suffix Tree-based data structure memory usage-limiting factor -  \n\
+    \t           \t      \tset it to 1 to use as much memory as possible, O to use O(M) memory with reduced  \n\
+    \t           \t      \tspeed, or anything up to O([M/w]) for balanced memory usage and speed. (default=1)\n\
   -c\t--counting-type\t<str>\tCount degenerate segments as one position (FIXEDLENGTH),\n\
     \t               \t     \tthe length of the first string (FIRSTLENGTH), or\n\
-    \t               \t     \tup to the length of the first string (default=UPTOFIRSTLENGTH)?\n\n\
+    \t               \t     \tup to the length of the first string (UPTOFIRSTLENGTH=default)?\n\n\
 Miscellaneous:\n\
   -h\t--help\t\t<void>\tThis help message.\n";
 

@@ -143,12 +143,12 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     p.pop_back(); //remove unnecessary terminal separator char as \0 already tagged on end of c_str
 
     //automatically calculate suffixTreeFactorLimit based on size of input. By
-    //setting l=[R/w], we obtain a datastructure of size O(R) with O(m+l)
+    //setting l=[M/w], we obtain a datastructure of size O(M) with O(m+l)
     //lookup time in OccVector.
     if (this->suffixTreeFactorLimit == 0) {
-        this->suffixTreeFactorLimit = (unsigned int) ceil((double)this->R / (double)BITSINWORD);
+        this->suffixTreeFactorLimit = (unsigned int) ceil((double)this->M / (double)BITSINWORD);
     } else {
-        this->suffixTreeFactorLimit = min(this->suffixTreeFactorLimit, (unsigned int) ceil((double)this->R / (double)BITSINWORD));
+        this->suffixTreeFactorLimit = min(this->suffixTreeFactorLimit, (unsigned int) ceil((double)this->M / (double)BITSINWORD));
     }
     //cout << "suffixTreeFactorLimit: " << this->suffixTreeFactorLimit << endl;
 
