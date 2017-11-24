@@ -395,7 +395,7 @@ int main(int argc, char * argv[])
         {"stf-limit",     required_argument, 0, 't'},
         {"counting-type", required_argument, 0, 'c'},
         {"help",          no_argument,       0, 'h'},
-        {0,               0,                 0, 0}
+        {0,               0,                 0,  0 }
     };
 
     string help = "Multiple Elastic Degenerate String Matching (Multi-EDSM) ---\n\n\

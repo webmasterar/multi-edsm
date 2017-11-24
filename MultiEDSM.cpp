@@ -142,16 +142,6 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     }
     p.pop_back(); //remove unnecessary terminal separator char as \0 already tagged on end of c_str
 
-    //automatically calculate suffixTreeFactorLimit based on size of input. By
-    //setting l=[M/w], we obtain a datastructure of size O(M) with O(m+l)
-    //lookup time in OccVector.
-    if (this->suffixTreeFactorLimit == 0) {
-        this->suffixTreeFactorLimit = (unsigned int) ceil((double)this->M / (double)BITSINWORD);
-    } else {
-        this->suffixTreeFactorLimit = min(this->suffixTreeFactorLimit, (unsigned int) ceil((double)this->M / (double)BITSINWORD));
-    }
-    //cout << "suffixTreeFactorLimit: " << this->suffixTreeFactorLimit << endl;
-
     //tool (array) to get pattern id from any given position in the bitvector/p
     cout << "2. Pos2Pat" << endl;
     this->Pos2PatId = this->umsa->getPatternPositions();
@@ -160,6 +150,14 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
     cout << "3. SuffixTree" << endl;
     construct_im(this->STp, p.c_str(), sizeof(char));
 
+    //set the suffixTreeFactorLimit based on user choice or automatically on
+    //total length of patterns. (By setting l=[M/w], we obtain a datastructure
+    //of size O(M) with O(m+l) lookup time in OccVector.)
+    if (this->suffixTreeFactorLimit == 0) {
+        this->suffixTreeFactorLimit = (unsigned int) ceil((double)this->M / (double)BITSINWORD);
+    } else {
+        this->suffixTreeFactorLimit = min(this->suffixTreeFactorLimit, (unsigned int) ceil((double)this->M / (double)BITSINWORD));
+    }
     //construct occVector datastructure
     cout << "4. OccVector" << endl;
     this->constructOV8(p);
@@ -281,7 +279,7 @@ void MultiEDSM::constructOV8(const string & p)
     this->OVMem8.reserve(this->STp.nodes() - numNodesInOVMemU8);
 
     //
-    // Step 2: For each explicit node at level maxDepth, encode it, so we can be
+    // Step 2: For each explicit node at level maxDepth, encode bitvector, so we can be
     // ready for step 3.
     //
     maxDepth = nodeLevels.size() - 1;
@@ -290,10 +288,10 @@ void MultiEDSM::constructOV8(const string & p)
         currNode = this->STp.inv_id(nodeId);
         if (!this->STp.is_leaf(currNode))
         {
-            unsigned int lb = this->STp.lb(currNode);
-            unsigned int rb = this->STp.rb(currNode);
             if (this->OVMemU8.find(nodeId) != this->OVMemU8.end())
             {
+                unsigned int lb = this->STp.lb(currNode);
+                unsigned int rb = this->STp.rb(currNode);
                 unsigned int i, j, sn;
                 for (i = lb; i <= rb; i++)
                 {
@@ -308,13 +306,6 @@ void MultiEDSM::constructOV8(const string & p)
                         this->WordVectorSet1At(this->OVMemU8[nodeId], j);
                     }
                 }
-            }
-            else
-            {
-                struct NodeRange nr;
-                nr.start = lb;
-                nr.end = rb;
-                this->OVMem8[nodeId] = nr;
             }
         }
     }
@@ -381,10 +372,11 @@ void MultiEDSM::constructOV8(const string & p)
     }
     nodeLevels.clear();
 
-    //finally, initialize the WordVector for the OccVector function
+    //finally, initialize the WordVectors for the OccVector function and also for main search
     this->OccVectorWordVector.assign(maxNoWordsInVector, 0ul);
-
-    //cout << "OVMemU8 size: " << this->OVMemU8.size() << " OVMem8 size: " << this->OVMem8.size() << endl;
+    this->B.assign(maxNoWordsInVector, 0ul);
+    this->B1.assign(maxNoWordsInVector, 0ul);
+    this->B2.assign(maxNoWordsInVector, 0ul);
 }
 
 /**
@@ -526,6 +518,7 @@ bool MultiEDSM::occVector(const string & a, WordVector & B2)
                     this->OccVectorPositionSetVector.push_back(k);
                 }
             }
+
             //keep the positions matching with B2
             if (this->OccVectorPositionSetVector.size() > 0) {
                 this->WordVectorAND_IP(B2, this->OccVectorWordVector);
@@ -811,12 +804,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 //
                 //step 2 - if string is a suffix of a previously determined prefix or infix, then report a match
                 //
-                if (this->B2.size() != this->B.size()) {
-                    this->B2 = this->B;
-                } else {
-                    for (i = 0; i < this->B.size(); i++) {
-                        this->B2[i] = this->B[i];
-                    }
+                for (i = 0; i < this->B.size(); i++) {
+                    this->B2[i] = this->B[i];
                 }
                 if (this->umsa->searchOnState(*stringI, this->B2, 0, this->maxP - 1))
                 {

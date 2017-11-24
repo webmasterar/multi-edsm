@@ -14,11 +14,11 @@ You may need to install one or more libraries before compiling Multi-EDSM. Pleas
 
 If you are searching an EDS format file:
 
-`~$ ./multiedsm --sequence-file seq.eds --patterns-file patterns.txt`
+`~$ ./multiedsm --sequence-file seq.eds --patterns-file patterns.txt --mem-limit 4g`
 
 If you are searching a reference sequence in FASTA format along with its VCF file:
 
-`~$ ./multiedsm --sequence-file reference.fasta --variants-file variants.vcf --patterns-file pattern.txt`
+`~$ ./multiedsm --sequence-file reference.fasta --variants-file variants.vcf --patterns-file pattern.txt --mem-limit 4g`
 
 For more options read the help instructions: `~$ ./multiedsm --help`.
 
