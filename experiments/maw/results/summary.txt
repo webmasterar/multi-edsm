@@ -1,0 +1,3 @@
+No. MAWs originally extracted: 161565
+No. MAWs confirmed: 37602 (23.27%)
+Confirmed MAWs written to: ./results/confirmedMAWs.maws

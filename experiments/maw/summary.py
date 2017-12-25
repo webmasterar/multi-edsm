@@ -9,7 +9,7 @@ with open(MAWFile, 'r') as f:
 
 print 'No. MAWs originally extracted: ' + str(len(originalMAWs))
 
-chromosomes = [str(x) for x in range(1,22)] + ['X', 'Y']
+chromosomes = [str(x) for x in range(1,23)] + ['X', 'Y']
 falseMAWsFile = './results/falseMAWs_%s.txt'
 for chromosome in chromosomes:
     chrFile = falseMAWsFile % chromosome
@@ -32,5 +32,5 @@ with open(confirmedMAWsFile, 'w') as f:
         f.write(maw)
         j += 1
 
-print 'No. MAWs confirmed: ' + str(j)
+print 'No. MAWs confirmed: ' + str(j) + ' (%0.2f%%)' % (float(j)/float(len(originalMAWs)) * 100.0)
 print 'Confirmed MAWs written to: ' + confirmedMAWsFile

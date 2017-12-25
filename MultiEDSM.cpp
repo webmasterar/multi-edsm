@@ -717,8 +717,12 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 m = (*stringI).length();
 
                 //
-                //step 1 - if string is longer than pattern then do a full search on it
+                //step 1 - if string is longer than pattern then do a full search
+                //on it... Actually, we can combine steps 1 and 2 together to do
+                //the prefix matching and the full search together to reduce the
+                //amount of processing
                 //
+                /*
                 if (m >= this->minP)
                 {
                     if (this->umsa->search(*stringI))
@@ -800,6 +804,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                         matchFound = true;
                     }
                 }
+                */
 
                 //
                 //step 2 - if string is a suffix of a previously determined prefix or infix, then report a match
@@ -807,7 +812,8 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 for (i = 0; i < this->B.size(); i++) {
                     this->B2[i] = this->B[i];
                 }
-                if (this->umsa->searchOnState(*stringI, this->B2, 0, this->maxP - 1))
+                // if (this->umsa->searchOnState(*stringI, this->B2, 0, this->maxP - 1))
+                if (this->umsa->searchOnState(*stringI, this->B2, 0, m))
                 {
                     if (this->reportOnce && !matchFound)
                     {

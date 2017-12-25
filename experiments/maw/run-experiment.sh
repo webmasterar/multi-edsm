@@ -1,24 +1,24 @@
-python test.py 1 --memory 4096
-python test.py 2 --memory 4096
-python test.py 3 --memory 4096
-python test.py 4 --memory 4096
-python test.py 5 --memory 4096
-python test.py 6 --memory 4096
-python test.py 7 --memory 4096
-python test.py 8 --memory 4096
-python test.py 9 --memory 4096
-python test.py 10 --memory 4096
-python test.py 11 --memory 4096
-python test.py 13 --memory 4096
-python test.py 14 --memory 4096
-python test.py 12 --memory 4096
-python test.py 15 --memory 4096
-python test.py 16 --memory 4096
-python test.py 17 --memory 4096
-python test.py 18 --memory 4096
-python test.py 19 --memory 4096
-python test.py 20 --memory 4096
-python test.py 21 --memory 4096
-python test.py 22 --memory 4096
-python test.py X --memory 4096
-python test.py Y --memory 4096
+time python test.py 1 --memory 4096 > results/1_output.txt
+time python test.py 2 --memory 4096 > results/2_output.txt
+time python test.py 3 --memory 4096 > results/3_output.txt
+time python test.py 4 --memory 4096 > results/4_output.txt
+time python test.py 5 --memory 4096 > results/5_output.txt
+time python test.py 6 --memory 4096 > results/6_output.txt
+time python test.py 7 --memory 4096 > results/7_output.txt
+time python test.py 8 --memory 4096 > results/8_output.txt
+time python test.py 9 --memory 4096 > results/9_output.txt
+time python test.py 10 --memory 4096 > results/10_output.txt
+time python test.py 11 --memory 4096 > results/11_output.txt
+time python test.py 12 --memory 4096 > results/12_output.txt
+time python test.py 13 --memory 4096 > results/13_output.txt
+time python test.py 14 --memory 4096 > results/14_output.txt
+time python test.py 15 --memory 4096 > results/15_output.txt
+time python test.py 16 --memory 4096 > results/16_output.txt
+time python test.py 17 --memory 4096 > results/17_output.txt
+time python test.py 18 --memory 4096 > results/18_output.txt
+time python test.py 19 --memory 4096 > results/19_output.txt
+time python test.py 20 --memory 4096 > results/20_output.txt
+time python test.py 21 --memory 4096 > results/21_output.txt
+time python test.py 22 --memory 4096 > results/22_output.txt
+time python test.py X --memory 4096 > results/X_output.txt
+time python test.py Y --memory 4096 > results/Y_output.txt
