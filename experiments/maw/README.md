@@ -9,8 +9,9 @@ First, clone the Github project [MAW](https://github.com/solonas13/maw) to
 how to build it.
 
 Secondly, we use [PyVCF](https://github.com/jamescasbon/PyVCF) python module to
-read the VCF files. Go ahead and install that. This is usually done by running
-`pip install pyvcf`. The experiment was run under Python v2.7 using PyVCF 0.6.7.
+read the VCF files. This in turn relies on the PySAM python module. Go ahead and
+install both. This is usually done by running `pip install pysam pyvcf`. The
+experiment was run under Python v2.7 using PySAM 0.12.0.1 and PyVCF 0.6.7.
 
 Thirdly, we create *EDS* (Elastic Degenerate String) files from the FASTA+VCF
 files using the Github project [EDSO](https://github.com/webmasterar/edso).
@@ -41,8 +42,8 @@ The first command executed in the file will run *em-maw* to create a list of MAW
 identified from the combined reference Human genome and will require 34GB of disk
 space to create an index. Subsequent commands will skip this initial indexing process.
 Each command will run *Multi-EDSM* to find any false-positive MAWs in each
-chromosome and verify they correspond to an individual (sample) from the 1000
-Human Genomes project.
+chromosome and the python script will verify they correspond to an individual
+(sample) from the 1000 Human Genomes project.
 
 ### Results
 

@@ -9,7 +9,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 4.04805s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 8.63207s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -17,7 +17,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 4939.43s.
+Multi-EDSM total processing time: 5205.23s.
 
 144 matches found!
 
@@ -167,8 +167,8 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-4940.00user 0.68system 1:45:51elapsed 77%CPU (0avgtext+0avgdata 263264maxresident)k
-116456inputs+0outputs (0major+53076minor)pagefaults 0swaps
+5205.28user 1.39system 2:43:15elapsed 53%CPU (0avgtext+0avgdata 262532maxresident)k
+0inputs+0outputs (0major+53851minor)pagefaults 0swaps
 
 Step 2: stf-limit=6056
 ./../../multiedsm -m 4096m -s ../maw/eds/Y.eds -p ../maw/patterns/filtered_hg37.maws -t 6056
@@ -179,7 +179,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 8.34077s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 8.64898s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -187,7 +187,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 4986.9s.
+Multi-EDSM total processing time: 5163.54s.
 
 144 matches found!
 
@@ -337,8 +337,8 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-4987.52user 0.66system 1:41:49elapsed 81%CPU (0avgtext+0avgdata 206192maxresident)k
-0inputs+0outputs (0major+38892minor)pagefaults 0swaps
+5163.44user 1.59system 2:41:50elapsed 53%CPU (0avgtext+0avgdata 206208maxresident)k
+0inputs+0outputs (0major+39195minor)pagefaults 0swaps
 
 Step 3: stf-limit=9084
 ./../../multiedsm -m 4096m -s ../maw/eds/Y.eds -p ../maw/patterns/filtered_hg37.maws -t 9084
@@ -349,7 +349,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 8.32718s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 8.83243s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -357,7 +357,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 4986.9s.
+Multi-EDSM total processing time: 5119s.
 
 144 matches found!
 
@@ -507,8 +507,8 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-4987.44user 0.70system 1:39:32elapsed 83%CPU (0avgtext+0avgdata 190292maxresident)k
-0inputs+0outputs (0major+32669minor)pagefaults 0swaps
+5119.65user 0.67system 2:45:59elapsed 51%CPU (0avgtext+0avgdata 189952maxresident)k
+0inputs+0outputs (0major+32353minor)pagefaults 0swaps
 
 Step 4: stf-limit=12112
 ./../../multiedsm -m 4096m -s ../maw/eds/Y.eds -p ../maw/patterns/filtered_hg37.maws -t 12112
@@ -519,7 +519,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 8.29595s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 8.41159s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -527,7 +527,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 4955.55s.
+Multi-EDSM total processing time: 5078.98s.
 
 144 matches found!
 
@@ -677,8 +677,8 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-4956.06user 0.74system 1:37:23elapsed 84%CPU (0avgtext+0avgdata 180368maxresident)k
-0inputs+0outputs (0major+32900minor)pagefaults 0swaps
+5079.76user 0.55system 2:45:50elapsed 51%CPU (0avgtext+0avgdata 180856maxresident)k
+0inputs+0outputs (0major+32226minor)pagefaults 0swaps
 
 Step 5: stf-limit=15140
 ./../../multiedsm -m 4096m -s ../maw/eds/Y.eds -p ../maw/patterns/filtered_hg37.maws -t 15140
@@ -689,7 +689,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 8.24606s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 8.3387s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -697,7 +697,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 4966.46s.
+Multi-EDSM total processing time: 5086.8s.
 
 144 matches found!
 
@@ -847,8 +847,8 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-4966.97user 0.72system 1:36:14elapsed 86%CPU (0avgtext+0avgdata 173328maxresident)k
-0inputs+0outputs (0major+31425minor)pagefaults 0swaps
+5087.53user 0.58system 2:45:53elapsed 51%CPU (0avgtext+0avgdata 172988maxresident)k
+0inputs+0outputs (0major+31575minor)pagefaults 0swaps
 
 Step 6: stf-limit=18168
 ./../../multiedsm -m 4096m -s ../maw/eds/Y.eds -p ../maw/patterns/filtered_hg37.maws -t 18168
@@ -859,7 +859,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 8.40803s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 8.86711s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -867,7 +867,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 5000.78s.
+Multi-EDSM total processing time: 5119.62s.
 
 144 matches found!
 
@@ -1017,8 +1017,8 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-5001.35user 0.67system 1:35:48elapsed 87%CPU (0avgtext+0avgdata 169936maxresident)k
-0inputs+0outputs (0major+30697minor)pagefaults 0swaps
+5120.27user 0.68system 2:46:52elapsed 51%CPU (0avgtext+0avgdata 169608maxresident)k
+0inputs+0outputs (0major+30163minor)pagefaults 0swaps
 
 Step 7: stf-limit=21196
 ./../../multiedsm -m 4096m -s ../maw/eds/Y.eds -p ../maw/patterns/filtered_hg37.maws -t 21196
@@ -1029,7 +1029,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 8.24058s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 9.53432s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -1037,7 +1037,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 4992.17s.
+Multi-EDSM total processing time: 5102.76s.
 
 144 matches found!
 
@@ -1187,8 +1187,8 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-4992.77user 0.59system 1:35:54elapsed 86%CPU (0avgtext+0avgdata 167764maxresident)k
-0inputs+0outputs (0major+29400minor)pagefaults 0swaps
+5103.58user 0.51system 2:46:16elapsed 51%CPU (0avgtext+0avgdata 166356maxresident)k
+0inputs+0outputs (0major+29513minor)pagefaults 0swaps
 
 Step 8: stf-limit=24224
 ./../../multiedsm -m 4096m -s ../maw/eds/Y.eds -p ../maw/patterns/filtered_hg37.maws -t 24224
@@ -1199,7 +1199,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 8.23595s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 8.72584s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -1207,7 +1207,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 5043.36s.
+Multi-EDSM total processing time: 5158.38s.
 
 144 matches found!
 
@@ -1357,8 +1357,8 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-5043.88user 0.73system 1:41:28elapsed 82%CPU (0avgtext+0avgdata 165208maxresident)k
-0inputs+0outputs (0major+28991minor)pagefaults 0swaps
+5159.03user 0.68system 2:48:13elapsed 51%CPU (0avgtext+0avgdata 166276maxresident)k
+0inputs+0outputs (0major+28925minor)pagefaults 0swaps
 
 Step 9: stf-limit=27252
 ./../../multiedsm -m 4096m -s ../maw/eds/Y.eds -p ../maw/patterns/filtered_hg37.maws -t 27252
@@ -1369,7 +1369,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 8.25655s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 8.63435s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -1377,7 +1377,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 5010.09s.
+Multi-EDSM total processing time: 5118.1s.
 
 144 matches found!
 
@@ -1527,8 +1527,8 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-5010.84user 0.50system 1:42:44elapsed 81%CPU (0avgtext+0avgdata 162968maxresident)k
-0inputs+0outputs (0major+28845minor)pagefaults 0swaps
+5118.92user 0.50system 2:46:57elapsed 51%CPU (0avgtext+0avgdata 164224maxresident)k
+0inputs+0outputs (0major+26002minor)pagefaults 0swaps
 
 Step 10: stf-limit=30280
 ./../../multiedsm -m 4096m -s ../maw/eds/Y.eds -p ../maw/patterns/filtered_hg37.maws -t 30280
@@ -1539,7 +1539,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 161565 patterns of total size M=1937789 completed in 8.25796s.
+Preproccessing 161565 patterns of total size M=1937789 completed in 8.42401s.
 
 Searching...
 No. determinate bases (f): 59309528
@@ -1547,7 +1547,7 @@ No. degenerate bases (F): 127162
 No. determinate segments (d): 61146
 No. degenerate segments (D): 61863
 No. strings processed shorter than pattern (N'): 127699
-Multi-EDSM total processing time: 5085.55s.
+Multi-EDSM total processing time: 5150.28s.
 
 144 matches found!
 
@@ -1697,7 +1697,7 @@ Position,PatternId
 24425435,89644
 28653166,144446
 28769309,82041
-5085.86user 0.96system 2:02:47elapsed 69%CPU (0avgtext+0avgdata 163276maxresident)k
-0inputs+0outputs (0major+28349minor)pagefaults 0swaps
+5151.08user 0.53system 2:47:59elapsed 51%CPU (0avgtext+0avgdata 163312maxresident)k
+0inputs+0outputs (0major+28993minor)pagefaults 0swaps
 
 Done!

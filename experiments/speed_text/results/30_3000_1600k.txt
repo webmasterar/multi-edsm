@@ -1,0 +1,20 @@
+Multi-EDSM starting...
+
+Preprocessing starting...
+1. Shift-And
+2. Pos2Pat
+3. SuffixTree
+4. OccVector
+Preproccessing 100 patterns of total size M=3000 completed in 0.056589s.
+
+Searching...
+No. determinate bases (f): 1280000
+No. degenerate bases (F): 320000
+No. determinate segments (d): 139657
+No. degenerate segments (D): 160000
+No. strings processed shorter than pattern (N'): 456391
+Multi-EDSM total processing time: 3.21058s.
+
+No matches found.
+3.16user 0.18system 0:06.30elapsed 53%CPU (0avgtext+0avgdata 13332maxresident)k
+0inputs+0outputs (0major+2499minor)pagefaults 0swaps

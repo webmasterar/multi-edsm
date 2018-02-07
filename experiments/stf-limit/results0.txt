@@ -1,0 +1,10 @@
+Multi-EDSM starting...
+
+Preprocessing starting...
+1. Shift-And
+2. Pos2Pat
+3. SuffixTree
+4. OccVector
+Preproccessing 161565 patterns of total size M=1937789 completed in 5.97554s.
+
+Searching...

@@ -5,7 +5,7 @@ Preprocessing starting...
 2. Pos2Pat
 3. SuffixTree
 4. OccVector
-Preproccessing 60 patterns of total size M=2400 completed in 0.026479s.
+Preproccessing 60 patterns of total size M=2400 completed in 0.046314s.
 
 Searching...
 No. determinate bases (f): 1447721
@@ -13,8 +13,8 @@ No. degenerate bases (F): 4252889
 No. determinate segments (d): 137677
 No. degenerate segments (D): 152279
 No. strings processed shorter than pattern (N'): 978448
-Multi-EDSM total processing time: 11.1867s.
+Multi-EDSM total processing time: 9.88065s.
 
 No matches found.
-11.26user 0.12system 0:11.39elapsed 99%CPU (0avgtext+0avgdata 13148maxresident)k
-0inputs+0outputs (0major+2713minor)pagefaults 0swaps
+9.99user 0.07system 0:10.07elapsed 99%CPU (0avgtext+0avgdata 13196maxresident)k
+0inputs+0outputs (0major+2709minor)pagefaults 0swaps

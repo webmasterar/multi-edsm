@@ -1073,7 +1073,7 @@ void MultiEDSM::WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m)
  */
 void MultiEDSM::WordVectorLeftShift_IP(WordVector & x, unsigned int m)
 {
-    unsigned int i = 0, p = 0, s = x.size();
+    /*unsigned int i = 0, p = 0, s = x.size();
     unsigned int specialShiftTime = 0, simpleShiftTime = m * s;
 
     while (i < s && specialShiftTime <= simpleShiftTime)
@@ -1083,11 +1083,11 @@ void MultiEDSM::WordVectorLeftShift_IP(WordVector & x, unsigned int m)
         i++;
     }
 
-    if (simpleShiftTime <= specialShiftTime) {
+    if (simpleShiftTime <= specialShiftTime) {*/
         this->WordVectorSIMPLESHIFT_IP(x, m);
-    } else {
+    /*} else {
         this->WordVectorSPECIALSHIFT_IPMW(x, m);
-    }
+    }*/
 }
 
 /**
