@@ -41,7 +41,7 @@ ax2 = ax1.twinx()
 ax2.set_ylim([100,275])
 ax2.plot(x_axis_labels, memory_points, '-g^', label='Memory')
 # apply labels and legend
-ax1.set_xlabel('SuffixTree Factor Limit ($\\tau$)')
+ax1.set_xlabel('Parameter $\\tau$')
 ax1.set_ylabel('Time (s)')
 ax2.set_ylabel('Memory (MB)')
 ax2.yaxis.set_label_position('right')

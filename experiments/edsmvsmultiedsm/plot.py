@@ -29,7 +29,7 @@ with open('results.csv') as f:
 
 # Plot the data for left axis
 plt.xticks(x_axis_labels, x_axis_labels)
-plt.plot(x_axis_labels, multiedsm_points, '-bs', label='MultiEDSM')
+plt.plot(x_axis_labels, multiedsm_points, '-bs', label='Multi-EDSM')
 plt.plot(x_axis_labels, edsm_points, '-ro', label='EDSM-BV')
 # apply labels and legend
 plt.xlabel('No. of patterns')

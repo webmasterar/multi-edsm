@@ -5,7 +5,7 @@ experiments/realdata/compare_results/*
 experiments/readmapping/*
 experiments/words/*
 experiments/maw/eds/*
-experiments/maw/em-maw-output/*
+experiments/maw/em-maw-output/old/*
 experiments/maw/patterns/old/*
 experiments/maw/references/*
 experiments/maw/results/old/*

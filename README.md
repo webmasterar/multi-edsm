@@ -4,7 +4,8 @@ Multiple string matching in Elastic Degenerate Strings.
 
 If you make use of this software, please cite the following:
 
-> Robert Grossi, Costas S. Iliopoulos, Chang Liu, Nadia Pisanti, Solon P. Pissis, Ahmad Retha, Giovanna Rosone, Fatima Vayani and Luca Versari; On-line pattern matching on similar texts; (in preparation).
+> S. Pissis, A. Retha, "Dictionary Matching in Elastic-Degenerate Texts with Applications in Searching VCF Files On-line", (in preparation).
+> R. Grossi, C. S. Iliopoulos, C. Liu, N. Pisanti, S. P. Pissis, A. Retha, G. Rosone, F. Vayani, L. Versari, "On-Line Pattern Matching on Similar Texts", in 28th Annual Symposium on Combinatorial Pattern Matching (CPM 2017), J. R. Juha Kärkkäinen, W. Rytter, Eds., Dagstuhl, Germany: Schloss Dagstuhl--Leibniz-Zentrum fuer Informatik, pp. 9:1-9:14.
 
 ### How to Install
 
@@ -18,7 +19,7 @@ If you are searching an EDS format file:
 
 If you are searching a reference sequence in FASTA format along with its VCF file:
 
-`~$ ./multiedsm --sequence-file reference.fasta --variants-file variants.vcf --patterns-file pattern.txt --mem-limit 4g`
+`~$ ./multiedsm --sequence-file reference.fasta --variants-file variants.vcf --patterns-file patterns.txt --mem-limit 4g`
 
 For more options read the help instructions: `~$ ./multiedsm --help`.
 
@@ -28,4 +29,4 @@ If you want to use a compressed vcf file (*.vcf.gz), please make sure its accomp
 
 ### License
 
-GNU GPLv3 License; Copyright (C) 2017 Chang Liu, Solon P. Pissis, Ahmad Retha and Fatima Vayani.
+GNU GPLv3 License; Copyright (C) 2018 Solon P. Pissis and Ahmad Retha.

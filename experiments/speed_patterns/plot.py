@@ -32,7 +32,7 @@ with open('results.csv') as f:
 plt.xticks(range(len(x_axis_labels)), x_axis_labels)
 plt.plot(range(len(x_axis_labels)), logprocessing_points, '-ro')
 #plt.title('Speed of MultiEDSM with increasing pattern size')
-plt.xlabel('Total pattern size (M)')
+plt.xlabel('Total pattern length (M)')
 plt.ylabel('Log processing time (s)')
 #plt.show()
 plt.savefig('speed_patterns.pdf')
