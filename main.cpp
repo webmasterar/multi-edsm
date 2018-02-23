@@ -408,8 +408,8 @@ Standard (Required) Arguments:\n\
   -m\t--mem-limit\t<str>\tThe maximum amount of memory to use. Use 'g' or 'm' modifiers for GB or MB, e.g. 3.5g\n\n\
 Optional Arguments:\n\
   -t\t--stf-limit\t<uint>\tManually set the Suffix Tree-based data structure memory usage-limiting factor -  \n\
-    \t           \t      \tset it to 1 to use as much memory as possible, O to use O(M) memory with reduced  \n\
-    \t           \t      \tspeed, or anything up to O([M/w]) for balanced memory usage and speed. (default=1)\n\
+    \t           \t      \tset it to 1 to use as much memory as possible, O to use O(M) memory, or anything up\n\
+    \t           \t      \tto O([M/w]) for balanced memory usage and speed. (default=1)\n\
   -c\t--counting-type\t<str>\tCount degenerate segments as one position (FIXEDLENGTH),\n\
     \t               \t     \tthe length of the first string (FIRSTLENGTH), or\n\
     \t               \t     \tup to the length of the first string (UPTOFIRSTLENGTH=default)?\n\n\

@@ -13,5 +13,6 @@ experiments/maw/vcf/*
 experiments/maw/old/*
 multiedsm
 test
+test.cpp
 *.o
 *.exe

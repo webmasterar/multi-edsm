@@ -85,6 +85,7 @@ MultiEDSM::~MultiEDSM()
  *  - Shift-And time and space O(M + sigma*[M/w]).
  *  - Suffix Tree time and space O(M + k), where k is number of patterns.
  *  - OccVector construction time O(M + k), space O((maxK-2) * [(M+k)/w])
+ *    or O(M + k) if its using the stfLimit at [M/w]
  *
  * @param patterns
  */
@@ -176,6 +177,7 @@ void MultiEDSM::preprocessPatterns(const vector<string> & patterns)
 * bitvectors to use in the datastructure as determined by what is left of the
 * memory specified by the user. It is possible less than maxK explicit nodes
 * exist in the suffix tree in which case fewer than maxK bitvectors are used.
+* Or if using stfLimit at [M/w] then space complexity if O(M+k)
 *
 * @param p The pattern string which the suffix tree was built on of size R = M + k
 */
@@ -385,9 +387,7 @@ void MultiEDSM::constructOV8(const string & p)
  * identified in the suffixes of all strings in a segment.
  * If the total length of all patterns is M, this is encoded into O([M/w]) computer
  * words. The total length of the strings in a segment is N, so the building of
- * the prefix border table should take time O(N[M/w]). But we need to factor in
- * the fact we do a bitwise OR operation for j strings in a segment, so the time
- * taken is worst case O(N*[jM/w]).
+ * the prefix border table should take time O(N[M/w]).
  *
  * @param S A segment
  * @param c A reference to a WordVector to mark prefixes on
@@ -428,10 +428,9 @@ void MultiEDSM::buildBorderPrefixWordVector(const Segment & S, WordVector & c)
 }
 
 /**
- * occVector tool returns the index in MultiEDSM::OVMem of the starting positions
- * of a given substring _a_, if it is present in the pattern, encoded as a bitvector.
- * If _a_ is not present in any patterns as an infix then 0 will be returned (0
- * index is the root element but it is not used directly by the algorithm).
+ * occVector tool encodes the indices of the starting positions of a given
+ * substring _a_, if it is present in P and in B2. If _a_ is not present in any
+ * patterns as an infix then it returns false (nothing changed in B2).
  * Time taken: O(|a| + [M/w]).
  *
  * @param a A substring
@@ -807,7 +806,7 @@ bool MultiEDSM::searchNextSegment(const Segment & S)
                 */
 
                 //
-                //step 2 - if string is a suffix of a previously determined prefix or infix, then report a match
+                //step 2 - if string is a suffix of a previously determined prefix or infix, then report a match. Also do full pattern matching.
                 //
                 for (i = 0; i < this->B.size(); i++) {
                     this->B2[i] = this->B[i];
@@ -987,9 +986,7 @@ void MultiEDSM::WordVectorAND_IP(WordVector & a, const WordVector & b)
  * illegally crosses into the next pattern, so requires O(M) space and then it
  * saves the shifted bits temporarily into a WordVector, so the final space usage
  * is O(M + [M/w]). This is why it's IPMW - In Place memory + extra [M/w].
- * Time taken is roughly: O(num_set_bits(x) + [M/w])... or really
- * worst-Worst-WORST case, where there is a match at every single position, which
- * is very-Very-VERY unlikely then O(M + [M/w])!
+ * Time taken is roughly: O(num_set_bits(x) + [M/w]) < O(m[M/w])
  *
  * @param x
  * @param m The length of the string being checked
@@ -1067,6 +1064,8 @@ void MultiEDSM::WordVectorSIMPLESHIFT_IP(WordVector & x, unsigned int m)
  *    because it does m shift operations over [M/w] words.
  * To get the best performance, we do a triage and identify which of the methods
  * does it in the least time. The triage check itself takes O([M/w]) time.
+ *
+ * Last call: Triage abandoned because undocumented and not fully tested -- probably works fine
  *
  * @param x
  * @param m The length of the string being checked
