@@ -14,5 +14,6 @@ experiments/maw/old/*
 multiedsm
 test
 test.cpp
+TestMakeFile
 *.o
 *.exe

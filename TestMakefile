@@ -1,5 +1,0 @@
-all:
-	g++ test.cpp -o test -std=c++11 -DNDEBUG -lz -lm -lpthread -I ./sdsl-lite/include/ -L ./sdsl-lite/lib/ -lsdsl -ldivsufsort -ldivsufsort64
-
-clean:
-	rm test.o test
