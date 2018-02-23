@@ -196,7 +196,7 @@ for i in range(len(positions)):
 	requiredAdditionalPrefix = 0
 	reffetchbegin = matchStartPosition
 	reffetchend = matchEndPosition + 1
-	alleles = [] # [{ref:'G', startPos:0, alt:['A','C'], samples:[{id:'HG001', gt:['0','1']}, ...], ...]
+	alleles = [] # [{ref:'G', startPos:0, alt:['A','C'], samples:{'HG001': ['0','1'], 'HG002': ['0','0'], ...}]
 	for record in vcf_reader.fetch(args.chromosome, matchStartPosition, matchEndPosition):
 		POSstart = record.POS
 		REF = str(record.REF)
@@ -219,7 +219,7 @@ for i in range(len(positions)):
 		samples = {}
 		for sample in record.samples:
 			if sample.data.GT != None:
-				samples[sample.sample] = list(set([str(x) for x in sample.data.GT.split('|')]))
+				samples[sample.sample] = [str(x) for x in str(sample.data.GT).replace('/', '|').split('|')] #even if not phased, treat it as if phased because subsequent records in the block are, see: https://www.biostars.org/p/109632/
 		alleles.append({'ref':REF, 'startPos':POSstart, 'alt':ALTs, 'samples':samples})
 		if POSstart < reffetchbegin:
 			reffetchbegin = POSstart
@@ -232,38 +232,49 @@ for i in range(len(positions)):
 
 	##
 	# Recreate the sequence for every sample (person) that has an alternate allele
-	# in this range
+	# in this range and do so conserving chromosomal haplotype
 	#
-	sampleStore = {}
+	phasedSampleStore = {} # {'HG001': (['GTCCA','GTACA'], ['GTCCA']), 'HG002': (['GTCCA'], ['GTCCA']), ...}
 	for allele in alleles:
-		for sampleId in allele['samples'].keys():
-			for altIdx in allele['samples'][sampleId]:
-				if '/' in altIdx or altIdx == '0' or altIdx == '.':
-					continue
-				sampleALT = allele['alt'][int(altIdx)-1]
-				if sampleALT.startswith('<') or sampleALT.startswith('.'):
-					continue
-				if sampleId not in sampleStore:
-					sampleStore[sampleId] = [refSequence]
-				currMotifs = sampleStore[sampleId][:]
-				indexToSubstitute = allele['startPos'] - reffetchbegin
+		for sampleId, genotypes in allele['samples'].items():
+			hap0 = hap1 = allele['ref']
+			if genotypes[0] != '0':
+				hap0 = allele['alt'][int(genotypes[0])-1]
+			if len(genotypes) == 2 and genotypes[1] != '0':
+				hap1 = allele['alt'][int(genotypes[1])-1]
+			if sampleId not in phasedSampleStore:
+				phasedSampleStore[sampleId] = ([refSequence], [refSequence])
+			indexToSubstitute = allele['startPos'] - reffetchbegin
+			if not (hap0.startswith('<') or hap0.startswith('.')):
+				currMotifs = phasedSampleStore[sampleId][0][:]
 				for motif in currMotifs:
 					if indexToSubstitute >= len(motif):
 						continue
 					temp = list(motif)
-					temp[indexToSubstitute] = sampleALT
+					temp[indexToSubstitute] = hap0
 					for j in range(1, min(len(allele['ref']), len(motif) - indexToSubstitute)):
 						del temp[indexToSubstitute+1]
 					temp = ''.join(temp)
-					sampleStore[sampleId].append(temp)
+					phasedSampleStore[sampleId][0].append(temp)
+			if not (hap1.startswith('<') or hap1.startswith('.')):
+				currMotifs = phasedSampleStore[sampleId][1][:]
+				for motif in currMotifs:
+					if indexToSubstitute >= len(motif):
+						continue
+					temp = list(motif)
+					temp[indexToSubstitute] = hap1
+					for j in range(1, min(len(allele['ref']), len(motif) - indexToSubstitute)):
+						del temp[indexToSubstitute+1]
+					temp = ''.join(temp)
+					phasedSampleStore[sampleId][1].append(temp)
 
 	##
-	# Check if the recreated sequences of any sample match the MAW and add it to
-	# the disqualified list if it does
+	# Check if the recreated sequences of any sample's haplotype match the MAW
+	# and add it to the disqualified list if it does
 	#
 	matchFound = False
-	for sampleId in sampleStore.keys():
-		for altPattern in sampleStore[sampleId]:
+	for sampleId, haplotypes in phasedSampleStore.items():
+		for altPattern in haplotypes[0] + haplotypes[1]:
 			if mawPattern in altPattern:
 				matchFound = True
 				disqualifiedMAWIds.append(patternId)
