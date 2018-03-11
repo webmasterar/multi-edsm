@@ -117,65 +117,48 @@ print output
 atMatches = False
 positions = []
 patternIds = []
-patterns = {} # {patId:pattern,...}
+#patterns = {} # {patId:pattern,...}
+patterns = []
 with open(patternsFile, 'r') as f:
-	for line in output.split('\n'):
-		line = line.strip()
-		if line == '':
-			continue
-		elif line.startswith('----'):
-			atMatches = True
-		elif atMatches and ',' in line:
-			(pos, patId) = [int(x) for x in line.split(',')]
-			positions.append(int(pos))
-			patternIds.append(int(patId))
-			if patId not in patterns:
-				f.seek(0)
-				i = 0
-				while i < patId:
-					f.readline()
-					i += 1
-				patterns[patId] = f.readline().strip()
+	for line in f:
+		patterns.append(line.rstrip())
+for line in output.split('\n'):
+	line = line.strip()
+	if line == '':
+		continue
+	elif line.startswith('----'):
+		atMatches = True
+	elif atMatches and ',' in line:
+		(pos, patId) = [int(x) for x in line.split(',')]
+		positions.append(int(pos))
+		patternIds.append(int(patId))
 
-print 'Verification of up to %d potential false positive MAWs starting.' % len(patterns)
+print 'Verification of up to %d potential false positive MAWs starting.' % len(set(patternIds))
 
 #
 # Step 5: validate each match to see if the MAW really exists and therefore isn't
 # really a MAW
 #
 
+refText = ''
+with open(refFile, 'r') as rf:
+	for line in rf:
+		line = line.strip()
+		if line == '' or line.startswith('>'):
+			continue
+		refText += line
+
 ##
 # Get range of bases from reference fasta file. e.g. chr21:9411239-9411240
 # @param begin 1-based index in reference sequence e.g. 9411239
 # @param end 1-based index in reference up-to-but-not-including e.g. 9411240
 # @return string 'G'
-def getRef(begin, end):
+def getRefText(begin, end):
 	if begin > end:
 		begin, end = end, begin
 	elif begin == end or begin < 1 or end < 1:
 		return ''
-	seq = ''
-	with open(refFile, 'r') as rf:
-		j = 1
-		for line in rf:
-			line = line.strip()
-			if line == '' or line.startswith('>'):
-				continue
-			if j >= end:
-				break
-			lineLen = len(line)
-			if j+lineLen >= begin:
-				k = 0
-				while j+k < begin:
-					k += 1
-				j = j + k
-				while j < end and k < lineLen:
-					seq += line[k]
-					j += 1
-					k += 1
-			else:
-				j += lineLen
-	return seq
+	return refText[begin - 1 : begin + end - begin - 1]
 
 disqualifiedMAWIds = []
 vcf_reader = vcf.Reader(filename=vcfgzFile)
@@ -228,58 +211,50 @@ for i in range(len(positions)):
 	# Open the reference chromosome and grab the ref sequence for the range
 	#
 	reffetchbegin = reffetchbegin - requiredAdditionalPrefix
-	refSequence = getRef(reffetchbegin, reffetchend)
+	refSequence = getRefText(reffetchbegin, reffetchend)
 
 	##
 	# Recreate the sequence for every sample (person) that has an alternate allele
 	# in this range and do so conserving chromosomal haplotype
 	#
-	phasedSampleStore = {} # {'HG001': (['GTCCA','GTACA'], ['GTCCA']), 'HG002': (['GTCCA'], ['GTCCA']), ...}
+	phasedSampleStore = {} # {'HG001': ['GTCCA','GTACA'], 'HG002': ['GTCCA', 'GTCCA'], ...}
+	sampleShiftIdx = {} # {'HG001': [0,0], 'HG002': [0,1], ...}
 	for allele in alleles:
+		if allele['ref'].startswith('.') or allele['ref'].startswith('<'):
+			continue
 		for sampleId, genotypes in allele['samples'].items():
-			hap0 = hap1 = allele['ref']
-			if genotypes[0] != '0':
-				hap0 = allele['alt'][int(genotypes[0])-1]
-			if len(genotypes) == 2 and genotypes[1] != '0':
-				hap1 = allele['alt'][int(genotypes[1])-1]
-			if sampleId not in phasedSampleStore:
-				phasedSampleStore[sampleId] = ([refSequence], [refSequence])
-			indexToSubstitute = allele['startPos'] - reffetchbegin
-			if not (hap0.startswith('<') or hap0.startswith('.')):
-				currMotifs = phasedSampleStore[sampleId][0][:]
-				for motif in currMotifs:
-					if indexToSubstitute >= len(motif):
+			for haplotypeIdx, genotypeIdx in enumerate(genotypes):
+				if genotypeIdx == '.':
+					continue
+				genotypeIdx = int(genotypeIdx)
+				if genotypeIdx == 0:
+					variant = allele['ref']
+				else:
+					variant = allele['alt'][genotypeIdx - 1]
+					if variant.startswith('.') or variant.startswith('<'):
 						continue
-					temp = list(motif)
-					temp[indexToSubstitute] = hap0
-					for j in range(1, min(len(allele['ref']), len(motif) - indexToSubstitute)):
-						del temp[indexToSubstitute+1]
-					temp = ''.join(temp)
-					phasedSampleStore[sampleId][0].append(temp)
-			if not (hap1.startswith('<') or hap1.startswith('.')):
-				currMotifs = phasedSampleStore[sampleId][1][:]
-				for motif in currMotifs:
-					if indexToSubstitute >= len(motif):
-						continue
-					temp = list(motif)
-					temp[indexToSubstitute] = hap1
-					for j in range(1, min(len(allele['ref']), len(motif) - indexToSubstitute)):
-						del temp[indexToSubstitute+1]
-					temp = ''.join(temp)
-					phasedSampleStore[sampleId][1].append(temp)
+				if sampleId not in sampleShiftIdx:
+					sampleShiftIdx[sampleId] = [0, 0]
+				if sampleId not in phasedSampleStore:
+					phasedSampleStore[sampleId] = [refSequence, refSequence]
+				indexToSubstitute = allele['startPos'] - reffetchbegin + sampleShiftIdx[sampleId][haplotypeIdx]
+				temp = phasedSampleStore[sampleId][haplotypeIdx]
+				if indexToSubstitute >= len(temp) or indexToSubstitute < 0:
+					continue
+				temp = list(temp)
+				temp[indexToSubstitute] = variant
+				for j in range(1, min(len(allele['ref']), len(temp) - indexToSubstitute)):
+					del temp[indexToSubstitute+1]
+				phasedSampleStore[sampleId][haplotypeIdx] = ''.join(temp)
+				sampleShiftIdx[sampleId][haplotypeIdx] += len(variant) - len(allele['ref'])
 
 	##
 	# Check if the recreated sequences of any sample's haplotype match the MAW
 	# and add it to the disqualified list if it does
 	#
-	matchFound = False
 	for sampleId, haplotypes in phasedSampleStore.items():
-		for altPattern in haplotypes[0] + haplotypes[1]:
-			if mawPattern in altPattern:
-				matchFound = True
-				disqualifiedMAWIds.append(patternId)
-				break
-		if matchFound:
+		if mawPattern in haplotypes[0] or mawPattern in haplotypes[1]:
+			disqualifiedMAWIds.append(patternId)
 			break
 
 #
