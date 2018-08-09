@@ -4,7 +4,7 @@ Multiple string matching in Elastic Degenerate Strings.
 
 If you make use of this software, please cite the following:
 
-> S. P. Pissis, A. Retha, "Dictionary Matching in Elastic-Degenerate Texts with Applications in Searching VCF Files On-line", (submitted to SEA2018).
+> S. P. Pissis, A. Retha, "Dictionary Matching in Elastic-Degenerate Texts with Applications in Searching VCF Files On-line", in 17th International Symposium on Experimental Algorithms (SEA 2018), G. D'Angelo, Ed., Dagstuhl, Germany: Schloss Dagstuhl--Leibniz-Zentrum fuer Informatik, pp. 16:1-16:14.
 
 ### How to Install
 

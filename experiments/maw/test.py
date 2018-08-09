@@ -158,7 +158,7 @@ def getRefText(begin, end):
 		begin, end = end, begin
 	elif begin == end or begin < 1 or end < 1:
 		return ''
-	return refText[begin - 1 : begin + end - begin - 1]
+	return refText[begin - 1 : end - 1]
 
 disqualifiedMAWIds = []
 vcf_reader = vcf.Reader(filename=vcfgzFile)
